@@ -12,6 +12,7 @@
 
 # General untracked file formats
 *.idea
+*.DS_Store
 *.log
 **/pbf
 *.pbf
@@ -20,6 +21,7 @@
 *.done
 *.tif
 *.csv
+!doc/za_clean_rebuild_concepts.csv
 *.geojson
 *.nc
 *.xls
@@ -57,6 +59,9 @@ doc/_build
 sample_pypsa_eur
 test/tmp/
 playground/
+.matplotlib/
+output/
+lumina_mockup.html
 
 # Specific configuration files
 configs/scenarios/config.*.yaml
