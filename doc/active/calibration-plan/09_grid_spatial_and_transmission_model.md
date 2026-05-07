@@ -65,6 +65,58 @@ The St Clair coefficients are sourced from PyPSA-RSA
 `scripts/build_topology.py:242-246`, which records them as digitized from the
 St Clair curve reference linked in that script.
 
+### pypsa-rsa grid parameters — explicit import list
+
+All grid parameters below are imported from pypsa-rsa at pinned commit `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
+For each parameter, cite the exact source file and line number (look up at implementation time):
+
+| Parameter | Value | pypsa-rsa source |
+|---|---|---|
+| Voltage threshold | ≥ 220 kV (lines below this threshold excluded) | `scripts/build_topology.py` (line TBD) |
+| `s_max_pu` | 0.7 (line loading factor) | `config.yaml` or `build_topology.py` (line TBD) |
+| `n1_approx_single_lines` | 0.7 | `config.yaml` (line TBD) |
+| St Clair limit coefficients | `(53.736, -0.65)` | `scripts/build_topology.py` lines 242–246 |
+| SIL 220 kV | ~122 MW | `scripts/build_topology.py` (line TBD) |
+| SIL 400 kV | ~600 MW | `scripts/build_topology.py` (line TBD) |
+| SIL 765 kV | ~2200 MW | `scripts/build_topology.py` (line TBD) |
+| N-1 rule | Drop strongest line per corridor | `scripts/build_topology.py` (line TBD) |
+| MTS hosting limits | Per-corridor caps from `Supply_Areas2022_Steady_State_Limit` | `data/` file (TBD) |
+| Supply area corridor caps | From `pypsa_rsa_transmission_expansion_audit.csv` | Module 04 registry |
+
+The implementing agent must fill in all `TBD` line numbers during Module 04 before using these parameters.
+
+### St Clair coefficient discrepancy
+
+The pypsa-rsa coefficients `(53.736, -0.65)` differ from the literature-standard
+Dunlop/St Clair fit `(43.261, -0.6678)`.
+
+The implementing agent must:
+1. Locate the pypsa-rsa source for `(53.736, -0.65)` in `scripts/build_topology.py`
+2. Check whether pypsa-rsa documents the source of this calibration
+3. Document the discrepancy and the chosen value in `doc/za_implementation_log.md`
+4. Use the pypsa-rsa value `(53.736, -0.65)` for consistency with the reference model,
+   unless inspection reveals it is clearly a data-entry error
+
+Do not silently use one value without documenting the discrepancy.
+
+### Spatial resolution — Eskom-34 supply regions (Stage 4b)
+
+Target: 34 Eskom supply regions. This is a hard requirement with no fallback to 10-region.
+The 27-region intermediate layer is intentionally skipped.
+
+If the 34-region custom busmap cannot be cleanly built in one pass, do not fall back to 10-region.
+Instead: document the blockers in `doc/za_implementation_log.md`, propose targeted fixes, and
+resolve them before proceeding. Escalate to nylan-ramnauth if blockers cannot be resolved within
+the implementing session.
+
+### MTS hosting limits
+
+`Supply_Areas2022_Steady_State_Limit` and MTS hosting limits (from Module 04 registry) are
+applied as post-clustering corridor capacity caps, not as per-line parameters. Specifically:
+after the custom busmap collapses lines to the 34-region network, apply the regional transfer
+limits as `n.lines.s_nom` caps where each corridor's limit comes from the audit table.
+Document the implementation approach in `doc/za_implementation_log.md`.
+
 Compare against:
 
 ```text

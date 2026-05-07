@@ -7,9 +7,10 @@ constraints needed for an interpretable match to Eskom 2023 dispatch.
 
 ## Solve Target
 
-Final validation solve uses Gurobi. HiGHS results are smoke/comparison only.
-Use the Gurobi options locked in the `01` ZA overlay; do not override `Method`,
-`Crossover`, `BarConvTol`, `Threads`, or `Seed` for the final solve.
+All solves — including smoke runs and the final 8760 validation — use Gurobi per Module 01.
+HiGHS is not used at any stage. Use the Gurobi options locked in the `01` ZA overlay; do not
+override `method`, `crossover`, `BarConvTol`, `threads`, `OptimalityTol`, or `FeasibilityTol`
+for the final solve.
 
 The first solve should be intentionally simple:
 
@@ -23,23 +24,41 @@ no new capacity expansion
 no future assets
 ```
 
-## Calibration Order
+## Calibration sequence
 
-1. Solve with basic fixed fleet and load shedding.
-2. Compare annual generation, renewable output, load shedding, imports/exports.
-3. Add aggregate thermal availability diagnostic or constraint from Eskom
-   `PCLF`, `UCLF`, and `OCLF`.
-4. Compare with PyPSA-RSA `plant_availability.xlsx` station EAF assumptions.
-5. Move to station-level `p_max_pu` only if aggregate availability cannot
-   explain the observed 2023 dispatch/load-shedding behavior.
-6. Add operational constraints only when this module's interim calibration
-   diagnostics show a concrete failure they address.
+Availability is a validation requirement, not only an expansion concern. Without carrier-level EAF,
+the 2023 dispatch is over-optimistic (model over-produces, under-sheds) relative to reality.
+
+**Required calibration order:**
+
+1. **Smoke solve — no availability** (from Module 10 smoke stages)
+   Purpose: verify network builds and solves. Not a calibration output.
+
+2. **Baseline solve — with aggregate carrier-level monthly EAF** ← this is the true baseline
+   Apply monthly EAF from Eskom data as `p_max_pu` per carrier (coal, nuclear, OCGT, etc.).
+   Formula: `p_max_pu[t] = monthly_EAF[carrier][month(t)]`.
+   Source: Eskom 2023 monthly EAF by carrier or by station (aggregate to carrier if needed).
+   This solve is the primary calibration starting point. All before/after deltas are measured
+   from it, not from the no-availability smoke solve.
+
+3. **Diagnostic cross-check — pypsa-rsa station-level EAF**
+   Compare the aggregate-EAF solve against pypsa-rsa's `plant_availability.xlsx` station-level
+   EAF values. This is a diagnostic, not a mandatory calibration step.
+
+4. **Upgrade to station-level EAF** (only if step 2 fails Stage 3 validation gates)
+   If the aggregate carrier-level EAF cannot reproduce 2023 dispatch within tolerance, upgrade
+   to station-level `p_max_pu` per generator row using pypsa-rsa's `plant_availability.xlsx`.
+
+5. **Operational constraint additions** (fuel ramp rates, minimum up/down time) — optional,
+   add only if step 2 fails and step 4 still fails. Document any additions in the log.
+
+All solves use Gurobi per Module 01. No HiGHS.
 
 This module must produce its own interim before/after calibration report. The
 final validation report in `12_validation_reporting_and_acceptance.md` is not
 the first source of validation evidence.
 
-Availability default:
+### Availability formula
 
 ```text
 EAF = 1 - (Total PCLF + Total UCLF+OCLF)
@@ -53,11 +72,28 @@ V1 default is to disable both because the cleaned Eskom EAF takes precedence;
 if either file is retained, document the reason and the affected carriers in
 the interim calibration report.
 
-The first pass reports monthly carrier-level EAF diagnostics. A binding
-carrier-level `p_max_pu = monthly_EAF` constraint may be enabled only when the
-unconstrained solve fails Stage 3-relevant dispatch/load-shedding checks.
-Station-level `p_max_pu` from `plant_availability.xlsx` is used only if the
-aggregate EAF diagnostic cannot explain the observed 2023 dispatch behavior.
+### pypsa-rsa `plant_availability.xlsx` schema
+
+If station-level EAF fallback is needed, the implementing agent must:
+1. Open `plant_availability.xlsx` at the pinned pypsa-rsa commit
+2. Record the sheet name(s), column layout, station identifier column name, and EAF column name
+3. Document the schema in `doc/za_implementation_log.md`
+4. Write a parser that maps station names to `custom_powerplants.csv` `Name` values
+   (station names may differ between sources — require a reconciliation table)
+
+### Infeasibility triage
+
+If the solver returns infeasible on any stage:
+
+1. **Check Other RE:** Confirm `p_min_pu = 0` (not `p_min_pu = p_max_pu`). Fixed-dispatch
+   Other RE at high-generation periods can exceed demand and cause infeasibility.
+2. **Check load-shedding is enabled:** `solving.options.load_shedding: true` must be set.
+   If enabled and solver is still infeasible, the problem is in constraints, not cost.
+3. **Check demand coverage:** Confirm that total `p_nom * p_max_pu` of all generators at any
+   hour exceeds the demand at that hour plus load-shedding generator capacity.
+4. **Check transmission:** Confirm no isolated buses (buses with no connecting lines) exist.
+5. **Reduce scope:** Re-run on the 7-day smoke period with `Threads=2` to isolate the failure hour.
+6. Document the failure and resolution in `doc/za_implementation_log.md`.
 
 ## Optional Constraints, In Order
 

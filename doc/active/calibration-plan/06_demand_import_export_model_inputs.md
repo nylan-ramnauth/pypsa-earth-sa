@@ -121,9 +121,20 @@ Attachment rules:
   `other_re` carrier locked in `05`; it is not folded into demand.
 - `Other RE` enters the network as a non-extendable `Generator` with carrier
   `other_re`, `p_nom` equal to the reconciled Other RE installed-capacity
-  anchor, `p_min_pu = p_max_pu` derived from the Eskom Other RE profile divided
-  by `p_nom`, and `marginal_cost = 0`. Module `10` writes the generator, carrier
-  row, and fixed dispatch time series.
+  anchor, `p_max_pu = profile / p_nom` (upper bound from the Eskom Other RE
+  profile), `p_min_pu = 0`, and `marginal_cost = 0`. Module `10` writes the
+  generator, carrier row, and dispatch upper-bound time series.
+
+### Other RE dispatch constraint
+
+`Other RE` generators use `p_max_pu = profile / p_nom` (upper bound from profile).
+Set `p_min_pu = 0` to allow downward flexibility (curtailment). Do NOT set `p_min_pu = p_max_pu`.
+
+Rationale: a fixed-dispatch constraint (`p_min_pu = p_max_pu`) forces the solver to inject Other RE
+energy regardless of demand. At low-load hours this can produce infeasibility if total minimum
+injection exceeds total demand. Permitting curtailment (`p_min_pu = 0`) makes the model feasible
+while still preventing Other RE from being actively curtailed in normal conditions (it will be
+dispatched first as a low-cost source).
 - `Other RE` ratios are clipped with the locked rule: values `< 0` become `0`,
   values `> p_nom` become `1`, and the parser logs a warning whenever the
   daily maximum `Other RE / p_nom` ratio exceeds `1.05`.

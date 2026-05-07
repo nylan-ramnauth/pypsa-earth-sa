@@ -93,3 +93,9 @@ Preserve CSP storage-hour metadata for later explicit thermal-storage CSP.
   `07_costs_fuels_efficiencies_and_coUE.md`.
 - Imports/exports and embedded PV treatment are documented.
 - CSP cannot normalize as PV in the planned custom plant smoke.
+- Smoke-test assertion passes:
+      `assert "csp" in n.carriers.index`
+      `assert n.generators.query("carrier=='csp'").p_nom.sum() > 400  # MW, lower bound`
+      `assert "solar" in n.carriers.index`
+      `assert n.generators.query("carrier=='solar'").p_nom.sum() > 5000  # MW, SA PV lower bound`
+      CSP and solar must be distinct non-zero carriers. CSP must never merge into solar.

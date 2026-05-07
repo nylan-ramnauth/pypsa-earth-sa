@@ -81,21 +81,79 @@ electricity:
 solving:
   solver:
     name: gurobi
+    options: gurobi-default
   solver_options:
-    za_gurobi:
-      Threads: 2
-      Method: 2
-      Crossover: 0
-      BarConvTol: 1e-8
-      Seed: 0
+    gurobi-default:
+      threads: 1        # use for parallel batches (many concurrent solves)
+      method: 2         # barrier
+      crossover: 0
+      BarConvTol: 1.e-5
+      OptimalityTol: 1.e-6
+      FeasibilityTol: 1.e-6
+  options:
+    load_shedding: true
+    noisy_costs: false
 ```
 
 `electricity.extendable_carriers.Store: []` intentionally disables the upstream
 `[battery, H2]` Store defaults for this fixed-capacity validation baseline.
 
-Gurobi is required for final validation solves. HiGHS may be used only for small
-smoke tests and must not be used for final thesis validation without a documented
-solver-comparison rerun.
+### Solver configuration
+
+All solves — including 1-week smoke runs, 1-month smoke runs, and the full 8760-hour solve — use Gurobi.
+HiGHS is not used at any stage.
+
+For serial single-solve runs (e.g., full 8760 standalone): set `threads: 2`.
+For batched parallel runs (e.g., many years, many scenarios): set `threads: 1`.
+Rationale: academic named-user license (version 13.0.0, expiry 2027-01-20, no WLS pool).
+
+### Output currency
+
+Add `output_currency: ZAR` to the ZA overlay config:
+
+```yaml
+output_currency: ZAR
+```
+
+This key is not native to upstream PyPSA-Earth. It is read by the local hook `apply_za_local_carriers`
+(implemented in Module 07) which applies the EUR→ZAR conversion as a post-processing step on all cost
+outputs. The internal solver operates in EUR throughout.
+
+### Upstream PyPSA-Earth commit pin
+
+The plan is calibrated against upstream PyPSA-Earth commit:
+
+```
+<IMPLEMENTING AGENT: read HEAD of 6-codebases/repos/pypsa-earth and record the exact hash here>
+```
+
+If a rebase from upstream main is needed after this pin, the implementing agent must:
+1. Review the diff between the pinned commit and the new HEAD
+2. Check whether any change affects modules 07, 08, 09, or 10 (costs, fleet, grid, network build)
+3. Record the rebase decision in `doc/za_implementation_log.md` before proceeding
+4. Update this pin to the new hash
+
+Auto-following upstream main without explicit review is not allowed.
+
+**Recent upstream changes to be aware of at plan-write time:**
+
+- **PR #1622 (`Attach wind and solar generators using real positions from powerplants.csv`):**
+  Wind and solar generators are now attached at the real lat/lon from `powerplants.csv` rather than
+  cluster centroids. This makes lat/lon columns in `custom_powerplants.csv` load-bearing for ZA local
+  carriers, and may mean that `bus` column assignment happens automatically from coordinates.
+  Implementing agent must verify: does `add_electricity` still require an explicit `bus` column in
+  `custom_powerplants.csv` for ZA carriers, or does it auto-resolve from lat/lon?
+  Document the finding in `doc/za_implementation_log.md` before building Module 09.
+
+- **`electricity_grid_connection` PR (commit `f8eab87a`):**
+  Adds a per-generator grid-connection cost. The ZA overlay must explicitly decide whether to enable,
+  disable, or override this for ZA local carriers. See Module 07 for the decision.
+
+### Environment version pinning
+
+A locked environment file `envs/za_environment.yaml` must be committed at the start of Module 01.
+At minimum, pin: `python`, `pypsa`, `atlite`, `powerplantmatching`, `linopy`, `gurobi`, `numpy`, `pandas`,
+`geopandas`, `snakemake`. Record the exact versions used in `doc/za_implementation_log.md`.
 
 `other_re` is not a native PyPSA-Earth config key and must not be expected under
 `electricity.extra_accounting_carriers`. Module `06` owns the 8760 `Other RE`
@@ -151,3 +209,5 @@ logic, and unresolved warnings for any external data it consumes.
 - Provenance skeleton exists and includes at least the PyPSA-Earth/PyPSA-RSA
   repo commits.
 - No upstream default config has been changed for a South Africa-only assumption.
+- `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run` executes without
+  errors, confirming the ZA overlay is syntactically valid and all rule inputs resolve.

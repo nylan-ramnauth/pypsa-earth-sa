@@ -72,10 +72,11 @@ Before solving, inspect `networks/<run>/elec.nc` and verify:
 - fixed capacities match reconciliation totals.
 - no unintended extendable capacity exists.
 - demand, import, and export time series have the sign conventions from `06`.
-- `other_re` is attached as the `06` locked non-extendable fixed-dispatch
+- `other_re` is attached as the `06` locked non-extendable
   Generator with `p_nom = 50.58 MW` from the end-of-2023 installed-capacity
-  anchor in `02`, `p_min_pu = p_max_pu = Eskom Other RE 8760 series / p_nom`,
-  clipped with the `06` locked rule, not folded into demand.
+  anchor in `02`, `p_max_pu = Eskom Other RE 8760 series / p_nom` (clipped per
+  the `06` locked rule), and `p_min_pu = 0` (curtailment allowed; see Module 06
+  rationale). Not folded into demand.
 - carrier costs and local carrier rows match `07`.
 - wind rows use `onwind` profile.
 - PV rows use `solar` profile.
@@ -83,6 +84,49 @@ Before solving, inspect `networks/<run>/elec.nc` and verify:
 - PHS, hydro, imports, storage, and local carriers map as declared in `05`.
 - load time index matches 8760 validation hours.
 - network buses/clusters match the spatial choice from `09`.
+
+## Smoke Build Stages
+
+### Smoke Build Stages (required before full 8760 build)
+
+Do not run the full 8760-hour solve without passing staged smoke builds first.
+Each stage has its own acceptance gate.
+
+#### Stage 1 — 7-day smoke (required)
+
+Period: `2023-07-01` to `2023-07-07` (peak winter week).
+Solve: Gurobi, `Threads=2`, full carrier set.
+Gate: network solves without errors; load-shedding ≤ 5% of demand; no infeasibility.
+If Stage 1 fails: diagnose and fix before Stage 2. Do not proceed.
+
+#### Stage 2 — 1-month smoke (required)
+
+Period: July 2023 (full month).
+Solve: Gurobi, `Threads=2`, full carrier set.
+Gate: network solves; monthly generation by carrier within 30% of Eskom anchor; no infeasibility.
+If Stage 2 fails: diagnose and fix before Stage 3. Do not proceed.
+
+#### Stage 3 — Full 8760 (only after Stage 1 and 2 pass)
+
+Period: Full year 2023.
+Solve: Gurobi, `Threads=2` (serial). Or `Threads=1` if running in batch.
+Gate: Module 12 staged acceptance criteria.
+
+## Uncalibrated Baseline
+
+### Uncalibrated baseline configuration
+
+For the before/after comparison required by Module 12, the uncalibrated baseline uses:
+```yaml
+# za_2023_uncalibrated_baseline.yaml
+countries: [ZA]
+# All other settings: pure upstream config.default.yaml defaults
+# Do NOT include: custom_powerplants.csv, ZA cost overlay, ZA grid override, ZA demand overlay
+```
+
+This "stock PyPSA-Earth" run with only `countries: [ZA]` set is the methodological baseline.
+Its results serve as the denominator for all before/after comparison metrics in Module 12.
+Build and solve this baseline as part of Module 10 so that Module 12 has both runs available.
 
 ## Acceptance Gates
 

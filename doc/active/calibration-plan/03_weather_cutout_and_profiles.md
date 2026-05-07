@@ -55,6 +55,56 @@ this module to name the consuming script and fallback artifact. Do not add an
 unconsumed `za_baseline.csp_profile_mode` key to the overlay. Any fallback must
 preserve CSP as `csp` and must not collapse CSP into PV.
 
+### CSP carrier — root cause of prior absence
+
+Upstream `config.default.yaml` does NOT include `csp` in `renewable_carriers`. The default list is:
+```yaml
+renewable_carriers: [solar, onwind, offwind-ac, offwind-dc, hydro]
+```
+
+If `csp` is not in `renewable_carriers`, `snakemake` does not build `profile_csp.nc` and
+`add_electricity` does not attach a CSP carrier. This is the root cause of CSP not appearing in prior
+PyPSA-Earth runs for South Africa.
+
+The ZA overlay fixes this by adding `csp` to `renewable_carriers`:
+```yaml
+renewable_carriers: [solar, onwind, hydro, csp]
+```
+(offwind carriers excluded for SA — no offshore wind in scope.)
+
+CSP and solar are **separate carriers** in PyPSA-Earth:
+- `solar`: PV resource method
+- `csp`: SAM solar tower model (`method: csp`)
+They are never merged or silently combined. Module 05 enforces this.
+
+### CSP cutout resolution
+
+The `csp` block in config uses `cutout: auto`. Implementing agent must verify that `auto` resolves
+to the ZA cutout (`cutout-2023-era5` or equivalent) and not to a global or non-ZA cutout. If
+`auto` does not resolve correctly, override explicitly:
+```yaml
+renewable:
+  csp:
+    cutout: cutout-2023-era5
+```
+Document the resolved cutout name in `doc/za_implementation_log.md`.
+
+### CSP model selection
+
+Use `csp_model: advanced` (SAM solar tower with thermal storage capability). This preserves
+storage-hour metadata for future explicit CSP thermal-storage modelling in the reliability plan.
+Do not use `csp_model: simple`.
+
+### GEGIS weather year string verification
+
+Module 06 uses `build_demand_profiles.py` via the GEGIS route with the `2023_custom` weather year
+string. Implementing agent must verify that upstream `build_demand_profiles.py:get_load_paths_gegis`
+accepts this string — upstream may validate against a closed list.
+
+If the string is rejected, use the fallback path: a local Snakemake rule overriding
+`resources/<run>/demand_profiles.csv` directly from the Eskom hourly demand CSV. Document the
+resolution in `doc/za_implementation_log.md`.
+
 PyPSA-RSA `data/eskom_pu_profiles.csv` comparison is a deferred validation
 check that consumes the raw audit from `04` after module `04` completes. It is
 not required for this module's profile-generation gate.

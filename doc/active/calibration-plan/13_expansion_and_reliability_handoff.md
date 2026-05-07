@@ -102,6 +102,20 @@ build_year
 source
 ```
 
+## Reliability Slack Penalty Basis
+
+### Reliability slack penalty basis
+
+The reliability slack penalty used in the Reliability Plan's deterministic EENS constraint
+(per DEC-002) must reference the policy CoLS, not the solver safety-valve cost.
+
+Handoff parameter:
+- `eens_slack_penalty_zar_per_mwh: 116570`  (CSIR primary, 2024 ZAR)
+- `eens_slack_penalty_sensitivity_zar_per_mwh: 9530`  (Nova Economics lower bound, 2018/19 ZAR)
+
+These values must appear in `data/za_baseline_reliability_diff.csv` and be documented
+in `doc/za_implementation_log.md` at Module 13 completion.
+
 ## Future-Year Carry-Forward Exclusions
 
 The following must not enter 2030/2040/2050 without explicit scenario source and
@@ -115,6 +129,15 @@ review:
 Structural assumptions, source provenance, fleet retirement policy, validated
 spatial/grid mapping, and reviewed local carrier definitions may carry forward
 when the receiving reliability/myopic module accepts them.
+
+### EAF carryforward policy
+
+The 2023-calibration EAF values (carrier-level monthly EAF from Eskom data) are used for the
+historical baseline validation only. They are NOT automatically carried forward into 2030/2040/2050
+expansion scenarios.
+
+The Reliability Plan (Reliability module 07) owns the decision on what availability assumptions to
+use for expansion years. Do not hardcode 2023 EAF values into scenario configs.
 
 ## CSP Fallback Handoff Status
 

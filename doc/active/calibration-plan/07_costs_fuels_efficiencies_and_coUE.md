@@ -98,6 +98,80 @@ All costs are stored in EUR. Any ZAR source values must be converted using a
 documented 2023 exchange rate recorded in
 `data/za_audit/za_costs_fuels_efficiencies_audit.csv`.
 
+### Cost currency policy
+
+**Internal solver:** All costs passed to the solver remain in EUR. This is the upstream PyPSA-Earth
+contract. Changing solver-internal units would break `process_cost_data.py` and `solve_network.py`.
+Do not change internal units.
+
+**Output / reporting:** All cost outputs presented to the user are converted to ZAR.
+Mechanism: the `output_currency: ZAR` key in the ZA overlay config is read by the local hook
+`apply_za_local_carriers`. The hook applies a post-processing EUR→ZAR conversion to all cost
+outputs (capacity costs, marginal costs, load-shedding costs) before writing to validation CSVs
+and notebooks. This hook is implemented as part of Module 07.
+
+**Frozen exchange rate:** Use the 2023-12-31 closing EUR/ZAR rate from:
+```
+https://github.com/alexprengere/currencyconverter/blob/master/currency_converter/eurofxref.csv
+```
+Take the rate for the row dated 2023-12-29 (last ECB trading day of 2023) or 2023-12-31 if
+present. Record the exact date and rate used in:
+```
+data/za_audit/za_eur_zar_fxrate_2023.csv
+```
+with columns: `date, eur_zar_rate, source, note`.
+
+**Source values in ZAR:** For any cost source already in ZAR (e.g., from pypsa-rsa), convert
+to EUR using the source's own base year rate, not the 2023 rate. Record the base-year rate
+per row in `za_costs_fuels_efficiencies_audit.csv`.
+
+### Cost of Load Shedding (CoLS) reference values
+
+Two distinct uses of CoLS exist in this model. They must not be confused.
+
+#### 1. Solver safety-valve marginal cost (numerical sentinel)
+
+This is the cost assigned to load-shedding in the dispatch/expansion solver. Its purpose is to
+ensure the solver only sheds load when physically unavoidable. It is NOT the policy CoLS.
+
+Value: `solving.options.load_shedding: 100` (EUR/kWh = 100,000 EUR/MWh, upstream default).
+This value is approximately 200× Nova Economics CoLS and 17× CSIR CoLS — intentionally extreme.
+Do not change this unless infeasibility debugging requires it.
+
+#### 2. Policy CoLS (used in reporting and reliability handoff)
+
+This is the economically grounded value used to:
+- Calculate the monetary cost of modelled load-shedding in validation reports
+- Set the reliability slack penalty in Module 13's handoff to the Reliability Plan
+
+**Primary value: CSIR R116,570/MWh** (2024 ZAR)
+Source: Council for Scientific and Industrial Research, Utility-scale power generation statistics
+in South Africa 2024, cited by FTI Consulting (2025) and National Treasury.
+Canonical reference: `3-wiki/reference/web-clips/2026-05-07-fti-consulting-out-of-darkness-economic-costs.md`
+
+**Sensitivity lower bound: Nova Economics R9,530/MWh** (2018/19 ZAR, GDP-loss only)
+Source: Nova Economics, commissioned by Eskom, c. 2020.
+Canonical reference: `3-wiki/reference/web-clips/2026-05-07-nova-economics-cost-of-load-shedding-sa.md`
+
+**Deloitte 2009 Eskom: R8,950/MWh** (2009 ZAR) — historical reference only.
+
+All three values must appear in `za_costs_fuels_efficiencies_audit.csv` with their base year, ZAR
+value, converted EUR value, and source. Module 12 validation reports must present load-shedding
+costs in both the solver-safety-valve frame (EUR) and the policy-CoLS frame (ZAR).
+
+#### 3. `electricity_grid_connection` cost (upstream PR `f8eab87a`)
+
+Upstream added a per-generator grid-connection cost in commit `f8eab87a`. The ZA overlay must
+explicitly decide how to handle this for ZA local carriers:
+
+Decision: **disable `electricity_grid_connection` for ZA local carriers** by setting
+`costs.electricity_grid_connection: 0` in the ZA overlay, or by removing the component from
+`apply_za_local_carriers`. Rationale: ZA local carriers (`custom_powerplants.csv` rows) already
+have reconciled capex values that include grid-connection components per Module 08.
+Applying the upstream formula again would double-count.
+
+Document this decision in `doc/za_implementation_log.md`.
+
 ## COUE And Load-Shedding Cost
 
 Load shedding must have a high marginal cost for dispatch validation, but the

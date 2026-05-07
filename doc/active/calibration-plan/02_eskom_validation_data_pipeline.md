@@ -5,6 +5,29 @@
 Turn raw Eskom 2023 hourly data into the validation authority for all later
 network, dispatch, and reporting checks.
 
+## Glossary Reference
+
+When interpreting Eskom CSV column headers, consult the official Eskom Data Portal Glossary:
+```
+1-sources/web-clips/2026-05-07 WEB Glossary.md
+```
+Canonical reference page: `3-wiki/reference/web-clips/2026-05-07-eskom-dataportal-glossary.md`
+
+Key definitions for this module:
+- **Residual Demand:** Hourly average MW that must be supplied by all dispatchable resources
+  (Eskom generation + international imports + dispatchable IPPs + IOS). Note: per the glossary,
+  `Residual Demand` **already includes IOS**.
+- **RSA Contracted Demand:** Residual Demand + self-dispatched (renewables). This is the total
+  contracted MW Eskom supplies.
+- **MLR (Manual Load Reduction):** Deliberate demand reduction by load shedding schedule.
+- **ILS (Interruptible Load Shed):** Contractually interruptible consumer load.
+- **IOS (Interruption of Supply):** All contracted + mandatory demand reductions, including
+  transmission faults. Per the glossary, IOS is a component of Residual Demand.
+- **EAF:** `1 - (PCLF + UCLF + OCLF)`. See Module 11 for formula derivation.
+- **PCLF:** Planned Capability Loss Factor (planned maintenance outage ratio).
+- **UCLF:** Unplanned Capability Loss Factor (unplanned outage ratio).
+- **OCLF:** Other Capability Loss Factor (external-constraint outage ratio).
+
 ## Input
 
 ```text
@@ -60,6 +83,20 @@ RSA Contracted Demand ~= Residual Demand + Total RE
   using the annual tolerance locked below
 ```
 
+### Accounting identity — verification required
+
+The identity as written must be verified against the actual CSV column structure before locking:
+
+**Risk:** The Eskom glossary defines `Residual Demand` as already including IOS. If the raw CSV
+has a single `Residual Demand` column, then adding `IOS` separately would double-count.
+
+**Implementing agent must:**
+1. Print the raw CSV column headers and inspect whether `MLR`, `ILS`, and `IOS` are independent
+   columns or whether some are sub-totals already inside `Residual Demand`.
+2. Reconstruct the identity from first principles using the actual column list.
+3. Document the resolved identity in `doc/za_implementation_log.md` with a column-header printout.
+4. Do not lock the identity formula until this inspection is done.
+
 ## Target Anchors
 
 The annual target file must include at least:
@@ -95,6 +132,22 @@ and a `source` column for every locked anchor value.
 
 `Eskom Gas Generation = 0` in the 2023 raw file is expected and must not be
 classified as a parser error.
+
+### Source requirements for anchors
+
+Every anchor value must cite a primary source (Eskom Annual Report 2023, CSIR Utility Statistics
+Report 2024, Eskom System Adequacy Outlook 2023, National Treasury Budget Review 2024, etc.).
+Do not leave any anchor un-cited. The implementing agent must retrieve the primary source document
+for each anchor and record it in the source column before locking the table.
+
+Note: `MLR = 16.562 TWh` is consistent with FTI Consulting (2025) citing 16.6 million MWh shed in
+2023. Cross-check against the Eskom primary source nonetheless.
+
+### Capacity reference year policy
+
+Two PV capacity values appear in the anchor data (capacity at start-of-year vs end-of-year).
+For Module 12 validation, **use end-of-year 2023 installed capacity** as the reference for
+carrier-level capacity tolerance checks. Document this choice in `doc/za_implementation_log.md`.
 
 Installed capacity anchors:
 

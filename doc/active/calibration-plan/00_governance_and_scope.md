@@ -52,6 +52,56 @@ may read earlier outputs but must not silently change earlier contracts.
   PyPSA-RSA profile comparison after `04`; Gate B does not block module `10`
   or `11` and blocks only final acceptance in `12`.
 
+## Implementation Log Contract
+
+Every module in this plan has a hard acceptance gate: before the implementing agent marks any module complete,
+it must append a structured entry to `doc/za_implementation_log.md` at the pypsa-earth repo root.
+
+### Log file: `doc/za_implementation_log.md`
+
+Create this file if it does not exist. Append one entry per module completion using the following schema:
+
+```
+## [MODULE_ID] [MODULE_NAME] — [YYYY-MM-DD HH:MM]
+
+- **Status:** complete | partial | blocked
+- **Decisions taken:** (bullet list of implementation choices not already in the plan)
+- **Deviations from plan:** (what was changed relative to the plan and why)
+- **Source inputs used:** (file paths, commit hashes, URLs relied upon)
+- **Output artifacts produced:** (file paths written or modified)
+- **Open follow-ups:** (anything that must be addressed in a later module)
+```
+
+This log is mandatory. No module is considered complete without its log entry.
+
+## Validation Notebook Policy
+
+Every module that produces a validation artifact must also produce a Jupyter notebook.
+
+### Notebook locations
+
+| Module | Notebook path |
+|---|---|
+| 02 | `notebooks/za_validation/02_eskom_data/parser_report.ipynb` |
+| 03 | `notebooks/za_validation/03_profiles/profile_validation.ipynb` |
+| 06 | `notebooks/za_validation/06_demand/demand_io_otherre.ipynb` |
+| 08 | `notebooks/za_validation/08_fleet/fleet_reconciliation.ipynb` |
+| 10 | `notebooks/za_validation/10_network/fixed_network_audit.ipynb` |
+| 11 | `notebooks/za_validation/11_dispatch/dispatch_calibration.ipynb` |
+| 12 | `notebooks/za_validation/12_acceptance/acceptance_report.ipynb` |
+| 12 | `notebooks/za_validation/12_acceptance/before_after_comparison.ipynb` |
+
+### Notebook requirements
+
+Each notebook must:
+1. Read from canonical CSV/netCDF outputs — no hardcoded data
+2. Use PyPSA and PyPSA-Earth canonical plotting idioms (use context7 to fetch `pypsa` and `pypsa-earth` documentation for plotting functions such as `plot_dispatch`, `plot_capacities`, `n.plot()`)
+3. Produce complete graphs and charts with titles, axis labels, units, and legends
+4. Run end-to-end without manual intervention from clean inputs
+5. Export a static HTML version to `doc/za_validation/figures/<module>/`
+
+Notebooks are presentation-ready artifacts. The user must be able to show them directly to their supervisor.
+
 ## Baseline Build Chain
 
 ```text

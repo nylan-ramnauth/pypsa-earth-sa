@@ -129,6 +129,52 @@ curtailment hours and energy
 capacity factor by carrier
 ```
 
+## Before/After Comparison
+
+### Before/After Comparison (mandatory)
+
+A comparison between the uncalibrated baseline and the fully-calibrated model is mandatory.
+Without it the calibration improvement cannot be quantified or presented.
+
+**Required artifact:** `data/za_validation/za_2023_uncalibrated_vs_calibrated.csv`
+
+Columns: `metric, uncalibrated_value, calibrated_value, unit, delta_pct`.
+
+Required metrics:
+- Annual demand served (TWh)
+- Generation by carrier (TWh each)
+- Installed capacity by carrier (MW each)
+- Annual load-shedding (TWh)
+- Hourly RMSE of total dispatch (MW)
+- Monthly correlation of dispatch profile (R²)
+- Peak demand error (MW, worst hour)
+- Annual EAF by carrier (%)
+
+**Required notebook:** `notebooks/za_validation/12_acceptance/before_after_comparison.ipynb`
+
+This notebook must:
+- Load both the uncalibrated baseline network (from Module 10) and the calibrated network
+- Produce side-by-side bar charts for generation and capacity by carrier
+- Produce a time-series overlay for at least one representative month (July 2023)
+- Produce a scatter plot of modelled vs Eskom dispatch (hourly)
+- Export static HTML to `doc/za_validation/figures/12/`
+
+## Cost Reporting
+
+### Cost reporting requirements
+
+All cost-related outputs must present two frames:
+
+1. **Solver frame (EUR):** internal costs as seen by the solver (capacity costs, marginal costs,
+   load-shedding penalty at 100,000 EUR/MWh solver safety-valve rate)
+
+2. **Policy frame (ZAR):** costs converted at the frozen 2023-12-31 EUR/ZAR rate, with
+   load-shedding priced at CSIR policy CoLS (R116,570/MWh, 2024 ZAR base).
+   Sensitivity column using Nova Economics CoLS (R9,530/MWh, 2018/19 ZAR base).
+
+The policy frame is the primary user-facing output. The solver frame is reported for transparency
+and reproducibility.
+
 ## Acceptance Standard
 
 Use staged acceptance:
@@ -216,3 +262,24 @@ Stage 4b -> Eskom-aligned 34-region reliability/myopic handoff readiness
   availability, cost, operational-constraint, or boundary issues.
 - The model is either accepted for the next module or blocked with explicit
   remediation tasks.
+
+### Plant-level identity gate (required)
+
+In addition to carrier-level tolerance checks, the following plant-level checks must pass:
+
+- [ ] Every station in `data/za_audit/za_named_plant_inventory.csv` with `status_2023 = operating`
+      is present as at least one row in the solved network's `n.generators` or `n.storage_units`
+- [ ] Each station's modelled `p_nom` is within ±50 MW of `p_nom_mw_expected` in the inventory
+- [ ] Each station's bus assignment places it within ±10 km of `lat_expected, lon_expected`
+- [ ] Retired stations (`status_2023 = retired`) do not appear as active generators
+
+### Stage 4b — hard requirement
+
+The 34-region Eskom supply-region resolution (Stage 4b) is a hard requirement for thesis
+acceptance. There is no fallback to Stage 4a (10-region). If the 34-region busmap is not achieved,
+the model is not accepted. Escalate blockers rather than accepting a lower-resolution result.
+
+### Per-module implementation log gate
+
+- [ ] Entry appended to `doc/za_implementation_log.md` covering all decisions, deviations,
+      inputs, and outputs for this module

@@ -17,6 +17,17 @@ On module entry, `git rev-parse HEAD` in the PyPSA-RSA repo must match this
 commit. If it does not, rerun the source audit before locking any downstream
 fleet, grid, cost, or availability assumptions.
 
+### No-silent-rebase policy
+
+The pypsa-rsa commit pin freezes a known reference state. If pypsa-rsa main has advanced beyond
+the pinned commit at implementation time, the implementing agent must:
+1. Verify the pinned commit still exists (not squashed/rebased away)
+2. Review the diff between the pin and current HEAD
+3. Determine whether any change affects fleet data, cost data, availability, or grid evidence
+4. Accept or reject the upgrade explicitly in `doc/za_implementation_log.md`
+
+Auto-following pypsa-rsa main without explicit review is not allowed.
+
 PyPSA-RSA warns that important data may be external, original-source, or Google
 Drive inputs. The registry must therefore include tracked files and required
 external placeholders.
@@ -83,6 +94,28 @@ data/bundle/renewable_profiles_updated.nc
 
 `data/eskom_data.csv` and `data/eskom_pu_profiles.csv` are validation/profile
 references, not first-choice South Africa 2023 model inputs.
+
+### Candidate missing files — verify against pinned commit
+
+The following files may exist in pypsa-rsa at the pinned commit and should be added to the
+minimum registry coverage if present:
+
+- `scripts/solve_network.py` — pypsa-rsa solve script with COUE/load-shedding handling
+- `scripts/add_extra_components.py` — CSP and storage component handling
+- `scripts/build_renewable_profiles.py` — RSA-specific renewable siting logic
+- `scripts/prepare_and_solve_network.py` (if present) — workflow constraint logic
+- `pre_processing/resource_processing/reipppp_phs_data.csv` (if present) — PHS reconciliation
+- IRP coal retirement schedule files (any `.xlsx` under `scenarios/` matching IRP 2023)
+- `envs/environment.yaml` — version pinning reference
+
+### Discovery sweep (required)
+
+Before sealing the registry, run:
+```bash
+find . -name '*.py' -o -name '*.xlsx' -o -name '*.csv' -o -name '*.gpkg' | grep -v '.git'
+```
+For every file ≥10 KB, reconcile against the registry as either `audit_only`, `do_not_port`, or
+add it to the minimum coverage list. Record the sweep results in `doc/za_implementation_log.md`.
 
 ## Powerplantmatching Audit
 
