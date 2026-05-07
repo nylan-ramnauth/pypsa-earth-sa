@@ -124,7 +124,7 @@ outputs. The internal solver operates in EUR throughout.
 The plan is calibrated against upstream PyPSA-Earth commit:
 
 ```
-<IMPLEMENTING AGENT: read HEAD of 6-codebases/repos/pypsa-earth and record the exact hash here>
+e18bea540e0742ea978e00338df143fa01e78553
 ```
 
 If a rebase from upstream main is needed after this pin, the implementing agent must:

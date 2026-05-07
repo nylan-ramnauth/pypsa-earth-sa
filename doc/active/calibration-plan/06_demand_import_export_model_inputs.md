@@ -148,8 +148,8 @@ dispatched first as a low-cost source).
 - Single-node and multi-node attachment policies are explicit.
 - Bus attachment files use the schema above and pass the sum-to-one checks for
   every layer and attachment type.
-- `Other RE` attachment is fixed as a non-extendable Generator with fixed
-  dispatch, not a negative Load or Link.
+- `Other RE` attachment is a non-extendable Generator with curtailable dispatch
+  (`p_min_pu = 0`, `p_max_pu = profile / p_nom`), not a negative Load or Link.
 - Load-allocation weights exist and pass sum/coverage checks.
 - PyPSA-RSA GVA_2016/POP_2016 load-weight comparison exists and is marked
   diagnostic-only.

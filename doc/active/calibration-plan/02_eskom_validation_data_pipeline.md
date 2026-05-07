@@ -135,10 +135,43 @@ classified as a parser error.
 
 ### Source requirements for anchors
 
-Every anchor value must cite a primary source (Eskom Annual Report 2023, CSIR Utility Statistics
-Report 2024, Eskom System Adequacy Outlook 2023, National Treasury Budget Review 2024, etc.).
-Do not leave any anchor un-cited. The implementing agent must retrieve the primary source document
-for each anchor and record it in the source column before locking the table.
+Every anchor value must cite a primary source before locking. The table below gives the
+preliminary source mapping based on known references. The implementing agent must verify each
+row against the primary source document and update the `source` column in
+`data/za_validation/eskom_2023_targets_by_carrier.csv` accordingly.
+
+#### Preliminary anchor source table
+
+| Anchor | Value | Preliminary Source | Confidence |
+|---|---|---|---|
+| RSA Contracted Demand | 225.875 TWh | Eskom 2023 raw data; cross-check against Eskom System Adequacy Outlook 2023 | Medium — verify |
+| Residual Demand | 207.190 TWh | Eskom 2023 raw data (`eskom_data_2023_full.csv`) | High |
+| Dispatchable Generation | 190.434 TWh | Eskom 2023 raw data | High |
+| Thermal Generation | 165.627 TWh | Eskom 2023 raw data | High |
+| Nuclear Generation | 8.127 TWh | Eskom 2023 raw data; CSIR Utility Statistics Report 2024 p.73 | High |
+| Eskom Gas Generation | raw repaired | Eskom 2023 raw data (expected zero for 2023) | High |
+| Eskom OCGT Generation | 3.566 TWh | Eskom 2023 raw data | High |
+| Dispatchable IPP OCGT | 1.677 TWh | Eskom 2023 raw data | High |
+| Hydro Water Generation | 1.992 TWh | Eskom 2023 raw data | High |
+| Pumped Water Generation | 4.294 TWh | Eskom 2023 raw data | High |
+| Pumped Water SCO Pumping | -5.658 TWh | Eskom 2023 raw data (negative = energy consumed for pumping) | High |
+| Wind | 11.613 TWh | CSIR Utility Statistics Report 2024 p.73; Eskom 2023 raw data | High |
+| PV | 5.015 TWh | CSIR Utility Statistics Report 2024 p.73; Eskom 2023 raw data | High |
+| CSP | 1.375 TWh | CSIR Utility Statistics Report 2024 p.73; Eskom 2023 raw data | High |
+| Other RE | 0.238 TWh | Eskom 2023 raw data | High |
+| Total RE | 18.241 TWh | Computed from Wind + PV + CSP + Other RE | High |
+| Manual Load Reduction (MLR) | 16.562 TWh | Eskom 2023 raw data; consistent with FTI Consulting (2025) citing 16.6M MWh shed | High |
+| ILS Usage | raw repaired | Eskom 2023 raw data | High |
+| IOS Excl ILS and MLR | raw repaired | Eskom 2023 raw data | High |
+| MLR + ILS + IOS | raw repaired | Eskom 2023 raw data (computed total) | High |
+| International Imports | raw repaired | Eskom 2023 raw data | High |
+| International Exports | raw repaired | Eskom 2023 raw data | High |
+| Wind installed capacity | 3442.57 MW | CSIR Utility Statistics Report 2024 p.73 | High |
+| PV installed capacity (start) | 2212.09 MW | CSIR Utility Statistics Report 2024; National Treasury Budget Review 2024 | High |
+| PV installed capacity (end) | 2287.09 MW | CSIR Utility Statistics Report 2024; National Treasury Budget Review 2024 | High |
+| CSP installed capacity | 500.00 MW | CSIR Utility Statistics Report 2024 p.73 | High |
+| Other RE installed capacity | 50.58 MW | Eskom 2023 raw data | Medium — verify |
+| Installed Eskom capacity | 46686 MW | Eskom Annual Report 2023; cross-check CSIR 2024 | Medium — verify |
 
 Note: `MLR = 16.562 TWh` is consistent with FTI Consulting (2025) citing 16.6 million MWh shed in
 2023. Cross-check against the Eskom primary source nonetheless.
