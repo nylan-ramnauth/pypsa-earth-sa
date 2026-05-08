@@ -1,0 +1,34 @@
+carrier,check,status,value,unit,notes
+cutout,sha256,pass,0c6b22fa6b8a0a469cc24460df2014fdb9c041035985dfb3b1aa7d6608e19076,sha256,matches module 01 recorded hash
+cutout,time_coverage,pass,8760,hours,first=2023-01-01T00:00:00.000000; last=2023-12-31T23:00:00.000000
+cutout,module,pass,era5,,atlite cutout module attribute
+cutout,resolution,pass,dx=0.3;dy=0.3,degrees,expected ZA module 03 resolution is 0.3 x 0.3
+cutout,bounds,pass,"Frozen({'x': 81, 'y': 58, 'time': 8760})",,"x=[12.900, 36.900], y=[-38.700, -21.600]"
+solar,file,pass,ae900f83a9358fa5ee10f74612da7c2806d144637655718671651dda9090535e,sha256,resources/za_2023_fixed_validation/renewable_profiles/profile_solar.nc
+solar,time_coverage,pass,8760,hours,first=2023-01-01T00:00:00.000000; last=2023-12-31T23:00:00.000000; parsed time coordinate
+solar,bus_count,pass,1291,bus,non-empty profile index
+solar,p_nom_max,pass,4707684.669302812,MW,sum of nonnegative p_nom_max
+solar,finite_values,pass,,,all finite
+solar,value_bounds,pass,min=0.0;max=0.7697281998137703,p.u.,hydro is inflow; other carriers are availability p.u.
+solar,annual_availability_vs_eskom,pass,1431.6569432978588,ratio,availability_twh=7179.537453358979; observed_twh=5.014844853; availability potential diagnostic only; no scaling applied
+onwind,file,pass,2a1ae2591ad757e71eb08e8315644787fb95814c57add311e0c1b3c0a0b9ed91,sha256,resources/za_2023_fixed_validation/renewable_profiles/profile_onwind.nc
+onwind,time_coverage,pass,8760,hours,first=2023-01-01T00:00:00.000000; last=2023-12-31T23:00:00.000000; parsed time coordinate
+onwind,bus_count,pass,1291,bus,non-empty profile index
+onwind,p_nom_max,pass,3094323.9825447546,MW,sum of nonnegative p_nom_max
+onwind,finite_values,pass,,,all finite
+onwind,value_bounds,pass,min=0.0;max=1.0000000000000004,p.u.,hydro is inflow; other carriers are availability p.u.
+onwind,annual_availability_vs_eskom,pass,468.13557414104207,ratio,availability_twh=5436.62878780247; observed_twh=11.613363923; availability potential diagnostic only; no scaling applied
+hydro,file,pass,25cf8e94bddf03c67302ebe049ed45c2b540814f7c1c7025f849e2847c6e8057,sha256,resources/za_2023_fixed_validation/renewable_profiles/profile_hydro.nc
+hydro,time_coverage,warn,1,hours,first=None; last=None; time dimension has no coordinate
+hydro,plant_count,warn,0,plant,upstream hydro profile is empty because build_powerplants found no ZA plants; fleet reconciliation is owned by module 08
+hydro,finite_values,warn,,,upstream hydro profile is empty because build_powerplants found no ZA plants; fleet reconciliation is owned by module 08
+hydro,value_bounds,pass,min=0.0;max=0.0,MW,hydro is inflow; other carriers are availability p.u.
+hydro,annual_availability_vs_eskom,warn,0.0,ratio,availability_twh=0.0; observed_twh=1.991804788; availability potential is below observed Eskom generation; diagnostic only
+csp,file,pass,2051d6c6720542eb004374cdfa09a18b7187f1dabf23d9f80d43aeb61d0bc310,sha256,resources/za_2023_fixed_validation/renewable_profiles/profile_csp.nc
+csp,time_coverage,pass,8760,hours,first=2023-01-01T00:00:00.000000; last=2023-12-31T23:00:00.000000; parsed time coordinate
+csp,bus_count,pass,1291,bus,non-empty profile index
+csp,p_nom_max,pass,2422458.215092333,MW,sum of nonnegative p_nom_max
+csp,finite_values,pass,,,all finite
+csp,value_bounds,pass,min=0.0;max=0.6713971620513928,p.u.,hydro is inflow; other carriers are availability p.u.
+csp,annual_availability_vs_eskom,pass,2510.1021260644707,ratio,availability_twh=3452.26570097021; observed_twh=1.375348702; availability potential diagnostic only; no scaling applied
+demand_preflight,gegis_2023_custom,pass,data/ssp2-2.6/2030/era5_2023_custom/Africa.csv,,accepted 2023_custom string

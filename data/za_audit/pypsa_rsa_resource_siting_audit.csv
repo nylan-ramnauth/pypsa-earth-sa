@@ -1,0 +1,11 @@
+rel_path,kind,description,present,feature_count,file_count,size_bytes,hash
+data/bundle/Power_corridors,directory,Power corridors,True,-1,7,1051449,
+data/bundle/REDZ_DEA_Unpublished_Draft_2015,directory,REDZ DEA unpublished draft,True,-1,8,922257,
+data/bundle/Phase2_REDZs,directory,Phase 2 REDZs,True,-1,8,153615,
+data/bundle/SAPAD_OR_2023_Q3.shp,shp,Protected areas (SAPAD),True,1655,-1,7764848,c42aa5bad52fa93070eea51ea35b900e821af9ec24b4e8c10de2f28e9db1a429
+data/bundle/SACAD_OR_2023_Q3.shp,shp,Conservation areas (SACAD),True,49,-1,1674696,9bdf1af3f1fb68a6a44277111256db30b02d391f750c109b6dc87d74a4d657f6
+data/bundle/SALandCover_OriginalUTM35North_2013_GTI_72Classes,directory,Land cover raster set,True,-1,8,5310893522,
+data/bundle/ZAF_wind-speed_100m.tif,raster,Wind speed @100m,True,-1,-1,81105685,5932023031c50465db31727742526b5b200c13b84fbf7dc9c7bbf01a291b859e
+data/bundle/ZAF15adjv4.tif,raster,Adjusted DEM,True,-1,-1,0,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+data/bundle/Shapefiles/RE_IPP_1_to_4b.shp,shp,REIPPPP rounds 1-4b siting,True,98,-1,2844,92b643d6ba8f79b9dc5585451f76621e5c5282cc6c8b8c368ead2a7bb8c31d8c
+pre_processing/resource_processing,directory,PyPSA-RSA resource processing pre-pipeline,True,-1,17,6461087,

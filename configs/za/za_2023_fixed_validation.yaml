@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: PyPSA-Earth and PyPSA-Eur Authors
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# South Africa 2023 fixed-capacity validation overlay.
+# Invoke explicitly with:
+# snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run
+
+countries: ["ZA"]
+output_currency: ZAR
+
+# Module 04 — Source Data Audits: PyPSA-RSA reference repo.
+pypsa_rsa_root: "/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa"
+pypsa_rsa_pinned_commit: "89872c1ea703af3d8a3f198706d1ab7958f50a5f"
+
+enable:
+  retrieve_cutout: false
+  build_cutout: false
+
+run:
+  name: "za_2023_fixed_validation"
+  shared_cutouts: true
+
+snapshots:
+  start: "2023-01-01"
+  end: "2024-01-01"
+  inclusive: "left"
+
+atlite:
+  default: cutout-2023-era5
+  cutouts:
+    cutout-2023-era5:
+      module: era5
+      dx: 0.3
+      dy: 0.3
+
+load_options:
+  ssp: "ssp2-2.6"
+  weather_year: 2013
+  prediction_year: 2030
+  scale: 1
+
+electricity:
+  custom_powerplants: replace
+  estimate_renewable_capacities:
+    stats: false
+  renewable_carriers: [solar, onwind, hydro, csp]
+  extendable_carriers:
+    Generator: []
+    StorageUnit: []
+    Store: []
+    Link: []
+
+solving:
+  solver:
+    name: gurobi
+    options: gurobi-default
+  solver_options:
+    gurobi-default:
+      threads: 1
+      method: 2
+      crossover: 0
+      BarConvTol: 1.e-5
+      OptimalityTol: 1.e-6
+      FeasibilityTol: 1.e-6
+  options:
+    load_shedding: true
+    noisy_costs: false

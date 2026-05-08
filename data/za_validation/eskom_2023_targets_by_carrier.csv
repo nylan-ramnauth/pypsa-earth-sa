@@ -1,0 +1,31 @@
+target,value,unit,source,raw_column,method,tolerance,status,notes
+RSA Contracted Demand,225.874862263,TWh,Eskom 2023 raw data; external primary cross-check pending,RSA Contracted Demand,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Residual Demand,207.189536398,TWh,Eskom 2023 raw data,Residual Demand,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Dispatchable Generation,190.434229593,TWh,Eskom 2023 raw data,Dispatchable Generation,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Thermal Generation,165.626914379,TWh,Eskom 2023 raw data,Thermal Generation,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Nuclear Generation,8.126615558,TWh,Eskom 2023 raw data; CSIR Utility Statistics Report 2024 cross-check pending,Nuclear Generation,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Eskom Gas Generation,0.00711849,TWh,Eskom 2023 raw data,Eskom Gas Generation,sum(hourly MW average) / 1e6,1e-06,warn,raw 2023 hourly MW average summed and converted to TWh; actual raw 2023 total is nonzero despite preliminary plan note that zero was expected
+Eskom OCGT Generation,3.566287258,TWh,Eskom 2023 raw data,Eskom OCGT Generation,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Dispatchable IPP OCGT,1.67684729,TWh,Eskom 2023 raw data,Dispatchable IPP OCGT,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Hydro Water Generation,1.991804788,TWh,Eskom 2023 raw data,Hydro Water Generation,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Pumped Water Generation,4.294480734,TWh,Eskom 2023 raw data,Pumped Water Generation,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Pumped Water SCO Pumping,-5.65790625,TWh,Eskom 2023 raw data; negative value is energy consumed for pumping,Pumped Water SCO Pumping,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Wind,11.613363923,TWh,Eskom 2023 raw data; CSIR Utility Statistics Report 2024 cross-check pending,Wind,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+PV,5.014844853,TWh,Eskom 2023 raw data; CSIR Utility Statistics Report 2024 cross-check pending,PV,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+CSP,1.375348702,TWh,Eskom 2023 raw data; CSIR Utility Statistics Report 2024 cross-check pending,CSP,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Other RE,0.237644992,TWh,Eskom 2023 raw data,Other RE,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Total RE,18.24120247,TWh,Computed from Eskom raw data; equals Wind + PV + CSP + Other RE,Total RE,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+Manual Load Reduction,16.561839644,TWh,Eskom 2023 raw data,Manual Load_Reduction(MLR),sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+ILS Usage,0.073165967,TWh,Eskom 2023 raw data,ILS Usage,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+IOS Excl ILS and MLR,0.120301336,TWh,Eskom 2023 raw data,IOS Excl ILS and MLR,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+International Imports,10.841729721,TWh,Eskom 2023 raw data,International Imports,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+International Exports,11.250298267,TWh,Eskom 2023 raw data,International Exports,sum(hourly MW average) / 1e6,1e-06,pass,raw 2023 hourly MW average summed and converted to TWh
+MLR + ILS + IOS,16.755306947,TWh,Computed from Eskom 2023 raw data,Manual Load_Reduction(MLR) + ILS Usage + IOS Excl ILS and MLR,sum(component hourly MW averages) / 1e6,1e-06,pass,observed reduced/unserved demand proxy for validation reporting
+Wind installed capacity,3442.57,MW,Eskom 2023 raw data; CSIR Utility Statistics Report 2024 cross-check pending,Wind Installed Capacity,last 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+PV installed capacity start,2212.09,MW,Eskom 2023 raw data; start-of-year value,PV Installed Capacity,first 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+PV installed capacity end,2287.09,MW,Eskom 2023 raw data; end-of-year value used for Module 12 capacity validation,PV Installed Capacity,last 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+CSP installed capacity,500.0,MW,Eskom 2023 raw data; CSIR Utility Statistics Report 2024 cross-check pending,CSP Installed Capacity,last 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+Other RE installed capacity,50.58,MW,Eskom 2023 raw data; external primary cross-check pending,Other RE Installed Capacity,last 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+Total RE installed capacity start,6205.24,MW,Eskom 2023 raw data; start-of-year value,Total RE Installed Capacity,first 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+Total RE installed capacity end,6280.24,MW,Eskom 2023 raw data; end-of-year value used for Module 12 capacity validation,Total RE Installed Capacity,last 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules
+Installed Eskom Capacity,46686.0,MW,Eskom 2023 raw data; Eskom Annual Report 2023 cross-check pending,Installed Eskom Capacity,last 2023 hour,1e-6 MW,pass,capacity anchor for later validation modules

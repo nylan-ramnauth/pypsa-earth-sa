@@ -1,0 +1,12 @@
+source_path,layer,feature_count,has_gva_2016,has_pop_2016,gva_column,pop_column,hash,gva_sum,gva_min,gva_max,pop_sum,pop_min,pop_max,suffix,size_bytes,layers
+rsa_supply_regions.gpkg,1,1,True,True,GVA2016,POP2016,eacd403aaf70ea1eba71f3545689e4b49a25a45ca9e561ba44654c452f68bf82,2509283.0,2509283.0,2509283.0,55792112.623405114,55792112.623405114,55792112.623405114,,,
+rsa_supply_regions.gpkg,27,27,True,True,GVA2016,POP2016,eacd403aaf70ea1eba71f3545689e4b49a25a45ca9e561ba44654c452f68bf82,2509282.505413342,4502.765857357221,431326.266768151,55792112.623405114,125993.76617511168,7834310.21091,,,
+rsa_supply_regions.gpkg,10,10,False,False,,,eacd403aaf70ea1eba71f3545689e4b49a25a45ca9e561ba44654c452f68bf82,,,,,,,,,
+rsa_supply_regions.gpkg,34,34,False,False,,,eacd403aaf70ea1eba71f3545689e4b49a25a45ca9e561ba44654c452f68bf82,,,,,,,,,
+rsa_supply_regions.gpkg,159,159,False,False,,,eacd403aaf70ea1eba71f3545689e4b49a25a45ca9e561ba44654c452f68bf82,,,,,,,,,
+rsa_supply_regions2.gpkg,1,1,True,True,GVA2016,POP2016,6f1bb146bbad44ab9c1f475c92c302a6be48c5c71ad96a5347540a5dc65e4ffc,2509283.0,2509283.0,2509283.0,55792112.623405114,55792112.623405114,55792112.623405114,,,
+rsa_supply_regions2.gpkg,27,27,True,True,GVA2016,POP2016,6f1bb146bbad44ab9c1f475c92c302a6be48c5c71ad96a5347540a5dc65e4ffc,2509282.505413342,4502.765857357221,431326.266768151,55792112.623405114,125993.76617511168,7834310.21091,,,
+rsa_supply_regions2.gpkg,10,10,False,False,,,6f1bb146bbad44ab9c1f475c92c302a6be48c5c71ad96a5347540a5dc65e4ffc,,,,,,,,,
+rsa_supply_regions2.gpkg,34,34,False,False,,,6f1bb146bbad44ab9c1f475c92c302a6be48c5c71ad96a5347540a5dc65e4ffc,,,,,,,,,
+rsa_supply_regions2.gpkg,159,159,False,False,,,6f1bb146bbad44ab9c1f475c92c302a6be48c5c71ad96a5347540a5dc65e4ffc,,,,,,,,,
+Mesozones.shp,,-1,False,False,,,61d8265dd717f4e2599f8f2ae258776d869fed11ea7dd927b40baea28de2f533,,,,,,,.shp,30889536.0,

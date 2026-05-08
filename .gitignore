@@ -63,6 +63,21 @@ playground/
 output/
 lumina_mockup.html
 !data/nuclear_p_max_pu.csv
+!data/za_audit/
+!data/za_audit/*.csv
+!data/za_audit/raw/
+!data/za_audit/raw/eskom_data_2023_full.csv
+!data/za_validation/
+!data/za_validation/*.csv
+!data/za_validation/.gitkeep
+!notebooks/
+notebooks/*
+!notebooks/za_validation/
+notebooks/za_validation/*
+!notebooks/za_validation/02_eskom_data/
+!notebooks/za_validation/02_eskom_data/parser_report.ipynb
+!notebooks/za_validation/03_profiles/
+!notebooks/za_validation/03_profiles/profile_validation.ipynb
 
 # Specific configuration files
 configs/scenarios/config.*.yaml

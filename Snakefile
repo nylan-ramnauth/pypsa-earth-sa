@@ -86,6 +86,74 @@ if config["custom_rules"] is not []:
         include: rule
 
 
+rule build_za_eskom_validation_data:
+    input:
+        raw="data/za_audit/raw/eskom_data_2023_full.csv",
+    output:
+        hourly="data/za_validation/eskom_2023_hourly_clean.csv",
+        targets="data/za_validation/eskom_2023_targets_by_carrier.csv",
+        report="data/za_audit/eskom_2023_parser_report.csv",
+    log:
+        "logs/" + RDIR + "build_za_eskom_validation_data.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_eskom_validation_data"
+    script:
+        "scripts/build_za_eskom_validation_data.py"
+
+
+rule validate_za_renewable_profiles:
+    input:
+        cutout="cutouts/" + CDIR + config["atlite"]["default"] + ".nc",
+        solar="resources/" + RDIR + "renewable_profiles/profile_solar.nc",
+        onwind="resources/" + RDIR + "renewable_profiles/profile_onwind.nc",
+        hydro="resources/" + RDIR + "renewable_profiles/profile_hydro.nc",
+        csp="resources/" + RDIR + "renewable_profiles/profile_csp.nc",
+        eskom_targets="data/za_validation/eskom_2023_targets_by_carrier.csv",
+    output:
+        validation="data/za_audit/za_atlite_renewable_profile_validation.csv",
+        technical_potential="data/za_audit/za_atlite_technical_potential.csv",
+        report="doc/za_renewable_profile_validation.md",
+    log:
+        "logs/" + RDIR + "validate_za_renewable_profiles.log",
+    benchmark:
+        "benchmarks/" + RDIR + "validate_za_renewable_profiles"
+    script:
+        "scripts/validate_za_renewable_profiles.py"
+
+
+rule build_za_source_audits:
+    output:
+        registry="data/za_audit/pypsa_rsa_source_registry.csv",
+        discovery="data/za_audit/pypsa_rsa_discovery_sweep.csv",
+        ppm_full="data/za_audit/powerplants_pm_za_full.csv",
+        ppm_audit="data/za_audit/powerplants_pm_za_audit.csv",
+        scenario_workbooks="data/za_audit/pypsa_rsa_scenario_workbook_inventory.csv",
+        fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
+        reipppp_solar="data/za_audit/reipppp_solar_2023_candidates.csv",
+        reipppp_wind="data/za_audit/reipppp_wind_2023_candidates.csv",
+        availability="data/za_audit/pypsa_rsa_availability_audit.csv",
+        op_constraints="data/za_audit/pypsa_rsa_operational_constraints_audit.csv",
+        reserve_margin="data/za_audit/pypsa_rsa_reserve_margin_audit.csv",
+        eskom_pu="data/za_audit/pypsa_rsa_eskom_pu_profiles_audit.csv",
+        cost_fuel="data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv",
+        load_weights="data/za_audit/pypsa_rsa_load_weight_audit.csv",
+        bundle_inv="data/za_audit/pypsa_rsa_external_bundle_inventory.csv",
+        supply_regions="data/za_audit/za_rsa_supply_regions.geojson",
+        supply_layer_resolution="data/za_audit/za_rsa_supply_region_layer_resolution.csv",
+        existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
+        planned_lines="data/za_audit/za_rsa_planned_tdp_lines.geojson",
+        supply_area_limits="data/za_audit/za_rsa_supply_area_connection_limits.csv",
+        mts_limits="data/za_audit/za_rsa_mts_hosting_limits.csv",
+        transmission_expansion="data/za_audit/pypsa_rsa_transmission_expansion_audit.csv",
+        resource_siting="data/za_audit/pypsa_rsa_resource_siting_audit.csv",
+    log:
+        "logs/" + RDIR + "build_za_source_audits.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_source_audits"
+    script:
+        "scripts/build_za_source_audits.py"
+
+
 rule clean:
     run:
         try:

@@ -1,0 +1,250 @@
+# South Africa Baseline Implementation Log
+
+This append-only log records implementation decisions, deviations, source inputs, output artifacts, and follow-ups for the ZA baseline calibration plan.
+
+## 00 Governance And Scope — 2026-05-08 11:22
+
+- **Status:** complete
+- **Decisions taken:**
+  - Implemented modules 00 and 01 on the current `main` checkout, per user confirmation, because it contains the frozen active plans and latest `AGENTS.md`.
+  - Created the repository-local implementation log as the binding module completion artifact.
+- **Deviations from plan:**
+  - None.
+- **Source inputs used:**
+  - `AGENTS.md`
+  - `doc/active/calibration-plan/00_governance_and_scope.md`
+  - `doc/active/calibration-plan/01_repo_bootstrap_and_config.md`
+  - Vault plan files under `6-codebases/Plans/Calibration Plan/`
+  - PyPSA-Earth HEAD `dacf37804e8d78f5a9a4b97d08958e22a747a839`
+  - PyPSA-RSA HEAD `89872c1ea703af3d8a3f198706d1ab7958f50a5f`
+- **Output artifacts produced:**
+  - `doc/za_implementation_log.md`
+- **Open follow-ups:**
+  - Later modules must continue appending one structured log entry per completed module.
+  - Workstream B reliability/myopic implementation remains out of scope until Workstream A Module 13 handoff artifacts exist and are accepted.
+
+## 01 Repo Bootstrap And Config — 2026-05-08 11:22
+
+- **Status:** complete
+- **Decisions taken:**
+  - Used explicit Snakemake invocation as the overlay composition contract: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run`.
+  - Left the top-level `Snakefile`, `config.yaml`, and upstream defaults unchanged for South Africa-only settings.
+  - Added narrow `.gitignore` exceptions so required ZA audit CSV skeletons are trackable despite the repo-wide `data/*` and `*.csv` ignore rules.
+  - Recorded the local Gurobi version split: `/usr/local/bin/gurobi_cl` reports 13.0.0, while the locked Python environment contains `gurobipy=12.0.3`.
+  - Kept bootstrap `load_options` on the existing PyPSA-Earth demand dataset (`ssp2-2.6`, `weather_year=2013`, `prediction_year=2030`) so DAG dry-runs resolve before Module 06 creates validated 2023 demand inputs.
+- **Deviations from plan:**
+  - `data/za_validation/.gitkeep` and `doc/za_validation/figures/.gitkeep` were added only to make empty bootstrap directories visible to git.
+  - The overlay does not point `load_options` at `2023/era5_2023` during bootstrap because `data/ssp2-2.6/2023/era5_2023/Africa.nc` is absent and demand/input replacement is explicitly owned by Module 06.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/01_repo_bootstrap_and_config.md`
+  - `config.default.yaml`
+  - `envs/environment.yaml`
+  - `envs/osx-arm64.lock.yaml`
+  - PyPSA-Earth HEAD `dacf37804e8d78f5a9a4b97d08958e22a747a839`
+  - PyPSA-RSA HEAD `89872c1ea703af3d8a3f198706d1ab7958f50a5f`
+  - Upstream plan pin `e18bea540e0742ea978e00338df143fa01e78553`
+  - Prebuilt cutout `cutouts/cutout-2023-era5.nc`, SHA256 `0c6b22fa6b8a0a469cc24460df2014fdb9c041035985dfb3b1aa7d6608e19076`
+- **Output artifacts produced:**
+  - `.gitignore`
+  - `configs/za/za_2023_fixed_validation.yaml`
+  - `envs/za_environment.yaml`
+  - `data/za_validation/.gitkeep`
+  - `data/za_audit/input_file_manifest.csv`
+  - `data/za_audit/source_hashes.csv`
+  - `data/za_audit/za_runtime_preflight.csv`
+  - `doc/za_data_provenance.md`
+  - `doc/za_validation/figures/.gitkeep`
+- **Verification completed:**
+  - YAML parse passed for `configs/za/za_2023_fixed_validation.yaml` and `envs/za_environment.yaml`.
+  - Package-version check passed in `/opt/anaconda3/envs/pypsa-earth`.
+  - Gurobi trivial LP smoke test passed with `status=2` and objective `1.0`.
+  - Required dry-run passed: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run`.
+  - Stronger solve target DAG check passed: `snakemake solve_all_networks --configfile configs/za/za_2023_fixed_validation.yaml --dry-run`; DAG contains 24 jobs.
+- **Open follow-ups:**
+  - Module 06 must replace bootstrap demand settings with validated South Africa 2023 demand/import/export inputs.
+  - Before Module 03, confirm whether the detected prebuilt cutout should remain the canonical fixed-validation weather input or be rebuilt from CDS.
+  - Before Module 09, verify whether `add_electricity` auto-resolves `custom_powerplants.csv` bus assignment from lat/lon for ZA carriers after PR #1622.
+  - Module 07 must decide how ZA local carriers handle `electricity_grid_connection`.
+
+## 02 Eskom Validation Data Pipeline — 2026-05-08 11:48
+
+- **Status:** complete
+- **Decisions taken:**
+  - Added a standalone parser script and explicit Snakemake rule `build_za_eskom_validation_data` so Eskom validation data can be regenerated without running the full model DAG.
+  - Staged the raw Eskom CSV from the repo root to `data/za_audit/raw/eskom_data_2023_full.csv`.
+  - Resolved the residual-demand identity from the inspected raw columns as `Residual Demand = Dispatchable Generation + Manual Load_Reduction(MLR) + ILS Usage + IOS Excl ILS and MLR`.
+  - Used end-of-year 2023 PV and total RE installed capacities for the later capacity-validation reference.
+- **Deviations from plan:**
+  - The raw file gives Eskom Gas Generation as `0.00711849 TWh` in 2023, not exactly zero. The parser retains the raw value and records a warning, but does not classify it as a parser error.
+  - `RSA Contracted Demand - Residual Demand - Total RE = 0.444123395 TWh`; this is recorded as a source/accounting warning rather than adjusted away.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/02_eskom_validation_data_pipeline.md`
+  - `6-codebases/Plans/Calibration Plan/90_Comments_Questions.md`
+  - `data/za_audit/raw/eskom_data_2023_full.csv`, SHA256 `8c2220f114ba60d5ae823f5116368cc2a664ec625d70f4d52bdf26caffc29869`
+  - Eskom glossary source `1-sources/web-clips/2026-05-07 WEB Glossary.md`
+  - Canonical glossary reference `3-wiki/reference/web-clips/2026-05-07-eskom-dataportal-glossary.md`
+- **Column inspection:**
+  - Raw CSV header has 42 columns:
+    `Date Time Hour Beginning`; `Original Res Forecast before Lockdown`; `Residual Forecast`; `RSA Contracted Forecast`; `Dispatchable Generation`; `Residual Demand`; `RSA Contracted Demand`; `International Exports`; `International Imports`; `Thermal Generation`; `Nuclear Generation`; `Eskom Gas Generation`; `Eskom OCGT Generation`; `Hydro Water Generation`; `Pumped Water Generation`; `ILS Usage`; `Manual Load_Reduction(MLR)`; `IOS Excl ILS and MLR`; `Dispatchable IPP OCGT`; `Eskom Gas SCO`; `Eskom OCGT SCO`; `Hydro Water SCO`; `Pumped Water SCO Pumping`; `Wind`; `PV`; `CSP`; `Other RE`; `Total RE`; `Wind Installed Capacity`; `PV Installed Capacity`; `CSP Installed Capacity`; `Other RE Installed Capacity`; `Total RE Installed Capacity`; `Installed Eskom Capacity`; `Total PCLF`; `Total UCLF`; `Total OCLF`; `Total UCLF+OCLF`; `Non Comm Sentout`; `Drakensberg Gen Unit Hours`; `Palmiet Gen Unit Hours`; `Ingula Gen Unit Hours`.
+  - `ILS Usage`, `Manual Load_Reduction(MLR)`, and `IOS Excl ILS and MLR` are independent columns in the raw file.
+- **Output artifacts produced:**
+  - `scripts/build_za_eskom_validation_data.py`
+  - `Snakefile`
+  - `.gitignore`
+  - `data/za_audit/raw/eskom_data_2023_full.csv`
+  - `data/za_validation/eskom_2023_hourly_clean.csv`
+  - `data/za_validation/eskom_2023_targets_by_carrier.csv`
+  - `data/za_audit/eskom_2023_parser_report.csv`
+  - `notebooks/za_validation/02_eskom_data/parser_report.ipynb`
+  - `doc/za_validation/figures/02_eskom_data/parser_report.html`
+  - `doc/za_data_provenance.md`
+  - `data/za_audit/input_file_manifest.csv`
+  - `data/za_audit/source_hashes.csv`
+- **Verification completed:**
+  - Direct parser execution passed in `/opt/anaconda3/envs/pypsa-earth`.
+  - Snakemake dry-run passed for `build_za_eskom_validation_data`.
+  - Snakemake execution passed for `build_za_eskom_validation_data`.
+  - Notebook execution and HTML export passed for `notebooks/za_validation/02_eskom_data/parser_report.ipynb`.
+  - Clean hourly output has exactly 8,760 rows and no missing hourly timestamps.
+  - `Total RE = Wind + PV + CSP + Other RE` passes with maximum hourly difference `9.094947017729282e-13 MW`.
+  - `Residual Demand = Dispatchable Generation + MLR + ILS + IOS` passes with maximum hourly difference `0.0010000000038417056 MW`, within tolerance after floating-point epsilon.
+- **Open follow-ups:**
+  - Primary external cross-checks for CSIR Utility Statistics Report 2024, Eskom Annual Report 2023, and System Adequacy Outlook remain pending where not present locally.
+  - Module 06 should consume `RSA Contracted Demand` as the demand target and must not subtract load shedding before modeling.
+
+## 03 Weather Cutout And Profiles — 2026-05-08 12:30
+
+- **Status:** complete
+- **Decisions taken:**
+  - Kept the established run directory `za_2023_fixed_validation` from modules 00-02 rather than renaming outputs to `za_2023_fixed`.
+  - Reused `cutouts/cutout-2023-era5.nc` because the SHA256 hash, ERA5 module metadata, 0.3-degree resolution, and 8,760-hour 2023 coverage match the module 01 provenance record. No full CDS rebuild was attempted.
+  - Set the ZA overlay to `enable.retrieve_cutout: false`, `enable.build_cutout: false`, and `atlite.default: cutout-2023-era5`.
+  - Verified that PyPSA-Earth resolves `renewable.csp.cutout: auto` to `cutout-2023-era5`; CSP is a separate `csp` carrier and is not merged into PV. The default CSP model remains `advanced`.
+  - Added `validate_za_renewable_profiles` as a dedicated Snakemake target for module 03 Gate A validation.
+  - Verified `build_demand_profiles.py:get_load_paths_gegis` accepts the `2023_custom` weather-year string; it resolves to `data/ssp2-2.6/2030/era5_2023_custom/Africa.csv`.
+- **Deviations from plan:**
+  - Hydro profile generation produced an upstream `profile_hydro.nc` file, but it is empty because `build_powerplants` reported no known South Africa plants before module 08 fleet reconciliation. This is recorded as a warning, not adjusted with a fallback profile.
+  - Large cutout/profile NetCDF files remain git-ignored; their paths and hashes are recorded in `data/za_audit/input_file_manifest.csv`, `data/za_audit/source_hashes.csv`, and `doc/za_data_provenance.md`.
+  - Notebook HTML export passed with a non-blocking nbconvert warning that two images lack alternative text.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/03_weather_cutout_and_profiles.md`
+  - `6-codebases/Plans/Calibration Plan/90_Comments_Questions.md`
+  - `cutouts/cutout-2023-era5.nc`, SHA256 `0c6b22fa6b8a0a469cc24460df2014fdb9c041035985dfb3b1aa7d6608e19076`
+  - `data/za_validation/eskom_2023_targets_by_carrier.csv`, SHA256 `dc0bba6c28d5dc0f1fb4004eee3a476f6c371f0bfe13316d5ec6c7204e508ec3`
+  - PyPSA-Earth upstream `build_renewable_profiles`, `build_cutout`, and `get_load_paths_gegis` helpers in the current checkout.
+- **Output artifacts produced:**
+  - `configs/za/za_2023_fixed_validation.yaml`
+  - `Snakefile`
+  - `scripts/validate_za_renewable_profiles.py`
+  - `resources/za_2023_fixed_validation/renewable_profiles/profile_solar.nc` (git-ignored, hash recorded)
+  - `resources/za_2023_fixed_validation/renewable_profiles/profile_onwind.nc` (git-ignored, hash recorded)
+  - `resources/za_2023_fixed_validation/renewable_profiles/profile_hydro.nc` (git-ignored, hash recorded)
+  - `resources/za_2023_fixed_validation/renewable_profiles/profile_csp.nc` (git-ignored, hash recorded)
+  - `data/za_audit/za_atlite_renewable_profile_validation.csv`
+  - `data/za_audit/za_atlite_technical_potential.csv`
+  - `doc/za_renewable_profile_validation.md`
+  - `notebooks/za_validation/03_profiles/profile_validation.ipynb`
+  - `doc/za_validation/figures/03_profiles/profile_validation.html`
+  - `doc/za_data_provenance.md`
+  - `data/za_audit/input_file_manifest.csv`
+  - `data/za_audit/source_hashes.csv`
+- **Verification completed:**
+  - YAML parse passed for `configs/za/za_2023_fixed_validation.yaml`.
+  - Cutout verification passed: 8,760 hours, ERA5 module, `dx=0.3`, `dy=0.3`, SHA256 `0c6b22fa6b8a0a469cc24460df2014fdb9c041035985dfb3b1aa7d6608e19076`.
+  - Snakemake dry-run passed for `validate_za_renewable_profiles`.
+  - Snakemake execution passed for `validate_za_renewable_profiles`; the DAG generated `profile_solar.nc`, `profile_onwind.nc`, `profile_hydro.nc`, and `profile_csp.nc`.
+  - Direct validation script execution passed.
+  - Notebook execution and HTML export passed for `notebooks/za_validation/03_profiles/profile_validation.ipynb`.
+  - Gate A validation table reports 29 passing checks and 4 hydro warnings.
+- **Open follow-ups:**
+  - Module 04 should add public/literature sanity anchors and PyPSA-RSA profile-reference comparisons for Gate B.
+  - Module 08 must reconcile the South Africa fleet so hydro plants are available to later hydro profile and dispatch validation.
+  - Module 06 can use the accepted `2023_custom` GEGIS string, but it still owns demand/input replacement.
+
+## 04 Source Data Audits — 2026-05-08 13:22
+
+- **Status:** complete
+- **Decisions taken:**
+  - Re-confirmed PyPSA-RSA pin: local `HEAD` and `origin/main` both equal `89872c1ea703af3d8a3f198706d1ab7958f50a5f`. No no-silent-rebase review required.
+  - PyPSA-Earth current HEAD recorded as `dacf37804e8d78f5a9a4b97d08958e22a747a839`.
+  - Implemented Module 04 as a single Snakemake rule `build_za_source_audits` that orchestrates ten audit stages from the new `scripts/za_audits/` package; this mirrors the module 02/03 single-rule pattern.
+  - Powerplantmatching uses `from_url=False, update=True` with `target_countries=['South Africa']` and the upstream matching/fully-included sources, matching the pattern in `scripts/build_powerplants.py`. The packaged `from_url=True` dataset is Europe-only and produced 0 ZA rows; the matching pipeline produced 276 SA plants including 147 solar and 52 wind. `EXTERNAL_DATABASE` was excluded so no ENTSOE token is required.
+  - The 2023-active filter follows the plan verbatim: `Commissioning Date <= 2023 AND (Decommissioning Date > 2023 OR Decommissioning Date IS NULL)`. Future assets (Redstone CSP, 2024-2027 BESS, fixed-tech rows with later commissioning) remain in the audit candidates with `included_2023 = false`. Resulting fixed_tech split: 306 rows `included_2023 = true`, 905 rows `included_2023 = false`.
+  - Existing-line GeoJSON filters `DESIGN_VOL >= 220 kV` (324 features retained out of 348 total).
+  - Supply-region layer resolution check correctly identifies all canonical PyPSA-RSA layer counts: layers `1`, `10`, `27`, `34`, `159` are present in both `rsa_supply_regions.gpkg` and `rsa_supply_regions2.gpkg`, plus matching feature counts in `AREAS_GCCA2025.gpkg` (`SUPPLY_AREA_GCCA2025=10`, `LOCAL_AREA_GCCA2025=34`, `MTS_ZONES_GCCA2025=159`) and the corresponding shapefile copies.
+  - Flat vs nested duplicate bundle copies (`Existing_Lines.shp`, `TDP_2023_32.shp`) are both recorded in the registry; the deeper scenario-tagged copies (`data/bundle/Shapefiles/Existing_Lines.shp`, `data/bundle/transmission_grid/tdp_digitised/TDP_2023_32.shp`) are canonical, the flat copies marked `do_not_port`.
+  - Candidate-missing files at the pinned commit recorded explicitly in the registry: `scripts/solve_network.py`, `scripts/add_extra_components.py`, `scripts/build_renewable_profiles.py`, and `pre_processing/resource_processing/reipppp_phs_data.csv` are absent and tagged `do_not_port` with `notes="ABSENT at pin: ..."`. `scripts/prepare_and_solve_network.py`, `envs/environment.yaml`, and `scenarios/Coal_Flexibilisation/sub_scenarios/phased_decommissioning.xlsx` are present and tagged `audit_only` / `validation_reference`.
+- **Deviations from plan:**
+  - `data/bundle/renewable_profiles_updated.nc` opens as an empty xarray Dataset (no data_vars or dims). Audit records this as a single row in `pypsa_rsa_eskom_pu_profiles_audit.csv` with the file hash plus an explanatory note — no fallback applied.
+  - `pypsa-rsa` PHS reconciliation file `reipppp_phs_data.csv` is absent at pin; recorded as `do_not_port` per plan §"Candidate missing files".
+  - Notebook HTML export passed with one non-blocking nbconvert warning ("Alternative text is missing on 1 image(s)") for the supply-region/lines map — same pattern as module 03.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/04_source_data_audits.md`
+  - `6-codebases/Plans/Calibration Plan/90_Comments_Questions.md` (`# 04_source_data_audits`)
+  - PyPSA-Earth HEAD `dacf37804e8d78f5a9a4b97d08958e22a747a839`
+  - PyPSA-RSA HEAD/`origin/main` `89872c1ea703af3d8a3f198706d1ab7958f50a5f`
+  - `configs/powerplantmatching_config.yaml`
+  - All PyPSA-RSA scenario workbooks under `scenarios/ME IRP 2024/` and `scenarios/Coal_Flexibilisation/`
+  - PyPSA-RSA bundle artefacts under `data/bundle/` (supply_regions, GCCA 2025 GIS, Shapefiles, transmission_grid)
+  - `pre_processing/resource_processing/{reipppp_solar_data.csv, reipppp_wind_data.csv, csir_fise_SWA_data.xlsx}`
+  - `data/eskom_pu_profiles.csv`
+  - `data/bundle/SystemEnergy2009_22.csv`, `data/bundle/Supply area normalised power feed-in for {Wind,PV}.xlsx`, `data/bundle/renewable_profiles_updated.nc`
+- **Output artifacts produced:**
+  - `configs/za/za_2023_fixed_validation.yaml` (added `pypsa_rsa_root` + `pypsa_rsa_pinned_commit`)
+  - `Snakefile` (added `build_za_source_audits` rule)
+  - `scripts/build_za_source_audits.py` (master orchestrator)
+  - `scripts/za_audits/__init__.py`
+  - `scripts/za_audits/io.py`
+  - `scripts/za_audits/registry.py`
+  - `scripts/za_audits/scenario_workbooks.py`
+  - `scripts/za_audits/powerplantmatching.py`
+  - `scripts/za_audits/fleet_availability.py`
+  - `scripts/za_audits/profiles.py`
+  - `scripts/za_audits/cost_fuel_emissions.py`
+  - `scripts/za_audits/load_weights.py`
+  - `scripts/za_audits/grid_spatial.py`
+  - `scripts/za_audits/resource_siting.py`
+  - `data/za_audit/pypsa_rsa_source_registry.csv` (72 rows)
+  - `data/za_audit/pypsa_rsa_discovery_sweep.csv` (77 rows)
+  - `data/za_audit/powerplants_pm_za_full.csv` (276 rows)
+  - `data/za_audit/powerplants_pm_za_audit.csv` (276 rows)
+  - `data/za_audit/pypsa_rsa_scenario_workbook_inventory.csv` (55 rows)
+  - `data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv` (1211 rows; 306 included_2023=true, 905 false)
+  - `data/za_audit/reipppp_solar_2023_candidates.csv` (64 rows)
+  - `data/za_audit/reipppp_wind_2023_candidates.csv` (70 rows)
+  - `data/za_audit/pypsa_rsa_availability_audit.csv` (716 rows)
+  - `data/za_audit/pypsa_rsa_operational_constraints_audit.csv` (262 rows)
+  - `data/za_audit/pypsa_rsa_reserve_margin_audit.csv` (64 rows)
+  - `data/za_audit/pypsa_rsa_eskom_pu_profiles_audit.csv` (15 rows)
+  - `data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv` (2554 rows)
+  - `data/za_audit/pypsa_rsa_load_weight_audit.csv` (11 rows)
+  - `data/za_audit/pypsa_rsa_external_bundle_inventory.csv` (15 rows)
+  - `data/za_audit/za_rsa_supply_regions.geojson` (27 features)
+  - `data/za_audit/za_rsa_supply_region_layer_resolution.csv` (17 rows; canonical 1/10/27/34/159 all matched)
+  - `data/za_audit/za_rsa_existing_lines_220kv_plus.geojson` (324 features)
+  - `data/za_audit/za_rsa_planned_tdp_lines.geojson` (102 features)
+  - `data/za_audit/za_rsa_supply_area_connection_limits.csv` (30 rows)
+  - `data/za_audit/za_rsa_mts_hosting_limits.csv` (198 rows)
+  - `data/za_audit/pypsa_rsa_transmission_expansion_audit.csv` (134 rows)
+  - `data/za_audit/pypsa_rsa_resource_siting_audit.csv` (10 rows)
+  - `notebooks/za_validation/04_source_audits/source_audit_overview.ipynb`
+  - `doc/za_validation/figures/04_source_audits/source_audit_overview.html`
+  - `doc/za_validation/figures/04_source_audits/grid_overview.png`
+  - `data/za_audit/source_hashes.csv` (Module 04 entries appended)
+  - `data/za_audit/input_file_manifest.csv` (Module 04 entries appended)
+  - `doc/za_data_provenance.md` (Module 04 section appended with full hash table)
+- **Verification completed:**
+  - YAML parse passed for `configs/za/za_2023_fixed_validation.yaml`.
+  - Direct script execution passed: `python scripts/build_za_source_audits.py --configfile configs/za/za_2023_fixed_validation.yaml` (22 stages succeed; final summary `{registry: 72, discovery: 77, ppm: 276, scenario_workbooks: 55, fixed_tech: 1211, reipppp_solar: 64, reipppp_wind: 70, availability: 716, op_constraints: 262, reserve_margin: 64, eskom_pu: 15, cost_fuel: 2554, load_weights: 11, bundle_inv: 15, supply_layer_resolution: 17, supply_regions_geojson: 27, existing_lines_geojson: 324, planned_tdp_geojson: 102, supply_area_limits: 30, mts_limits: 198, transmission_expansion: 134, resource_siting: 10}`).
+  - Snakemake dry-run passed: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run build_za_source_audits` (1 job).
+  - Snakemake forced execution passed: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --cores 1 -F build_za_source_audits` finished with `1 of 1 steps (100%) done`.
+  - Notebook execution and HTML export passed (`source_audit_overview.html`, 600,952 bytes).
+  - Spot-check: `pypsa_rsa_source_registry.csv` row count = 72 (>= 50 minimum threshold).
+  - Spot-check: `pypsa_rsa_fixed_technologies_2023_candidates.csv` contains rows with `included_2023 = false` (905 rows).
+  - Spot-check: `za_rsa_supply_region_layer_resolution.csv` matches canonical 1/10/27/34/159 layers in `rsa_supply_regions.gpkg`, `rsa_supply_regions2.gpkg`, and the GCCA 2025 GIS bundle.
+- **Open follow-ups:**
+  - Module 03 Gate B can now consume the Eskom pu profile audit and the supply-area normalised PV/Wind workbooks for cross-validation.
+  - Module 06 owns the downstream comparison of PyPSA-RSA `GVA_2016 + POP_2016` weights against the PyPSA-Earth V1 load allocation; this module exposes the weights but does not re-allocate load.
+  - Module 08 owns fleet reconciliation; the `included_2023 = true` subset of `pypsa_rsa_fixed_technologies_2023_candidates.csv` plus REIPPPP audits are the canonical baseline candidate set.
+  - Module 09 owns the supply-region selection between 1/10/27/34/159 layers and the busmap; module 04 only catalogs the available resolutions.
+  - Module 13 owns expansion handoff; `pypsa_rsa_transmission_expansion_audit.csv`, `za_rsa_planned_tdp_lines.geojson`, and the resource-siting audit are expansion-only evidence.

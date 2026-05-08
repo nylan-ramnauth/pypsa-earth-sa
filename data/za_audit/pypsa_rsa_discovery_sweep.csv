@@ -1,0 +1,78 @@
+rel_path,size_bytes,suffix,kind,in_min_coverage,classification
+data/bundle/renewable_profiles_updated.nc,715101674,.nc,netcdf,True,covered
+networks/ME IRP 2024/base/capacity-IRP_H12_CL_RM10_FULL.nc,3872189,.nc,netcdf,False,audit_only
+networks/ME IRP 2024/base/capacity-IRP_REF_CI.nc,3872189,.nc,netcdf,False,audit_only
+networks/ME IRP 2024/elec/capacity-IRP_H12_CL_RM10_FULL.nc,378958916,.nc,netcdf,False,audit_only
+pre_processing/outages/outages.ipynb,124397,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/convert_excel_to_netcdf.ipynb,26171,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/plotting.ipynb,449476,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_availability_matrix.ipynb,632298,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_extendable_solar_pv.ipynb,18919,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_extendable_wind.ipynb,63132,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_fixed_solar_pv.ipynb,36966,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_fixed_wind.ipynb,42591,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_single_resource_file.ipynb,121848,.ipynb,notebook,False,audit_only
+pre_processing/resource_processing/prepare_wasa_timeseries.ipynb,307758,.ipynb,notebook,False,audit_only
+data/bundle/SALandCover_OriginalUTM35North_2013_GTI_72Classes/sa_lcov_2013-14_gti_utm35n_vs22b.tif,4083281806,.tif,raster,False,audit_only
+data/bundle/ZAF_wind-speed_100m.tif,81105685,.tif,raster,True,covered
+.snakemake/scripts/tmpor4uwofl.prepare_and_solve_network.py,26519,.py,script,False,audit_only
+docs/archive/conf.py,10660,.py,script,False,audit_only
+docs/conf.py,10409,.py,script,False,audit_only
+pre_processing/resource_processing/_helpers.py,12969,.py,script,False,audit_only
+scripts/_helpers.py,42530,.py,script,True,covered
+scripts/add_electricity.py,76226,.py,script,True,covered
+scripts/build_topology.py,16143,.py,script,True,covered
+scripts/custom_constraints.py,16807,.py,script,True,covered
+scripts/prepare_and_solve_network.py,24848,.py,script,True,covered
+data/bundle/11-supply.shp,4798988,.shp,spatial,False,audit_only
+data/bundle/CSIR/Mesozones/Mesozones.shp,30889536,.shp,spatial,False,audit_only
+data/bundle/Existing_Lines.shp,1326556,.shp,spatial,True,covered
+data/bundle/GCCA 2025 GIS/AREAS_GCCA2025.gpkg,15335424,.gpkg,spatial,True,covered
+data/bundle/GCCA 2025 GIS/LOCAL_AREA_GCCA2025.shp,4898336,.shp,spatial,True,covered
+data/bundle/GCCA 2025 GIS/MTS_ZONES_GCCA2025.shp,4939424,.shp,spatial,True,covered
+data/bundle/GCCA 2025 GIS/SUPPLY_AREA_GCCA2025.shp,4881552,.shp,spatial,True,covered
+data/bundle/Phase2_REDZs/PHASE 2_REDZs.shp,142480,.shp,spatial,False,audit_only
+data/bundle/Power_corridors/Power_corridors.shp,1036880,.shp,spatial,False,audit_only
+data/bundle/REDZ_DEA_Unpublished_Draft_2015/REDZ_DEA_Unpublished_Draft_2015.shp,471988,.shp,spatial,False,audit_only
+data/bundle/RSA.shp,4864904,.shp,spatial,False,audit_only
+data/bundle/SACAD_OR_2023_Q3.shp,1674696,.shp,spatial,True,covered
+data/bundle/SAPAD_OR_2023_Q3.shp,7764848,.shp,spatial,True,covered
+data/bundle/Shapefiles/Existing_Lines.shp,1711652,.shp,spatial,True,covered
+data/bundle/Shapefiles/Planned_Lines.shp,163972,.shp,spatial,True,covered
+data/bundle/Shapefiles/Supply_Areas2022_Steady_State_Limit.shp,3963032,.shp,spatial,False,audit_only
+data/bundle/TDP_2023_32.shp,66564,.shp,spatial,True,covered
+data/bundle/supply_regions/rsa_supply_regions.gpkg,19918848,.gpkg,spatial,True,covered
+data/bundle/supply_regions/rsa_supply_regions2.gpkg,20615168,.gpkg,spatial,True,covered
+data/bundle/transmission_grid/eskom_gcca_2022/Existing_Lines.shp,1711652,.shp,spatial,True,covered
+data/bundle/transmission_grid/tdp_digitised/TDP_2023_32.shp,66564,.shp,spatial,True,covered
+data/bundle/SystemEnergy2009_22.csv,4894211,.csv,tabular,True,covered
+data/eskom_data.csv,12701713,.csv,tabular,True,covered
+data/eskom_pu_profiles.csv,2858046,.csv,tabular,True,covered
+docs/archive/configtables/existing_non_eskom.csv,13939,.csv,tabular,False,audit_only
+docs/configtables/existing_non_eskom.csv,13939,.csv,tabular,False,audit_only
+data/ambitions_validation.xlsx,43182,.xlsx,workbook,True,covered
+data/bundle/Supply area normalised power feed-in for PV.xlsx,5419924,.xlsx,workbook,True,covered
+data/bundle/Supply area normalised power feed-in for Wind.xlsx,10009966,.xlsx,workbook,True,covered
+pre_processing/resource_processing/csir_fise_SWA_data.xlsx,4201663,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/scenarios_to_run.xlsx,260866,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/annual_load.xlsx,26808,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/aux_stg_feed.xlsx,12122,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/emissions.xlsx,83143,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/extendable_technologies.xlsx,279099,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/fixed_technologies.xlsx,89091,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/fuel_prices.xlsx,577124,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx,66984,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/phased_decommissioning.xlsx,274253,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/plant_availability.xlsx,147985,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/reserve_margin.xlsx,14767,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/transmission_expansion.xlsx,14127,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/weather.xlsx,13185,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/scenarios_to_run.xlsx,17322,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/annual_load.xlsx,12527,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/carbon_constraints.xlsx,22504,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/extendable_technologies.xlsx,253871,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/fixed_technologies.xlsx,129524,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/operational_constraints.xlsx,34661,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/plant_availability.xlsx,98938,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/reserve_margin.xlsx,13809,.xlsx,workbook,True,covered
+scenarios/ME IRP 2024/sub_scenarios/transmission_expansion.xlsx,11878,.xlsx,workbook,True,covered

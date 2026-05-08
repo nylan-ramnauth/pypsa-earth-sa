@@ -1,0 +1,20 @@
+check_id,category,status,value,unit,tolerance,notes
+raw-input-path,provenance,pass,data/za_audit/raw/eskom_data_2023_full.csv,,,canonical staged Eskom raw CSV
+raw-input-sha256,provenance,pass,8c2220f114ba60d5ae823f5116368cc2a664ec625d70f4d52bdf26caffc29869,,,hash of staged raw CSV
+raw-column-count,schema,pass,42,,,header column count
+raw-column-headers,schema,pass,Date Time Hour Beginning | Original Res Forecast before Lockdown | Residual Forecast | RSA Contracted Forecast | Dispatchable Generation | Residual Demand | RSA Contracted Demand | International Exports | International Imports | Thermal Generation | Nuclear Generation | Eskom Gas Generation | Eskom OCGT Generation | Hydro Water Generation | Pumped Water Generation | ILS Usage | Manual Load_Reduction(MLR) | IOS Excl ILS and MLR | Dispatchable IPP OCGT | Eskom Gas SCO | Eskom OCGT SCO | Hydro Water SCO | Pumped Water SCO Pumping | Wind | PV | CSP | Other RE | Total RE | Wind Installed Capacity | PV Installed Capacity | CSP Installed Capacity | Other RE Installed Capacity | Total RE Installed Capacity | Installed Eskom Capacity | Total PCLF | Total UCLF | Total OCLF | Total UCLF+OCLF | Non Comm Sentout | Drakensberg Gen Unit Hours | Palmiet Gen Unit Hours | Ingula Gen Unit Hours,,,printed for accounting identity inspection
+raw-row-count,parser,pass,10272,rows,,
+exact-row-count,parser,pass,9,rows,,
+repaired-row-count,parser,pass,10263,rows,,rows repaired for split Total UCLF+OCLF comma decimal
+bad-field-count-rows,parser,pass,0,rows,,
+pre-2023-rows-dropped,filter,pass,744,rows,,
+post-2023-rows-dropped,filter,pass,768,rows,,
+clean-hourly-row-count,filter,pass,8760,rows,,exactly 8760 hourly observations
+clean-start,filter,pass,2023-01-01 00:00:00,,,
+clean-end,filter,pass,2023-12-31 23:00:00,,,
+required-numeric-columns,schema,pass,28,columns,,"RSA Contracted Demand, Residual Demand, Dispatchable Generation, Thermal Generation, Nuclear Generation, Eskom Gas Generation, Eskom OCGT Generation, Hydro Water Generation, Pumped Water Generation, ILS Usage, Manual Load_Reduction(MLR), IOS Excl ILS and MLR, Dispatchable IPP OCGT, Pumped Water SCO Pumping, Wind, PV, CSP, Other RE, Total RE, International Exports, International Imports, Wind Installed Capacity, PV Installed Capacity, CSP Installed Capacity, Other RE Installed Capacity, Total RE Installed Capacity, Installed Eskom Capacity, Total UCLF+OCLF"
+total-re-hourly-identity,accounting,pass,9.094947017729282e-13,MW,0.001,Total RE = Wind + PV + CSP + Other RE
+residual-demand-hourly-identity,accounting,pass,0.0010000000038417056,MW,0.001,Residual Demand = Dispatchable Generation + MLR + ILS + IOS
+residual-demand-annual-identity,accounting,pass,-1.4200000025812188e-07,TWh,1e-06,annual residual-demand identity difference
+rsa-contracted-demand-identity,accounting,warn,0.444123395,TWh,1e-06,RSA Contracted Demand - Residual Demand - Total RE; retained as source discrepancy
+eskom-gas-generation-total,target,warn,0.00711849,TWh,1e-06,raw 2023 total is nonzero; retained as source value and not treated as parser error

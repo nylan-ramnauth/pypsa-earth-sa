@@ -1,0 +1,18 @@
+layer_path,layer_name,feature_count,matched_canonical_resolution,notes
+data/bundle/supply_regions/rsa_supply_regions.gpkg,1,1,1,
+data/bundle/supply_regions/rsa_supply_regions.gpkg,27,27,27,
+data/bundle/supply_regions/rsa_supply_regions.gpkg,10,10,10,
+data/bundle/supply_regions/rsa_supply_regions.gpkg,34,34,34,
+data/bundle/supply_regions/rsa_supply_regions.gpkg,159,159,159,
+data/bundle/supply_regions/rsa_supply_regions2.gpkg,1,1,1,
+data/bundle/supply_regions/rsa_supply_regions2.gpkg,27,27,27,
+data/bundle/supply_regions/rsa_supply_regions2.gpkg,10,10,10,
+data/bundle/supply_regions/rsa_supply_regions2.gpkg,34,34,34,
+data/bundle/supply_regions/rsa_supply_regions2.gpkg,159,159,159,
+data/bundle/GCCA 2025 GIS/AREAS_GCCA2025.gpkg,LOCAL_AREA_GCCA2025,34,34,
+data/bundle/GCCA 2025 GIS/AREAS_GCCA2025.gpkg,MTS_ZONES_GCCA2025,159,159,
+data/bundle/GCCA 2025 GIS/AREAS_GCCA2025.gpkg,SUPPLY_AREA_GCCA2025,10,10,
+data/bundle/GCCA 2025 GIS/AREAS_GCCA2025.gpkg,layer_styles,3,none,"feature count outside {1,10,27,34,159}"
+data/bundle/GCCA 2025 GIS/SUPPLY_AREA_GCCA2025.shp,<single-layer-shp>,10,10,
+data/bundle/GCCA 2025 GIS/LOCAL_AREA_GCCA2025.shp,<single-layer-shp>,34,34,
+data/bundle/GCCA 2025 GIS/MTS_ZONES_GCCA2025.shp,<single-layer-shp>,159,159,
