@@ -1,0 +1,17 @@
+carrier_name,source_concept,treatment,component,is_local,color,nice_name,profile_intent,emissions_intent,validation_target,availability_treatment,owning_modules,notes
+coal,coal,upstream conventional generator,Generator,false,,,,,,,05|07|08,Eskom coal fleet
+sasol_coal,sasol_coal,local generator with explicit cost/emissions,Generator,true,#4d4d4d,Sasol coal,fixed dispatch from coal-equivalent availability profile (module 11),explicit row in module 07 cost CSV,Eskom 2023 coal generation reconciliation (sub-row),owned by module 08 fleet reconciliation,05|07|08|10,Sasol Secunda coal-to-liquid
+nuclear,nuclear,upstream conventional generator,Generator,false,,,,,,,05|07|08,Koeberg
+ocgt_diesel,ocgt_diesel / diesel peaker,local generator with explicit cost/emissions,Generator,true,#cc6633,OCGT diesel,peaker; high marginal cost; module 11 dispatch,explicit row in module 07,Eskom 2023 OCGT/diesel reconciliation,owned by module 08,05|07|08|10,Ankerlig/Gourikwa diesel peakers
+ocgt_gas,ocgt_avf / gas OCGT,local generator with explicit cost/emissions,Generator,true,#d35050,OCGT gas,peaker; module 11 dispatch,explicit row in module 07,Eskom 2023 OCGT/gas reconciliation,owned by module 08,05|07|08|10,AVF gas OCGT
+sasol_gas,sasol_gas,local generator with explicit cost/emissions,Generator,true,#a06030,Sasol gas,fixed dispatch; gas-equivalent availability,explicit row in module 07,Eskom 2023 OCGT/gas reconciliation (sub-row),owned by module 08,05|07|08|10,Sasol natural gas
+onwind,wind,upstream renewable generator (atlite profile),Generator,false,,,,,,,05|03|08,REIPPPP wind fleet
+solar,solar PV,upstream renewable generator (atlite profile),Generator,false,,,,,,,05|03|08,REIPPPP utility PV
+csp,solar_csp / csp,upstream renewable generator (atlite profile),Generator,false,,,,,,,05|03|08,500 MW / 1.375 TWh anchor; never mapped to PV
+hydro,reservoir hydro,PyPSA-Earth hydro/reservoir-compatible,StorageUnit,false,,,,,,,05|08,Gariep / Vanderkloof
+ror,run-of-river hydro,PyPSA-Earth ror/hydro-compatible,Generator,false,,,,,,,05|08,small RoR plants
+PHS,pumped storage,PyPSA-Earth storage-compatible PHS,StorageUnit,false,,,,,,,05|08,Drakensberg / Ingula; PHS energy checked
+battery,battery,upstream Store; only 2023-active batteries that pass normalization,Store,false,,,,,,,05|08,include only after Module 08 reconciliation
+biomass,biomass,upstream biomass carrier; only when 2023-active reconciled,Generator,false,,,,,,,05|08,absorbed by other_re if not separately validated; bioenergy normalizes to biomass
+other_re,Other RE,local exogenous generator using Eskom 8760 Other RE series,Generator,true,#88c057,Other RE,exogenous: Eskom 8760 'Other RE' series for V1 accounting,zero CO2 by default; row in module 07,Eskom 2023 Other RE energy total,"exogenous time series, no availability filter",05|07|08|10,Eskom Other RE accounting
+hydro_import,hydro_import,"exogenous import time series, owned by module 06",Load,false,,,,,,,05|06,not a domestic hydro generator

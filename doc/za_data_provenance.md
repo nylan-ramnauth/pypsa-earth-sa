@@ -2,7 +2,7 @@
 
 **Created:** 2026-05-08 11:22 CEST  
 **Workstream:** ZA Baseline Calibration  
-**Modules:** 00 Governance and Scope; 01 Repo Bootstrap and Config; 02 Eskom Validation Data Pipeline; 03 Weather Cutout And Profiles
+**Modules:** 00 Governance and Scope; 01 Repo Bootstrap and Config; 02 Eskom Validation Data Pipeline; 03 Weather Cutout And Profiles; 04 Source Data Audits; 05 System Boundary And Carrier Taxonomy; 06 Demand Import Export Model Inputs
 
 ## Repository Inputs
 
@@ -132,3 +132,77 @@ layers are present in `data/bundle/supply_regions/rsa_supply_regions.gpkg`,
 `rsa_supply_regions2.gpkg`, and the GCCA 2025 GIS bundle. The 27-region layer
 is exported as `za_rsa_supply_regions.geojson` for downstream consumption by
 modules 06 (load allocation context only) and 09 (grid build).
+
+## System Boundary And Carrier Taxonomy (Module 05)
+
+PyPSA-RSA pin re-confirmed: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`
+(HEAD = origin/main). PyPSA-Earth HEAD at module entry:
+`f5422d8f384a86117bbc18b3048784e265808669`.
+
+Module 05 is doc/config/spec — no fleet/cost/grid override is written. The
+configuration file `configs/za/za_2023_fixed_validation.yaml` was extended
+in-place with `za_system_boundary`, `za_local_carriers`, and locked
+`electricity.{conventional,renewable,extendable}_carriers`.
+
+| artifact | sha256 |
+|---|---|
+| `doc/za_carrier_taxonomy.md` | `d38790645475bdb9c1f246e5978701adf74349fc689cdaa15e50895a5d4c6418` |
+| `data/za_audit/za_carrier_taxonomy.csv` | `6df50b77665f79f7b740931030f895ca5368219176aaed3e7a81f145a7abfb1a` |
+| `data/za_audit/za_carrier_taxonomy_crosscheck.csv` | `b4e5253f5d7ebee62af1ba60a8699844e0e274e60a1dd45a3feb758603651b79` |
+| `scripts/build_za_carrier_taxonomy.py` | `91eab10d0560d45575d3f948d1c84556ce7af710692194ac8cf56fda2969ed91` |
+| `scripts/za_validation/smoke_carrier_taxonomy.py` | `63f354b9285ef82b6ba2cb8f886380c4aee47627b0ecffcee7ed7bcded15e109` |
+| `notebooks/za_validation/05_carrier_taxonomy/carrier_taxonomy_overview.ipynb` | `2eeb3bb49a0030a9aa62b1ec3358223dad0461ea2466f9e3d7f5b77889e44d8a` |
+| `doc/za_validation/figures/05_carrier_taxonomy/carrier_taxonomy_overview.html` | `5cb7a611bcc508a9d8a5ce681d58c09455d8e87a06f0cebaf411741de9acacf1` |
+| `doc/za_validation/figures/05_carrier_taxonomy/mw_by_v1_carrier.png` | `aa045dc7b1a1189cad9eade47673f42f580b8bd700d89adbdcaabe8e91c39e44` |
+
+The crosscheck CSV resolves 15 of 17 RSA carriers from the module 04
+fixed-tech audit; one row is `excluded_by_boundary` (`solar_pv_rooftop`,
+embedded PV per `za_system_boundary.embedded_pv_treatment`) and one is
+`pending_module_08` (`rmippp` — Risk Mitigation IPP procurement-program
+label, not a carrier; module 08 will reconcile per-plant carrier during
+fleet build).
+
+The CSP/solar acceptance smoke test
+(`scripts/za_validation/smoke_carrier_taxonomy.py`) is shipped but deferred
+to fire when module 10's `apply_za_local_carriers` hook produces a network.
+
+## Demand Import Export Model Inputs (Module 06)
+
+Module 06 replaces the bootstrap demand route with the validated Eskom 2023
+contracted-demand profile. The ZA overlay now sets
+`load_options.weather_year: 2023_custom` and keeps
+`load_options.prediction_year: 2030`, so upstream
+`build_demand_profiles.py:get_load_paths_gegis` resolves to
+`data/ssp2-2.6/2030/era5_2023_custom/Africa.csv` once the generated CSV exists.
+
+Demand uses Eskom `RSA Contracted Demand` without subtracting load shedding.
+Gross `International Imports` and gross `International Exports` remain separate:
+imports are positive supply injections and exports are positive withdrawals.
+`Other RE` is not folded into demand; it is prepared as a curtailable local
+`other_re` generator profile for module 10, with `p_min_pu = 0` and
+`p_max_pu = Other RE / p_nom`.
+
+Candidate layer `1`, `10`, and `34` demand weights use PyPSA-Earth-style
+GADM GDP/population allocation (`0.6 * gdp + 0.4 * pop`). PyPSA-RSA
+`GVA_2016`/`POP_2016` remains diagnostic-only. The actual PyPSA-RSA 10- and
+34-region layers do not carry regional `GVA_2016`/`POP_2016` columns, so the
+diagnostic comparison records one available national row and 44 unavailable
+candidate-region rows rather than substituting PyPSA-RSA weights. Conservative
+proxy attachments are used for non-demand series: imports attach to `ZA`,
+`Gauteng`, and `Pretoria`; exports and `Other RE` use demand-weight proxies
+until module 09 resolves final bus IDs.
+
+| Artifact | Path | SHA256 |
+|---|---|---|
+| Builder script | `scripts/build_za_demand_import_export_inputs.py` | `0f63bdc30a46d6192b8cf49ab6457cdb3e3a4a47cd76685b4f7d427e0cfe19be` |
+| Demand profile | `data/za_validation/za_2023_demand_profile.csv` | `536ec5659b70723aa9bb9b49aa196085435a11ae9c4bd79032247b3334aca847` |
+| GEGIS Africa demand CSV | `data/ssp2-2.6/2030/era5_2023_custom/Africa.csv` | `9de919b6229de94ad2dbea91fbec9a41dae397c31dc4b5def608538af4fb9a1f` |
+| Import/export time series | `data/za_validation/za_2023_import_export_timeseries.csv` | `33f7ee12ca4e076cdba8ea482ffb64b3235ab3caa56e961cfb23bb42d5758579` |
+| Other RE time series | `data/za_validation/za_2023_other_re_timeseries.csv` | `e4112c5b16437c83dad722071a965eee413f857842c8fbc56178d66b91aed24a` |
+| Load allocation weights | `data/za_audit/za_2023_load_allocation_weights.csv` | `d1b0060e25d065a1ea1d96e9561e50db1169b5f1df5bcba1065f756a80b886b3` |
+| PyPSA-RSA GVA/POP comparison | `data/za_audit/pypsa_rsa_gva_pop_load_weight_comparison.csv` | `552e663abcdf72d96df75a3576ebcd06f62e21ebe745b7d4ecf3605e46797dcc` |
+| Import/export attachment | `data/za_audit/za_2023_import_export_attachment.csv` | `9066189c6adfbbd735870148d71b96d5dd4f1e267b9657870cd094ed28c2107a` |
+| Other RE attachment | `data/za_audit/za_2023_other_re_attachment.csv` | `fef2ad3e86122166527b87cc3a13839b4f9d60e4d7d384f6105135e574c8e379` |
+| Markdown report | `doc/za_demand_import_export_model_inputs.md` | `d3bd22fa52ff330cbaea165733a55b382fe6da5eac6caabbf4beaab6a8c07a72` |
+| Notebook | `notebooks/za_validation/06_demand_import_export/demand_import_export_overview.ipynb` | `c61c6f1ed1b5cf8d471fcd65fd9783f8813598907c5e5af5726aa84d6310865e` |
+| Notebook HTML | `doc/za_validation/figures/06_demand_import_export/demand_import_export_overview.html` | `d3171aba589232465761c063ba5562e7292b26370dbcdb197272b1cda5cfc157` |

@@ -248,3 +248,108 @@ This append-only log records implementation decisions, deviations, source inputs
   - Module 08 owns fleet reconciliation; the `included_2023 = true` subset of `pypsa_rsa_fixed_technologies_2023_candidates.csv` plus REIPPPP audits are the canonical baseline candidate set.
   - Module 09 owns the supply-region selection between 1/10/27/34/159 layers and the busmap; module 04 only catalogs the available resolutions.
   - Module 13 owns expansion handoff; `pypsa_rsa_transmission_expansion_audit.csv`, `za_rsa_planned_tdp_lines.geojson`, and the resource-siting audit are expansion-only evidence.
+
+## 05 System Boundary And Carrier Taxonomy — 2026-05-08 16:10
+
+- **Status:** complete (network-level CSP/solar smoke-test gate pending module 10).
+- **Decisions taken:**
+  - Re-confirmed PyPSA-RSA pin: local `HEAD` and `origin/main` both equal `89872c1ea703af3d8a3f198706d1ab7958f50a5f`. PyPSA-earth HEAD at module entry = `f5422d8f384a86117bbc18b3048784e265808669`.
+  - Locked V1 modeling boundary (`za_system_boundary` block): national SA 2023 electricity system, demand target = `RSA Contracted Demand`, load shedding target = `MLR + ILS + IOS`, imports/exports owned by module 06, embedded PV excluded as explicit plant capacity, IPP utility wind/PV/CSP included, CSP 2023 anchors = 500 MW / 1.375 TWh with Redstone excluded.
+  - Locked V1 carrier set in `electricity.{conventional,renewable,extendable}_carriers`: `conventional_carriers = [coal, nuclear]`, `renewable_carriers = [solar, onwind, hydro, csp]`, all `extendable_carriers` lists empty (true V1 fixed-fleet).
+  - Locked structural metadata for the five ZA local carriers (`sasol_coal`, `sasol_gas`, `ocgt_diesel`, `ocgt_gas`, `other_re`) under `za_local_carriers:` — names, color, nice_name, profile/emissions/validation/availability intent. Numeric cost rows are owned by module 07; the `apply_za_local_carriers` network hook is owned by module 10.
+  - RSA → V1 carrier mapping is hand-coded inside `scripts/build_za_carrier_taxonomy.py` (the mapping itself is the lock). 17 distinct RSA carriers in module 04 fixed-tech audit: 15 `resolved`, 1 `excluded_by_boundary` (`solar_pv_rooftop`), 1 `pending_module_08` (`rmippp` — procurement program label).
+  - CSP/solar acceptance smoke test deferred to module 10 via `scripts/za_validation/smoke_carrier_taxonomy.py` (exit codes: 0 pass, 1 fail, 2 skip-when-no-network).
+- **Deviations from plan:**
+  - Plan-time verification spec asserted "all `resolved`"; actual crosscheck has two non-`unresolved` non-`resolved` statuses (`excluded_by_boundary` for embedded PV per system boundary, `pending_module_08` for the RMIPPP procurement-program label). Verification gate updated to "no `unresolved` rows" — equivalent strength.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/05_system_boundary_and_carrier_taxonomy.md`
+  - `6-codebases/Plans/Calibration Plan/90_Comments_Questions.md` §`# 05_system_boundary_and_carrier_taxonomy` (= "None")
+  - `data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv` (module 04)
+  - `data/za_audit/pypsa_rsa_source_registry.csv` (module 04)
+  - PyPSA-Earth HEAD `f5422d8f384a86117bbc18b3048784e265808669`
+  - PyPSA-RSA HEAD `89872c1ea703af3d8a3f198706d1ab7958f50a5f`
+- **Output artifacts produced:**
+  - `configs/za/za_2023_fixed_validation.yaml` (added `za_system_boundary`, `za_local_carriers`, locked `electricity.conventional_carriers`)
+  - `doc/za_carrier_taxonomy.md` (canonical taxonomy doc, 8 sections)
+  - `data/za_audit/za_carrier_taxonomy.csv` (16 rows: 15 V1 + hydro_import supplemental)
+  - `data/za_audit/za_carrier_taxonomy_crosscheck.csv` (17 rows; 15 resolved / 1 excluded / 1 pending)
+  - `scripts/build_za_carrier_taxonomy.py` (dual-mode CLI/Snakemake generator)
+  - `scripts/za_validation/__init__.py`, `scripts/za_validation/smoke_carrier_taxonomy.py` (deferred smoke test)
+  - `Snakefile` rule `build_za_carrier_taxonomy`
+  - `notebooks/za_validation/05_carrier_taxonomy/carrier_taxonomy_overview.ipynb` (+ `.executed.ipynb`)
+  - `doc/za_validation/figures/05_carrier_taxonomy/carrier_taxonomy_overview.html` (355,140 bytes)
+  - `doc/za_validation/figures/05_carrier_taxonomy/mw_by_v1_carrier.png`
+  - `data/za_audit/source_hashes.csv` (Module 05 rows appended)
+  - `data/za_audit/input_file_manifest.csv` (Module 05 rows appended)
+  - `doc/za_data_provenance.md` (Module 05 section appended)
+- **Verification completed:**
+  - YAML parse passed for `configs/za/za_2023_fixed_validation.yaml`.
+  - Direct script execution passed: `python scripts/build_za_carrier_taxonomy.py --configfile configs/za/za_2023_fixed_validation.yaml` → `taxonomy: 16 rows; crosscheck: 17 rows`.
+  - Snakemake dry-run passed: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run build_za_carrier_taxonomy` (1 job).
+  - Snakemake execution passed: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml -j1 build_za_carrier_taxonomy` → `1 of 1 steps (100%) done`.
+  - Crosscheck assertion passed: `python -c "import pandas as pd; df=pd.read_csv('data/za_audit/za_carrier_taxonomy_crosscheck.csv'); assert (df['status']!='unresolved').all()"`.
+  - Smoke-test skip path verified: `python scripts/za_validation/smoke_carrier_taxonomy.py /nonexistent.nc; echo $?` → `2`.
+  - Notebook execution + HTML export passed (`carrier_taxonomy_overview.html`, 355,140 bytes; `mw_by_v1_carrier.png` rendered).
+  - Cross-module DAG dry-run passed: `snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run build_za_carrier_taxonomy build_za_source_audits` → `Nothing to be done`.
+- **Open follow-ups:**
+  - Module 06 must consume `za_system_boundary` (demand target, imports/exports note, embedded PV exclusion) when building load and import/export model inputs.
+  - Module 07 owns `data/za_audit/za_local_carrier_cost_rows.csv` for the 5 local carriers; cost numeric values must be filled per `za_local_carriers` validation/emissions intent.
+  - Module 08 owns the active-2023 biomass decision and the `rmippp` per-plant carrier reconciliation flagged by the crosscheck `pending_module_08` rows.
+  - Module 10 owns the `apply_za_local_carriers` network hook; once it produces a network, run `python scripts/za_validation/smoke_carrier_taxonomy.py <net.nc>` to fire the deferred CSP/solar acceptance gate.
+  - Module 11 dispatch must respect the V1 carrier set and not silently extend it.
+
+## 06 Demand Import Export Model Inputs — 2026-05-08 16:40
+
+- **Status:** complete
+- **Decisions taken:**
+  - Added `build_za_demand_import_export_inputs` as a dedicated Snakemake rule and `scripts/build_za_demand_import_export_inputs.py` as the dual-mode builder.
+  - Replaced the module 01 bootstrap demand setting with `load_options.weather_year: 2023_custom` while keeping `ssp2-2.6`, `prediction_year: 2030`, and `scale: 1`.
+  - Exported Eskom `RSA Contracted Demand` to the upstream GEGIS CSV route at `data/ssp2-2.6/2030/era5_2023_custom/Africa.csv`.
+  - Kept gross imports and gross exports separate. `International Imports` is positive supply injection, `International Exports` is positive withdrawal, and net import is diagnostic only.
+  - Treated `Other RE` as a curtailable local generator input for module 10: `p_nom = 50.58 MW`, `p_max_pu = Other RE / p_nom`, clipped to `[0, 1]`, and `p_min_pu = 0`.
+  - Built demand weights for candidate layers `1`, `10`, and `34` with PyPSA-Earth-style GADM area-overlay allocation using normalized `0.6 * gdp + 0.4 * pop`.
+  - Used conservative proxy attachments for non-demand series: imports attach to `ZA`, `Gauteng`, and `Pretoria`; exports and `Other RE` reuse demand weights until module 09 resolves final bus IDs.
+- **Deviations from plan:**
+  - PyPSA-RSA regional `GVA_2016`/`POP_2016` diagnostics are available for the national layer only. The actual audited PyPSA-RSA 10- and 34-region layers do not contain regional `GVA_2016`/`POP_2016` columns, so `pypsa_rsa_gva_pop_load_weight_comparison.csv` records 1 available diagnostic row and 44 `diagnostic_unavailable` rows instead of inventing regional PyPSA-RSA weights.
+  - The first Snakemake execution with `-F` also reran module 02 and module 04 prerequisites because Snakemake force-propagated through the dependency chain; the unrelated module 04 powerplant CSVs only changed nondeterministic ordering inside serialized set/dict strings and were restored to their pre-run state.
+  - Notebook HTML export passed with a non-blocking nbconvert warning that 4 images lack alternative text.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/06_demand_import_export_model_inputs.md`
+  - `6-codebases/Plans/Calibration Plan/90_Comments_Questions.md` (`# 06_Demand_import_export_model_inputs`)
+  - `data/za_validation/eskom_2023_hourly_clean.csv`, SHA256 `bab73ee6b46d4c147d64b9e0b8d88a01eff2d49229e4688729b180aa1ca4221a`
+  - `data/za_validation/eskom_2023_targets_by_carrier.csv`, SHA256 `dc0bba6c28d5dc0f1fb4004eee3a476f6c371f0bfe13316d5ec6c7204e508ec3`
+  - `data/za_audit/pypsa_rsa_load_weight_audit.csv`
+  - `resources/za_2023_fixed_validation/shapes/gadm_shapes.geojson`
+  - PyPSA-RSA `data/bundle/supply_regions/rsa_supply_regions.gpkg` at pin `89872c1ea703af3d8a3f198706d1ab7958f50a5f`
+- **Output artifacts produced:**
+  - `scripts/build_za_demand_import_export_inputs.py`
+  - `configs/za/za_2023_fixed_validation.yaml`
+  - `Snakefile`
+  - `.gitignore`
+  - `data/za_validation/za_2023_demand_profile.csv`
+  - `data/ssp2-2.6/2030/era5_2023_custom/Africa.csv`
+  - `data/za_validation/za_2023_import_export_timeseries.csv`
+  - `data/za_validation/za_2023_other_re_timeseries.csv`
+  - `data/za_audit/za_2023_load_allocation_weights.csv`
+  - `data/za_audit/pypsa_rsa_gva_pop_load_weight_comparison.csv`
+  - `data/za_audit/za_2023_import_export_attachment.csv`
+  - `data/za_audit/za_2023_other_re_attachment.csv`
+  - `doc/za_demand_import_export_model_inputs.md`
+  - `notebooks/za_validation/06_demand_import_export/demand_import_export_overview.ipynb`
+  - `doc/za_validation/figures/06_demand_import_export/demand_import_export_overview.html`
+  - `data/za_audit/source_hashes.csv`
+  - `data/za_audit/input_file_manifest.csv`
+  - `doc/za_data_provenance.md`
+- **Verification completed:**
+  - YAML parse passed for `configs/za/za_2023_fixed_validation.yaml`; `weather_year` is `2023_custom`.
+  - `python -m py_compile scripts/build_za_demand_import_export_inputs.py` passed.
+  - Direct script execution passed in `/opt/anaconda3/envs/pypsa-earth`.
+  - Snakemake dry-run passed for `build_za_demand_import_export_inputs`; after the generated `Africa.csv` existed, `get_load_paths_gegis` resolved the route to `data/ssp2-2.6/2030/era5_2023_custom/Africa.csv`.
+  - Snakemake execution passed for `build_za_demand_import_export_inputs`.
+  - Demand, GEGIS demand, import/export, and `Other RE` time series each have exactly 8,760 rows aligned to the cleaned Eskom 2023 hourly index.
+  - All attachment-weight groups sum to `1.0` for layers `1`, `10`, and `34`.
+  - Demand annual energy equals the module 02 `RSA Contracted Demand` target: `225.874862263 TWh`.
+  - Notebook execution and HTML export passed for `notebooks/za_validation/06_demand_import_export/demand_import_export_overview.ipynb`.
+- **Open follow-ups:**
+  - Module 09 must resolve final PyPSA-Earth bus IDs and may replace the conservative import/export and `Other RE` proxy attachments with stronger grid evidence.
+  - Module 10 must consume `za_2023_other_re_timeseries.csv` as a non-extendable curtailable `other_re` generator input, not as negative load or a fixed-dispatch generator.

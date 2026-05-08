@@ -154,6 +154,45 @@ rule build_za_source_audits:
         "scripts/build_za_source_audits.py"
 
 
+rule build_za_carrier_taxonomy:
+    input:
+        config="configs/za/za_2023_fixed_validation.yaml",
+        registry="data/za_audit/pypsa_rsa_source_registry.csv",
+        fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
+    output:
+        taxonomy_csv="data/za_audit/za_carrier_taxonomy.csv",
+        crosscheck_csv="data/za_audit/za_carrier_taxonomy_crosscheck.csv",
+    log:
+        "logs/" + RDIR + "build_za_carrier_taxonomy.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_carrier_taxonomy"
+    script:
+        "scripts/build_za_carrier_taxonomy.py"
+
+
+rule build_za_demand_import_export_inputs:
+    input:
+        hourly="data/za_validation/eskom_2023_hourly_clean.csv",
+        targets="data/za_validation/eskom_2023_targets_by_carrier.csv",
+        rsa_load_weights="data/za_audit/pypsa_rsa_load_weight_audit.csv",
+    output:
+        demand_profile="data/za_validation/za_2023_demand_profile.csv",
+        gegis_africa="data/ssp2-2.6/2030/era5_2023_custom/Africa.csv",
+        import_export="data/za_validation/za_2023_import_export_timeseries.csv",
+        other_re="data/za_validation/za_2023_other_re_timeseries.csv",
+        load_weights="data/za_audit/za_2023_load_allocation_weights.csv",
+        gva_pop_comparison="data/za_audit/pypsa_rsa_gva_pop_load_weight_comparison.csv",
+        import_export_attachment="data/za_audit/za_2023_import_export_attachment.csv",
+        other_re_attachment="data/za_audit/za_2023_other_re_attachment.csv",
+        report="doc/za_demand_import_export_model_inputs.md",
+    log:
+        "logs/" + RDIR + "build_za_demand_import_export_inputs.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_demand_import_export_inputs"
+    script:
+        "scripts/build_za_demand_import_export_inputs.py"
+
+
 rule clean:
     run:
         try:

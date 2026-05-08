@@ -70,6 +70,10 @@ lumina_mockup.html
 !data/za_validation/
 !data/za_validation/*.csv
 !data/za_validation/.gitkeep
+!data/ssp2-2.6/
+!data/ssp2-2.6/2030/
+!data/ssp2-2.6/2030/era5_2023_custom/
+!data/ssp2-2.6/2030/era5_2023_custom/Africa.csv
 !notebooks/
 notebooks/*
 !notebooks/za_validation/
@@ -78,6 +82,8 @@ notebooks/za_validation/*
 !notebooks/za_validation/02_eskom_data/parser_report.ipynb
 !notebooks/za_validation/03_profiles/
 !notebooks/za_validation/03_profiles/profile_validation.ipynb
+!notebooks/za_validation/06_demand_import_export/
+!notebooks/za_validation/06_demand_import_export/demand_import_export_overview.ipynb
 
 # Specific configuration files
 configs/scenarios/config.*.yaml

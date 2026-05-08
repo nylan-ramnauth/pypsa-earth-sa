@@ -36,7 +36,7 @@ atlite:
 
 load_options:
   ssp: "ssp2-2.6"
-  weather_year: 2013
+  weather_year: 2023_custom
   prediction_year: 2030
   scale: 1
 
@@ -44,12 +44,77 @@ electricity:
   custom_powerplants: replace
   estimate_renewable_capacities:
     stats: false
+  # Module 05 — System Boundary And Carrier Taxonomy.
+  # Upstream V1 baseline carriers; local ZA carriers (sasol_coal, sasol_gas,
+  # ocgt_diesel, ocgt_gas, other_re) are added post add_electricity by the
+  # module 10 apply_za_local_carriers hook and must NOT appear here.
+  conventional_carriers: [coal, nuclear]
   renewable_carriers: [solar, onwind, hydro, csp]
   extendable_carriers:
     Generator: []
     StorageUnit: []
     Store: []
     Link: []
+
+# Module 05 — System Boundary lock for V1 fixed-fleet validation.
+za_system_boundary:
+  scope: "national South Africa 2023 electricity system"
+  demand_target: "RSA Contracted Demand"
+  load_shedding_target: "MLR + ILS + IOS"
+  imports_exports: "exogenous time series owned by module 06"
+  embedded_pv_treatment: "excluded as explicit plant capacity in V1; documented as residual demand/accounting issue"
+  ipp_utility_inclusion: "included when present in Eskom reported generation and 2023 plant reconciliation"
+  csp_2023_anchors:
+    installed_capacity_mw: 500
+    generation_twh: 1.375
+    redstone_excluded: true
+    profile_route: "native_atlite_first; documented_temporary_fallback_allowed"
+
+# Module 05 — Carrier Taxonomy lock (structural metadata only).
+# Cost numeric values are owned by module 07 in
+# data/za_audit/za_local_carrier_cost_rows.csv. Network rows are added by
+# module 10 apply_za_local_carriers hook AFTER add_electricity.
+za_local_carriers:
+  sasol_coal:
+    component: Generator
+    color: "#4d4d4d"
+    nice_name: "Sasol coal"
+    profile_intent: "fixed dispatch from coal-equivalent availability profile (module 11)"
+    emissions_intent: "explicit row in module 07 cost CSV"
+    validation_target: "Eskom 2023 coal generation reconciliation (sub-row)"
+    availability_treatment: "owned by module 08 fleet reconciliation"
+  sasol_gas:
+    component: Generator
+    color: "#a06030"
+    nice_name: "Sasol gas"
+    profile_intent: "fixed dispatch; gas-equivalent availability"
+    emissions_intent: "explicit row in module 07"
+    validation_target: "Eskom 2023 OCGT/gas reconciliation (sub-row)"
+    availability_treatment: "owned by module 08"
+  ocgt_diesel:
+    component: Generator
+    color: "#cc6633"
+    nice_name: "OCGT diesel"
+    profile_intent: "peaker; high marginal cost; module 11 dispatch"
+    emissions_intent: "explicit row in module 07"
+    validation_target: "Eskom 2023 OCGT/diesel reconciliation"
+    availability_treatment: "owned by module 08"
+  ocgt_gas:
+    component: Generator
+    color: "#d35050"
+    nice_name: "OCGT gas"
+    profile_intent: "peaker; module 11 dispatch"
+    emissions_intent: "explicit row in module 07"
+    validation_target: "Eskom 2023 OCGT/gas reconciliation"
+    availability_treatment: "owned by module 08"
+  other_re:
+    component: Generator
+    color: "#88c057"
+    nice_name: "Other RE"
+    profile_intent: "exogenous: Eskom 8760 'Other RE' series for V1 accounting"
+    emissions_intent: "zero CO2 by default; row in module 07"
+    validation_target: "Eskom 2023 Other RE energy total"
+    availability_treatment: "exogenous time series, no availability filter"
 
 solving:
   solver:
