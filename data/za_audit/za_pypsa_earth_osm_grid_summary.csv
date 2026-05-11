@@ -1,0 +1,13 @@
+metric,value,voltage_bucket,line_count,total_length_km
+total_buses,1606,,,
+total_lines,2138,,,
+total_links_dc,0,,,
+total_transformers,315,,,
+total_line_length_km,76680.09700566337,,,
+unique_v_nom_kv,66|88|110|132|150|220|275|400|500|765,,,
+source_base_nc,networks/za_2023_fixed_validation/base.nc,,,
+lines_per_voltage_bucket,,<220kV,1758,40642.44329711116
+lines_per_voltage_bucket,,220kV,17,1457.3188662513662
+lines_per_voltage_bucket,,275kV,131,7778.257415207871
+lines_per_voltage_bucket,,400kV,219,23598.66549791645
+lines_per_voltage_bucket,,765kV,13,3203.4119291765273

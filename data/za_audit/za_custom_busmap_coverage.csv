@@ -1,0 +1,8 @@
+metric,value,detail
+n_input_buses,803.0,
+n_mapped_buses,803.0,
+unassigned_buses,0.0,
+n_target_regions,34.0,
+n_used_regions,34.0,
+orphan_regions,0.0,
+buses_per_region_mean,23.618,

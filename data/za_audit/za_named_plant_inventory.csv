@@ -1,0 +1,31 @@
+station_name,carrier,status_2023,p_nom_mw_expected,lat_expected,lon_expected,source,notes
+Koeberg,nuclear,operating,1854.0000,-33.6760,18.4317,PyPSA-RSA fixed_technologies + Eskom Annual Report 2023,
+Medupi,coal,commissioning,4317.0000,-23.4200,27.3300,PyPSA-RSA fixed_technologies (audit coords differ ~30 km from real Lephalale; flagged for Module 04 follow-up),
+Kusile,coal,commissioning,3600.0000,-25.9201,28.9249,PyPSA-RSA fixed_technologies + Eskom Annual Report 2023,
+Matimba,coal,operating,3690.0000,-23.6678,27.6086,PyPSA-RSA fixed_technologies,
+Kendal,coal,operating,3840.0000,-26.0975,28.9706,PyPSA-RSA fixed_technologies,
+Tutuka,coal,operating,3510.0000,-26.7785,29.3528,PyPSA-RSA fixed_technologies,
+Lethabo,coal,operating,3558.0000,-26.7383,27.9656,PyPSA-RSA fixed_technologies,
+Majuba,coal,operating,3807.0000,-27.1011,29.7831,PyPSA-RSA fixed_technologies,
+Matla,coal,operating,3450.0000,-26.2789,29.1483,PyPSA-RSA fixed_technologies,
+Duvha,coal,operating,2875.0000,-25.9636,29.3389,PyPSA-RSA fixed_technologies,
+Hendrina,coal,operating,1098.0000,-26.0314,29.6014,"PyPSA-RSA fixed_technologies; audit Hendrina** coord (-26.62, 30.09) differs from primary site and is flagged for Module 04 follow-up",
+Kriel,coal,operating,2640.0000,-26.2456,29.1772,PyPSA-RSA fixed_technologies,
+Arnot,coal,operating,2100.0000,-25.9533,29.7894,PyPSA-RSA fixed_technologies,
+Komati,coal,retired,906.0000,-26.0894,29.4525,Eskom Annual Report 2023; retired 2023-Q4,
+Camden,coal,operating,1481.0000,-26.6244,30.0944,PyPSA-RSA fixed_technologies; partial decommissioning planned 2024,
+Grootvlei,coal,operating,570.0000,-26.7783,28.4986,PyPSA-RSA fixed_technologies; partial retirement underway,
+Ankerlig,ocgt_diesel,operating,1332.0000,-33.5781,18.3744,PyPSA-RSA fixed_technologies,
+Gourikwa,ocgt_diesel,operating,746.0000,-34.1850,21.9764,PyPSA-RSA fixed_technologies,
+Acacia,ocgt_diesel,operating,171.0000,-33.8556,18.5544,PyPSA-RSA fixed_technologies; AVF treated as diesel for V1,
+PortRex,ocgt_diesel,operating,171.0000,-33.0322,27.8350,PyPSA-RSA fixed_technologies; audit name 'PortRex'; AVF treated as diesel for V1,
+Drakensberg,PHS,operating,1000.0000,-28.5628,29.0828,PyPSA-RSA fixed_technologies; audit coord differs ~22 km from real site near Bergville and is flagged for Module 04 follow-up,max_hours_from_audit=21.7h
+Ingula,PHS,operating,1324.0000,-28.1650,29.3512,PyPSA-RSA fixed_technologies; capacity 1324 MW per audit (vs Eskom 1332 MW nameplate),max_hours_from_audit=20.7h
+Palmiet,PHS,operating,400.0000,-34.2589,19.0008,"Eskom Annual Report; not in audit BASE scenario, flagged below",max_hours=12
+Steenbras,PHS,operating,180.0000,-34.1858,18.8794,"City of Cape Town / Eskom; not in audit BASE scenario, flagged below",max_hours=20
+Kaxu Solar One,csp,operating,100.0000,-28.8793,19.5929,PyPSA-RSA fixed_technologies; SA REIPPPP CSP plant,csp_storage_hours=3
+Khi Solar One,csp,operating,50.0000,-28.5364,21.0782,PyPSA-RSA fixed_technologies,csp_storage_hours=6
+Bokpoort CSP project,csp,operating,50.0000,-28.7333,21.9955,PyPSA-RSA fixed_technologies,csp_storage_hours=9
+!XiNa Solar One,csp,operating,100.0000,-28.8906,19.5918,PyPSA-RSA fixed_technologies; audit name retains leading '!',csp_storage_hours=6
+Karoshoek Solar One,csp,operating,100.0000,-28.4819,21.5204,"PyPSA-RSA fixed_technologies; also known as Ilanga CSP-1 (100 MW, COD 2018, Postmasburg)",csp_storage_hours=6
+Kathu Solar Park,csp,operating,100.0000,-27.6095,23.0276,PyPSA-RSA fixed_technologies,csp_storage_hours=6

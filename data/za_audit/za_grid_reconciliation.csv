@@ -1,0 +1,8 @@
+voltage_bucket,osm_line_count,osm_length_km,rsa_line_count,rsa_length_km
+<220kV,1758,40642.44329711116,,
+220kV,17,1457.3188662513662,,
+275kV,131,7778.257415207871,,
+400kV,219,23598.66549791645,,
+765kV,13,3203.4119291765273,,
+rsa_220kv_plus_aggregate,,,151,21390.63313364369
+rsa_existing_lines_220kv_plus_input,,,324,

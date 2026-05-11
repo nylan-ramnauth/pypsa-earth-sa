@@ -1,0 +1,5 @@
+station_name,p_nom_mw,max_hours,storage_capacity_mwh,source_path,source_note
+Drakensberg,1000.000,21.700,21700.000,"data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv (scenario_set=ME IRP 2024, Scenario=BASE, sheet=storage)",Module 04 audit Max Storage (GWh)
+Ingula,1324.000,20.695,27400.000,"data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv (scenario_set=ME IRP 2024, Scenario=BASE, sheet=storage)",Module 04 audit Max Storage (GWh)
+Palmiet,400.000,25.000,10000.000,"data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv (scenario_set=ME IRP 2024, Scenario=BASE, sheet=storage)",Module 04 audit Max Storage (GWh)
+Steenbras,180.000,15.000,2700.000,"data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv (scenario_set=ME IRP 2024, Scenario=BASE, sheet=storage)",Module 04 audit Max Storage (GWh)

@@ -1,0 +1,4 @@
+source_label,base_year,value_zar_per_mwh,value_eur_per_mwh,conversion_rate,source_doc,frame,note
+CSIR,2024,116570.000000,5878.545945,19.829734,3-wiki/reference/web-clips/2026-05-07-fti-consulting-out-of-darkness-economic-costs.md,policy_primary,CSIR Utility-scale power generation statistics in South Africa 2024; cited by FTI Consulting and National Treasury
+Nova_Economics,2019,9530.000000,589.156195,16.175676,3-wiki/reference/web-clips/2026-05-07-nova-economics-cost-of-load-shedding-sa.md,policy_lower_sensitivity,"Nova Economics, commissioned by Eskom, c. 2020; GDP-loss only"
+Deloitte_Eskom_2009,2009,8950.000000,766.683326,11.673659,,historical_reference,Deloitte 2009 study for Eskom; historical reference only

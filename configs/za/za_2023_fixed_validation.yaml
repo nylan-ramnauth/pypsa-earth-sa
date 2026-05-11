@@ -7,7 +7,36 @@
 # snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run
 
 countries: ["ZA"]
-output_currency: ZAR
+
+# Module 07 — Costs, Fuels, Efficiencies, and CoUE.
+# Locks dispatch-cost inputs for the 2023 fixed-validation baseline.
+# `output_currency` lives under `costs:` because PyPSA-Earth reads
+# `config["costs"]["output_currency"]` (scripts/add_electricity.py:759).
+# `electricity_grid_connection: 0` disables the upstream per-generator
+# grid-connection cost (PR f8eab87a) for ZA local carriers — Module 08
+# reconciles full per-plant capex through custom_powerplants.csv.
+costs:
+  year: 2030
+  output_currency: ZAR
+  electricity_grid_connection: 0
+
+# Module 07 — Policy CoLS reference values (ZAR per MWh).
+# Numeric rows + EUR conversion are recorded in
+# data/za_audit/za_cols_reference_values.csv. Module 12 reporting must
+# present load-shedding costs in both solver-safety-valve and policy frames.
+za_cols_policy:
+  primary:
+    source: CSIR
+    base_year: 2024
+    value_zar_per_mwh: 116570
+  lower_sensitivity:
+    source: Nova_Economics
+    base_year: 2019
+    value_zar_per_mwh: 9530
+  historical:
+    source: Deloitte_Eskom_2009
+    base_year: 2009
+    value_zar_per_mwh: 8950
 
 # Module 04 — Source Data Audits: PyPSA-RSA reference repo.
 pypsa_rsa_root: "/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa"
@@ -16,6 +45,8 @@ pypsa_rsa_pinned_commit: "89872c1ea703af3d8a3f198706d1ab7958f50a5f"
 enable:
   retrieve_cutout: false
   build_cutout: false
+  # Module 09 — custom busmap from 34 Eskom local-area supply regions.
+  custom_busmap: true
 
 run:
   name: "za_2023_fixed_validation"
@@ -42,6 +73,9 @@ load_options:
 
 electricity:
   custom_powerplants: replace
+  # Module 08 — Fleet Reconciliation. Keep rows active in 2023:
+  #   DateOut >= 2022 OR DateOut isna  AND  DateIn <= 2023 OR DateIn isna
+  powerplants_filter: (DateOut >= 2022 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
   estimate_renewable_capacities:
     stats: false
   # Module 05 — System Boundary And Carrier Taxonomy.
@@ -131,3 +165,35 @@ solving:
   options:
     load_shedding: true
     noisy_costs: false
+
+# Module 09 — Grid Spatial And Transmission Model.
+# Spatial level locked to 34 Eskom local areas (Stage 4b decision,
+# pre-implementation-decisions.md Q2). Custom busmap is the V1 path
+# (enable.custom_busmap: true above); subregion.method stays false.
+# The 34-cluster target is selected at CLI time via the wildcard in
+# `networks/{run}/elec_s_34.nc` — no `scenario:` or `cluster_options:`
+# overrides are needed because `config.default.yaml` already sets
+# alternative_clustering: false and upstream aggregation_strategies.
+# Thermal/SIL/n1/s_max_pu values pinned from pypsa-rsa @
+# 89872c1ea703af3d8a3f198706d1ab7958f50a5f config.yaml:146-162.
+# St Clair coefficients (53.736, -0.65) from pypsa-rsa
+# scripts/build_topology.py:241-253; differs from literature-standard
+# Dunlop fit (43.261, -0.6678) — see doc/za_grid_reconciliation.md.
+za_grid_spatial:
+  spatial_level: 34
+  source_decision: "Stage 4b (pre-implementation-decisions.md Q2)"
+  pypsa_rsa_supply_regions_layer: 34
+  line_voltage_threshold_kv: 220
+  st_clair_coefficients: [53.736, -0.65]
+  s_max_pu: 0.7
+  n1_approx_single_lines: 0.7
+  sil_mw:
+    220: 122
+    275: 245
+    400: 602
+    765: 2280
+  thermal_mw:
+    220: 492
+    275: 921
+    400: 1788
+    765: 5512

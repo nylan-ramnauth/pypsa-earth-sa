@@ -193,6 +193,84 @@ rule build_za_demand_import_export_inputs:
         "scripts/build_za_demand_import_export_inputs.py"
 
 
+rule build_za_costs_fuels_efficiencies:
+    input:
+        config="configs/za/za_2023_fixed_validation.yaml",
+        cost_audit="data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv",
+        carrier_taxonomy="data/za_audit/za_carrier_taxonomy.csv",
+        costs_2030="data/costs_2030.csv",
+    output:
+        audit_csv="data/za_audit/za_costs_fuels_efficiencies_audit.csv",
+        local_rows_csv="data/za_audit/za_local_carrier_cost_rows.csv",
+        fxrate_csv="data/za_audit/za_eur_zar_fxrate_2023.csv",
+        cols_refs_csv="data/za_audit/za_cols_reference_values.csv",
+        report="doc/za_costs_fuels_efficiencies_and_coUE.md",
+    log:
+        "logs/" + RDIR + "build_za_costs_fuels_efficiencies.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_costs_fuels_efficiencies"
+    script:
+        "scripts/build_za_costs_fuels_efficiencies.py"
+
+
+rule build_za_fleet_reconciliation:
+    input:
+        config="configs/za/za_2023_fixed_validation.yaml",
+        fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
+        reipppp_wind="data/za_audit/reipppp_wind_2023_candidates.csv",
+        reipppp_solar="data/za_audit/reipppp_solar_2023_candidates.csv",
+        eskom_raw="data/za_audit/raw/eskom_data_2023_full.csv",
+        carrier_taxonomy="data/za_audit/za_carrier_taxonomy.csv",
+    output:
+        custom_powerplants="data/custom_powerplants.csv",
+        reconciliation="data/za_audit/za_powerplant_reconciliation.csv",
+        named_inventory="data/za_audit/za_named_plant_inventory.csv",
+        anchors="data/za_audit/za_eskom_2023_capacity_anchors.csv",
+        phs_storage="data/za_audit/za_phs_storage_hours.csv",
+        normalization_diff="data/za_audit/za_powerplants_normalization_diff.csv",
+        report="doc/za_powerplant_reconciliation.md",
+    log:
+        "logs/" + RDIR + "build_za_fleet_reconciliation.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_fleet_reconciliation"
+    script:
+        "scripts/build_za_fleet_reconciliation.py"
+
+
+rule build_za_grid_spatial:
+    input:
+        config="configs/za/za_2023_fixed_validation.yaml",
+        base_network="networks/" + RDIR + "base.nc",
+        elec_s="networks/" + RDIR + "elec_s.nc",
+        country_shapes="resources/" + RDIR + "shapes/country_shapes.geojson",
+        existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
+        supply_area_limits="data/za_audit/za_rsa_supply_area_connection_limits.csv",
+        mts_limits="data/za_audit/za_rsa_mts_hosting_limits.csv",
+        transmission_audit="data/za_audit/pypsa_rsa_transmission_expansion_audit.csv",
+        custom_powerplants="data/custom_powerplants.csv",
+        load_weights="data/za_audit/za_2023_load_allocation_weights.csv",
+        import_export="data/za_audit/za_2023_import_export_attachment.csv",
+        other_re="data/za_audit/za_2023_other_re_attachment.csv",
+    output:
+        custom_busmap="data/custom_busmap_elec_s_34.csv",
+        osm_summary="data/za_audit/za_pypsa_earth_osm_grid_summary.csv",
+        rsa_corridors="data/za_audit/za_rsa_interregional_transfer_limits.csv",
+        reconciliation="data/za_audit/za_grid_reconciliation.csv",
+        level_lock="data/za_audit/za_spatial_level_lock.csv",
+        plant_bus="data/za_audit/za_plant_bus_assignment.csv",
+        demand_bus="data/za_audit/za_demand_bus_attachment.csv",
+        ie_bus="data/za_audit/za_import_export_bus_attachment.csv",
+        other_re_bus="data/za_audit/za_other_re_bus_attachment.csv",
+        busmap_coverage="data/za_audit/za_custom_busmap_coverage.csv",
+        reconciliation_md="doc/za_grid_reconciliation.md",
+    log:
+        "logs/" + RDIR + "build_za_grid_spatial.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_grid_spatial"
+    script:
+        "scripts/build_za_grid_spatial.py"
+
+
 rule clean:
     run:
         try:

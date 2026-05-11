@@ -206,3 +206,76 @@ until module 09 resolves final bus IDs.
 | Markdown report | `doc/za_demand_import_export_model_inputs.md` | `d3bd22fa52ff330cbaea165733a55b382fe6da5eac6caabbf4beaab6a8c07a72` |
 | Notebook | `notebooks/za_validation/06_demand_import_export/demand_import_export_overview.ipynb` | `c61c6f1ed1b5cf8d471fcd65fd9783f8813598907c5e5af5726aa84d6310865e` |
 | Notebook HTML | `doc/za_validation/figures/06_demand_import_export/demand_import_export_overview.html` | `d3171aba589232465761c063ba5562e7292b26370dbcdb197272b1cda5cfc157` |
+
+## Module 07 — Costs, Fuels, Efficiencies, and CoUE — 2026-05-11
+
+| Artifact | Path | SHA256 |
+|---|---|---|
+| Builder script | `scripts/build_za_costs_fuels_efficiencies.py` | `a4c95c342f24ee5eb6ef9948ac3e4679987b2c84b8a66fb0ff020e1549a3ed95` |
+| `za_costs` package — `__init__.py` | `scripts/za_costs/__init__.py` | `203ef1888f05b960e57bdb633120bf596925577189a4bf0b279406e647e017c0` |
+| `za_costs` package — `fxrate.py` | `scripts/za_costs/fxrate.py` | `15f8d7069e7c8fd93845abf53f421ec01db1a982f9e2c639239040a5fbfae774` |
+| `za_costs` package — `currency.py` | `scripts/za_costs/currency.py` | `99e789361c0601ad31d8ddd8b0abf8e6a8c9dd99440349cf2959070d4032a424` |
+| `za_costs` package — `audit_builder.py` | `scripts/za_costs/audit_builder.py` | `d1d10b27df417a80879368d30d1d560af835d159196fdfa7cbbd69e3da0e7816` |
+| `za_costs` package — `local_rows.py` | `scripts/za_costs/local_rows.py` | `952aee049ca247c2f534cae57cfef4d6b492f7f83c052ccf55dcac757a7086a5` |
+| Cost/fuel/emissions audit CSV | `data/za_audit/za_costs_fuels_efficiencies_audit.csv` | `91c649984e3f605305bfb17d45a4a7beaad0357b5b9c8ecb05cd1be878ae54e7` |
+| Local-carrier cost rows | `data/za_audit/za_local_carrier_cost_rows.csv` | `c5e3c5e74021175776851d1d68b9368232fa3f7cc2d82934132126f9d410b4da` |
+| Frozen 2023 EUR/ZAR rate | `data/za_audit/za_eur_zar_fxrate_2023.csv` | `9d6fe1ec0d5d5f16ac2507214ccb45a5db6359a6c3b54ff76199c3b5a3a79c91` |
+| Policy CoLS reference values | `data/za_audit/za_cols_reference_values.csv` | `3024a998f4b6292a83fd8debdaa936f06d01a4e900e4361463732dc75e2cc75d` |
+| Canonical doc | `doc/za_costs_fuels_efficiencies_and_coUE.md` | `257328fd70e50b3e8dd21bd3768c1dad19992a7b5775710b43f8370a3e9e707f` |
+| Notebook | `notebooks/za_validation/07_costs_fuels/cost_fuel_overview.ipynb` | `beb7be393ce651119fe642e381fc1a2ed49d6443c3cf8bfd5fa237502e48e88a` |
+| Notebook HTML | `doc/za_validation/figures/07_costs_fuels/cost_fuel_overview.html` | `f0a586c40721c63104c763d20336fb97a8e5d6c13202dda1a29185ad1c0a7ec4` |
+
+### Module 04 audit consumed by Module 07
+
+- `data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv` (SHA256
+  `42648462daa9c6bec30ac41ce5886132b0321d355d21917aa230dfb23e311e03`)
+- `data/costs_2030.csv` (SHA256
+  `8a412a1d32c1f43fba1aa46295a67eab13345758eb5f5bffef415ca743b4d7b7`)
+
+### External source
+
+- ECB historical EUR FX reference rates archive
+  `eurofxref-hist.zip`, mirrored at
+  `https://raw.githubusercontent.com/alexprengere/currencyconverter/master/currency_converter/eurofxref-hist.zip`,
+  archive SHA256
+  `9dea72fbf8116f2d76106d78f9875f2aa8157f39ed3cf728a1602f2a5445d199`,
+  member `eurofxref-hist.csv`. Frozen 2023 row used: date `2023-12-29`,
+  EUR/ZAR `20.3477`. PyPSA-RSA base-year (2018) average rate used for
+  ZAR → EUR conversion of audited values: `15.6186`.
+
+PyPSA-Earth HEAD at Module 07 completion: `2d76ba3569689817dc0c8bda99719670ec292f08`.
+PyPSA-RSA HEAD: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
+
+## Module 08 — Fleet Reconciliation And Custom Powerplants
+
+| Artifact | Path | SHA256 |
+|---|---|---|
+| Module 08 builder | `scripts/build_za_fleet_reconciliation.py` | `60dbdb4754a74c246603e244b4aad4e019b6c596e6038357e075499860cbb855` |
+| `za_fleet` package — `__init__.py` | `scripts/za_fleet/__init__.py` | `c3dbea19c5abd17db2bb3f1ebabc79338356b416edae90eeefae811cd72aa910` |
+| `za_fleet` package — `reconciliation.py` | `scripts/za_fleet/reconciliation.py` | `416c379579d244e0c342e859b395cf837504a1675fd389c502dc3fb83350b78c` |
+| `za_fleet` package — `custom_powerplants.py` | `scripts/za_fleet/custom_powerplants.py` | `da7fbcb8a44701d55175114ce152fc4726640f1771ad4b79ef006290051ebbe7` |
+| `za_fleet` package — `named_inventory.py` | `scripts/za_fleet/named_inventory.py` | `5f596a7168e4cc8d66a5856898e8f464d350a9c56b728fe76ce6d08f7133d88b` |
+| `za_fleet` package — `eskom_anchors.py` | `scripts/za_fleet/eskom_anchors.py` | `4bc7ce338fce90a947d521180a016c073d6586707d976069890ce9102695d771` |
+| `za_fleet` package — `normalization_smoke.py` | `scripts/za_fleet/normalization_smoke.py` | `2cb0d6da409c9826e6d0b0a4fcf4355ad4b15bda4e7f4a8954d9f889c972bd4f` |
+| Frozen 2023 ZA fleet | `data/custom_powerplants.csv` | `082c5ef44c298993c3ccaa603346e49a39371e2edad305689894c880ba16d43e` |
+| Reconciliation audit | `data/za_audit/za_powerplant_reconciliation.csv` | `ec6ee617280c599f11eee98b9c0755e2d89c004050adeb2fa69937535ddda238` |
+| Named-plant inventory | `data/za_audit/za_named_plant_inventory.csv` | `74c67f7cef4cae03ded2cae4af63346648456acff06d17b28ac762fc8780c146` |
+| Eskom 2023 capacity anchors | `data/za_audit/za_eskom_2023_capacity_anchors.csv` | `a78b905a1c88dfac1e70981f292d5cfca5543c5f425cfa64b8e50fc21cb6d93b` |
+| PHS storage hours audit | `data/za_audit/za_phs_storage_hours.csv` | `c8aa6d0ea7c9159082c7b02af62db9a2fd6e61fd39c311be173dd409b46c712d` |
+| Normalization smoke diff | `data/za_audit/za_powerplants_normalization_diff.csv` | `145fc7943e80a20ec7358b4d6d9b772a8f153e9ad941395ea65e3d7908f87b7d` |
+| Canonical doc | `doc/za_powerplant_reconciliation.md` | `7717a21689b8b961249ce3f1ddc23e7745146c5a79b4dfa9acaf73e20617f66f` |
+| Notebook | `notebooks/za_validation/08_fleet/fleet_overview.ipynb` | `678c015edcf711a53cec01fcf561f1a3d4a821ea15c23388a8435b4a1cd8e34c` |
+| Notebook HTML | `doc/za_validation/figures/08_fleet/fleet_overview.html` | `4a921355446dad6b02b77d84fe142d29a8f03024852dc61374719ba7de93dde8` |
+
+### Module 04 audits consumed by Module 08
+
+- `data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv` (SHA256 `81c19dce89803c375e1616323ffd86c999c87a085e3a98b3ff34de74ec8e5d03`)
+- `data/za_audit/reipppp_wind_2023_candidates.csv` (SHA256 `7ba1fdb00b89234019c53f6fb7297ca5fb09f8ed532747619e78f826b9c919d6`)
+- `data/za_audit/reipppp_solar_2023_candidates.csv` (SHA256 `9833b61ab47a8cc58aa3202b4b83af96b67bb371c7b7c479540d4a90a2c4c2c3`)
+
+### Module 02 raw input consumed by Module 08 anchor builder
+
+- `data/za_audit/raw/eskom_data_2023_full.csv` (SHA256 `8c2220f114ba60d5ae823f5116368cc2a664ec625d70f4d52bdf26caffc29869`)
+
+PyPSA-Earth HEAD at Module 08 completion: `2d76ba3569689817dc0c8bda99719670ec292f08`.
+PyPSA-RSA HEAD: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
