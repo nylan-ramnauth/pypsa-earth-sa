@@ -141,6 +141,13 @@ def build_reconciliation_rows(
         v1_carrier = RSA_TO_V1.get(rsa_carrier)
         if v1_carrier is None or v1_carrier == "hydro_import":
             continue
+        # Skip onwind/solar — REIPPPP loops (2 and 3) are authoritative for these
+        # carriers. Keeping RSA rows duplicates every wind/solar plant (~2× capacity
+        # error) and adds 4,439 MW of `Existing distributed solar PV` aggregates that
+        # are already netted into `RSA Contracted Demand` (double-count). CSP stays
+        # because Loop 3 skips CSP — RSA is its only source.
+        if v1_carrier in ("onwind", "solar"):
+            continue
         raw_name = str(r.get("Power Station Name", "")).strip()
         canonical = _canonical_name(raw_name)
         if not canonical:

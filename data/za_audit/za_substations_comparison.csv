@@ -1,0 +1,7 @@
+voltage_bucket,osm_substation_count,rsa_substation_count,delta_count,osm_coverage_ratio,notes
+220kV,113,9,104,12.5560,
+275kV,1118,66,1052,16.9390,
+400kV,1382,80,1302,17.2750,
+765kV,110,9,101,12.2220,
+other_kv,13482,7,13475,1926.0000,
+220kv_plus_total,2723,164,2559,16.6040,sum of 220/275/400/765 buckets

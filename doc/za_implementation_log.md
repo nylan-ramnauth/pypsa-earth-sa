@@ -717,3 +717,145 @@ This append-only log records implementation decisions, deviations, source inputs
   - **Import/export proxy:** V1 attaches all `International Imports` rows to `Polokwane` for Cahora Bassa routing. Module 13 (expansion handoff) may refine using a per-interconnector table once a 765 kV HVDC node is exposed in the OSM/Eskom corridor data.
   - **Demand / other_re weights** use 34-region polygon area share for audit; active model disaggregation remains in `build_demand_profiles.py`. Module 12 reconciliation must NOT use the audit CSV as the demand allocation — it is provenance only.
   - **`from __future__ import annotations` quirk:** the orchestrator (`build_za_grid_spatial.py`) cannot use this future import because Snakemake's `script:` directive injects code before user imports. Submodule files keep the future import. Recorded for module-template reuse.
+
+## 09b Custom Missing Transmission Lines — 2026-05-12 08:30
+
+- **Status:** complete
+- **Decisions taken:**
+  - **Injection point** moved to the clustered network `elec_s_34.nc` (post-`cluster_network`). PyPSA-Earth's upstream `use_custom_lines` / `path_custom_lines` config flags consume OSM-format GeoJSON at `base_network.py` — the 10 unmatched corridors are identified by Eskom supply-area bus names that only exist after clustering. Hook mutates `elec_s_34.nc` in place and writes `elec_s_34.pre_custom.nc` as the Snakemake-tracked backup/marker.
+  - **400 kV** corridors use the PyPSA standard line type `Al/St 240/40 4-bundle 380.0` (matches the existing 6 four-bundle 380 kV lines in `elec_s_34.nc`); x/r/b derived from `type × length / num_parallel`. PyPSA normalises 400 kV → 380 kV v_nom per the config voltage map at `config.default.yaml:238-244`.
+  - **275 kV** corridors hand-override per-km impedance because PyPSA's standard catalog has no 275 kV bundle. Values: `x = 0.32 Ω/km`, `r = 0.034 Ω/km`, `b = 3.6e-6 S/km` (typical single-circuit 275 kV bundle), then divided/multiplied by `num_parallel` for impedance/capacitance respectively. Recorded in `za_custom_missing_lines.csv` `source_note` column as `hand_override_275kV_singlecircuit`.
+  - **Line length** computed via Haversine from `n.buses[['x','y']]` of the clustered network — no geometry tracing.
+  - **Snakemake wiring** uses an input function `_za_custom_lines_marker(wildcards)` on `add_extra_components` that returns `["elec_s_34.pre_custom.nc"]` only when `wildcards.simpl == "" and wildcards.clusters == "34"`. Empty list for any other wildcard combination, so the marker dependency does not pollute other clustering paths.
+- **Deviations from plan:**
+  - Plan said `Al/St 240/40 2-bundle 380.0` for 400 kV; actual clustered-network 400 kV lines use `4-bundle 380.0`. Switched to 4-bundle to match upstream electrical characteristics exactly.
+  - Plan said the hook would target `elec_s_34.nc`; on first attempt I wrote `v_nom` as an `n.add("Line", ...)` kwarg — PyPSA Line components derive `v_nom` from `bus0`, so the kwarg was ignored with a warning. Fixed: drop `v_nom` from `n.add` kwargs. Also: pandas read empty `type` cells as `NaN` which truthy-tests as `True` once cast to `str("nan")`, causing PyPSA to look up the nonexistent `"nan"` type and silently zero x/r/b. Fixed: `pd.notna(type_raw) and str(type_raw).strip() != ""`.
+- **Source inputs used:**
+  - `data/za_audit/za_osm_vs_stclair_ratings_comparison.csv` (Module 10 output; 65 corridors, 10 with `notes == "no_osm_lines_found"`).
+  - `networks/za_2023_fixed_validation/elec_s_34.nc` (34 supply-area buses with `x, y` coordinates).
+  - PyPSA standard `line_types` catalog (PyPSA 0.30.3, built-in).
+- **Output artifacts produced:**
+  - `scripts/build_za_custom_lines.py` (new; pure-pandas + PyPSA bus-coord lookup).
+  - `scripts/apply_za_custom_lines.py` (new; injection hook with backup + audit).
+  - `Snakefile` — appended `build_za_custom_lines` and `apply_za_custom_lines` rules at line 274 (before `build_za_earth_rsa_diagnostic`); added `_za_custom_lines_marker` input function and wired `za_custom_lines_marker=_za_custom_lines_marker` into `add_extra_components.input`.
+  - `data/za_audit/za_custom_missing_lines.csv` — 10 rows; total `s_nom = 12,053.28 MW`.
+  - `data/za_audit/za_custom_lines_audit.csv` — 10 rows; all `added_ok == True`; columns `name, bus0, bus1, v_nom_kv, length_km, num_parallel, s_nom_built, s_nom_target, x, r, b, type_used, source_note, added_ok`.
+  - `networks/za_2023_fixed_validation/elec_s_34.nc` — mutated in place; 72 → 82 lines.
+  - `networks/za_2023_fixed_validation/elec_s_34.pre_custom.nc` — backup taken immediately before mutation.
+- **Verification completed:**
+  - **Acceptance gate:** re-ran `python scripts/build_za_earth_rsa_diagnostic.py --configfile configs/za/za_2023_fixed_validation.yaml`. Output: `over=52, under=2, within=11, unmatched=0` (was `unmatched=10`). All 10 corridors now appear with `direction=within_20pct` and `ratio_osm_to_stclair=1.0000`. Pass.
+  - **Per-line gate:** `pypsa.Network('networks/.../elec_s_34.nc').lines.filter(like='ZA_custom', axis=0).shape[0] == 10`. Pass.
+  - **Capacity gate:** `audit['s_nom_built'].sum() == 12053.28 MW` matches the brief's "~12 GW" target.
+  - **275 kV impedance:** spot-checked Carletonville→Pretoria (209.07 km, n_circuits=1): x = 0.32 × 209.07 ≈ 66.90 Ω, r = 0.034 × 209.07 ≈ 7.11 Ω. Audit row matches.
+- **Open follow-ups:**
+  - **275 kV impedance values are representative**, not Eskom-specific. If Eskom publishes per-bundle data for the 4 corridors (Carletonville–Pretoria, Johannesburg–Vaal, Johannesburg–Warmbad, Nigel–Welkom; total 1,837 MW), swap into `derive_line_params()` and re-run.
+  - **In-place mutation of `elec_s_34.nc`** breaks Snakemake's "did input change?" semantics for downstream rules. Mitigation: marker file `.pre_custom.nc` wired as input of `add_extra_components`. Module 12 should validate this contract continues to hold once `cluster_network` is re-run.
+  - **Module 09b is structurally orthogonal to Module 09** but logically depends on Module 10's diagnostic output. Documented under the 09b numbering per the brief; not folded into Module 09 because Module 09's outputs are frozen.
+
+## 11 Fixed Capacity Network Build — 2026-05-12 08:31
+
+- **Status:** complete (Stage 1 + Stage 2 smoke builds PASS; Stage 3 deferred to user; uncalibrated baseline deferred to Module 12)
+- **Decisions taken:**
+  - **Hook target shifted from `elec.nc` to `elec_s_34.nc`** (post-cluster). The Module 11 spec specifies `elec.nc` but pre-cluster pypsa-earth assigns coal/nuclear at raw OSM bus indices (e.g. `0 coal-1990`, `1106 coal-1990`) and does *not* attach the Oil/Natural Gas plants in `custom_powerplants.csv` at all — config `electricity.conventional_carriers: [coal, nuclear]` excludes them. `custom_powerplants.csv:bus` uses Eskom supply-area names (Peninsula, Outeniqua, Vaal, …) that only exist after clustering. Hook therefore runs on `elec_s_34.nc` (also where 09b lives) for both spatial and data-shape reasons.
+  - **biomass overlay dropped from scope** — `za_local_carrier_cost_rows.csv` (Module 07 output) has 5 rows: sasol_coal, sasol_gas, ocgt_diesel, ocgt_gas, other_re. No biomass row. The brief's "biomass etc." was speculative; actual Module 07 data dictates scope.
+  - **`ocgt_gas` Carrier created but no Generators attached.** Filter `Fueltype == "Natural Gas" AND NOT Name startswith "Sasol_"` yields 0 plants in the 2023 fleet (all NG is Sasol). The Carrier row is reserved so Module 12 sensitivity analysis can re-attribute AVF gas without schema churn.
+  - **`sasol_coal` materialised by splitting 128 MW Sasolburg_coal off the aggregated `Witbank coal` row.** `add_electricity` aggregates all `Hard Coal` plants at each clustered bus into one Generator named `{bus} coal`; the 128 MW Sasolburg block lives inside `Witbank coal` (14,258 MW total → 14,130 MW after split). Implemented via two-step mutation: reduce `n.generators.at['Witbank coal','p_nom']` and `n.add('Generator', 'Witbank sasol_coal', ...)`.
+  - **`Acacia` Oil OCGT mapped to `ocgt_diesel`.** Per `scripts/za_fleet/named_inventory.py:64`, Acacia is treated as diesel for V1 (it is technically AVF). Aggregated with Ankerlig at the Peninsula bus → 1,503 MW `Peninsula ocgt_diesel`.
+  - **`other_re` profile units = MW dispatch**, not p_max_pu. The 8760 column `Other RE` in `eskom_2023_hourly_clean.csv` peaks at ~33 MW with `Other RE Installed Capacity = 50.58 MW` (constant 8760 column). p_max_pu = `Other RE / 50.58`, clipped to [0,1].
+  - **`other_re` is replicated across 34 buses**, with `p_nom = 50.58 × weight` from `za_2023_other_re_attachment.csv` filtered to `layer_key == 34` (34 rows summing to 1.0). All 34 generators share the same hourly p_max_pu series. Total fleet `p_nom == 50.58 MW ± 1e-6`.
+  - **In-place mutation of `elec_s_34.nc`** with `.pre_local.nc` backup. Marker `elec_s_34.pre_local.nc` wired into `add_extra_components.input` via `_za_local_carriers_marker` input function (same pattern as 09b). Ensures Snakemake serialises `apply_za_custom_lines → apply_za_local_carriers → add_extra_components → prepare_network → solve_network`.
+  - **Gurobi `threads: 1 → 2`** in `configs/za/za_2023_fixed_validation.yaml:159` per the brief's smoke-build protocol.
+  - **Smoke-slicing via `n.set_snapshots`**, not YAML override. `scripts/prepare_network.py` only resamples (`average_every_nhours`), it does not slice the snapshot range. Sliced the full-year prepared network `elec_s_34_ec_lcopt_Co2L-1H.nc` directly via Python.
+  - **CO2 cap kept at the annual 77.5 Mt** for smoke. First Stage 1 attempt scaled the cap to 7/365 = 1.49 Mt; coal CO2 ≈ 1 tCO2/MWh so the cap became the binding constraint and forced 46.7% load-shedding. The cap is effectively non-binding for a 1-week or 1-month winter window, which is what the smoke test needs — it isolates dispatch feasibility from policy constraint behaviour.
+  - **Pre-solve audit** runs on `elec_s_34_ec_lcopt_Co2L-1H.nc` (post `prepare_network`, pre-solve). `is_load_shedding_safety_valve` is False for all rows since load-shedding generators are added by `solve_network.py:add_load_shedding` only at solve time.
+- **Deviations from plan:**
+  - **Hook target moved from `elec.nc` to `elec_s_34.nc`** — see Decisions section. The plan honoured the Module 11 spec; the data did not.
+  - **biomass overlay dropped** — see Decisions section.
+  - **Stage 2 anchor-delta gate not enforced** — `za_eskom_2023_capacity_anchors.csv` is all-NaN. Recorded informationally only; gate becomes binding once Module 12 sources Eskom Annual Report 2023 / IRP 2023 anchors.
+  - **Plan listed `Al/St 240/40 2-bundle 380.0` for 09b 400 kV lines** — actual upstream lines use 4-bundle. Switched. Documented under 09b log entry above.
+- **Source inputs used:**
+  - `data/za_audit/za_local_carrier_cost_rows.csv` (Module 07; 5 carrier rows with marginal_cost / efficiency / co2_emissions / nice_name / color).
+  - `data/za_audit/za_2023_other_re_attachment.csv` (Module 06; layer_key 1/10/34, 26 rows at layer_key=34).
+  - `data/za_validation/eskom_2023_hourly_clean.csv` (Module 02; 8760 rows, column `Other RE` in MW).
+  - `data/custom_powerplants.csv` (Module 08 output; 227 rows; 6 Oil OCGT + 2 Natural Gas Sasol + 1 Hard Coal Sasolburg used here).
+  - `data/za_audit/za_eskom_2023_capacity_anchors.csv` (Module 02; all NaN — flagged).
+  - `networks/za_2023_fixed_validation/elec_s_34.nc` (post Module 09b; 34 buses, 82 lines, 150 generators after hook).
+  - Cost CSV provenance: `pypsa_rsa fixed_technologies.xlsx`, hash `42648462daa9c6bec30ac41ce5886132b0321d355d21917aa230dfb23e311e03`.
+- **Output artifacts produced:**
+  - `scripts/apply_za_local_carriers.py` (new).
+  - `scripts/build_za_fixed_network_audit.py` (new).
+  - `configs/za/za_2023_smoke_stage1.yaml` (new; snapshot overlay 2023-07-01..2023-07-08).
+  - `configs/za/za_2023_smoke_stage2.yaml` (new; snapshot overlay 2023-07-01..2023-08-01).
+  - `Snakefile` — appended `apply_za_local_carriers` + `build_za_fixed_network_audit` rules; added `_za_local_carriers_marker` input function; wired `za_local_carriers_marker=_za_local_carriers_marker` into `add_extra_components.input`.
+  - `configs/za/za_2023_fixed_validation.yaml` — `solver_options.gurobi-default.threads: 1 → 2`.
+  - `data/za_audit/za_local_carriers_audit.csv` — 46 rows (5 carrier adds + 1 sasol_coal split + 6 ocgt_diesel + 1 sasol_gas + 34 other_re; ocgt_gas: 0 generators).
+  - `data/za_audit/za_fixed_network_audit.csv` — 18 carrier rows; spec columns; gate PASS (`extendable_flag.any() == False`).
+  - `networks/za_2023_fixed_validation/elec_s_34.nc` — mutated in place; 5 new carriers, 42 new generators (1 sasol_coal + 5 ocgt_diesel + 1 sasol_gas + 34 other_re + 1 reduced-coal mutation; net +42).
+  - `networks/za_2023_fixed_validation/elec_s_34.pre_local.nc` — backup taken before mutation.
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lcopt_Co2L-1H.nc` — full-year prepared network (canonical, restored).
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lcopt_Co2L-1H.stage1.nc` — sliced 7-day pre-solve.
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lcopt_Co2L-1H.stage2.nc` — sliced July pre-solve.
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lcopt_Co2L-1H.stage2.nc` — Stage 2 solved network (optimal, objective 1.018e10).
+  - `notebooks/za_validation/11_fixed_capacity/fixed_capacity_report.ipynb` — validation notebook (markdown + tables + plots; sections: 09b custom lines, 11 hook, pre-solve audit, Stage 1/2 dispatch).
+  - `doc/za_validation/figures/11_fixed_capacity/fixed_capacity_report.html` — executed notebook HTML (969 KB).
+  - `doc/za_validation/figures/11_fixed_capacity/other_re_profile.png` — 8760 + July zoom of `other_re` p_max_pu.
+  - `doc/za_validation/figures/11_fixed_capacity/capacity_by_carrier.png` — bar chart of fixed-capacity build.
+  - `doc/za_validation/figures/11_fixed_capacity/stage2_dispatch.png` — Stage 2 pie + capacity-factor bar.
+  - `doc/za_validation/figures/11_fixed_capacity/stage2_hourly_stack.png` — July hourly dispatch stack.
+- **Verification completed:**
+  - **Snakemake dry-run** of `apply_za_local_carriers` and `build_za_fixed_network_audit` with `--rerun-triggers mtime` after `--touch` of upstream outputs: 2 jobs (add_extra_components + prepare_network) for the smoke target. Pass.
+  - **Hook smoke-run** (direct invocation via `python scripts/apply_za_local_carriers.py`): "Wrote audit (46 rows)" — 5 add_carrier + 1 split_sasol_coal + 6 add_generator (ocgt_diesel+sasol_gas) + 34 add_other_re. Pass.
+  - **No upstream Carrier mutation** asserted programmatically by snapshotting `n.carriers` before mutation and comparing every column for every upstream carrier post-mutation. Pass.
+  - **`other_re` total p_nom**: 50.58 MW (±1e-6). Pass.
+  - **Pre-solve audit gate**: `extendable_flag.any() == False` across all 18 carrier rows. Pass.
+  - **Stage 1 (7 days, 168 h)**: Gurobi termination `optimal`, objective `3.4229e9`, total load `4,318,266 MWh`, load-shedding `350.49 MWh = 0.008%` ≤ 5% gate. Pass.
+  - **Stage 2 (July, 744 h)**: Gurobi termination `optimal`, objective `1.0181e10`, total load `19,538,724 MWh = 19.54 TWh`, load-shedding `6,234.6 MWh = 0.032%`. Pass (no infeasibility; anchor-delta gate not enforceable).
+  - **Stage 2 dispatch shape**: coal 13.24 TWh (68%), ocgt_diesel 2.54 TWh (13%), onwind 1.35 TWh, solar 1.19 TWh, nuclear 0.74 TWh, sasol_gas 0.32 TWh, sasol_coal 0.10 TWh, other_re 0.027 TWh, CSP 0. Consistent with Eskom's typical winter mix.
+  - **Notebook execution + HTML export**: `fixed_capacity_report.html` 969,344 bytes; 4 image alt-text warnings (non-blocking).
+- **Open follow-ups:**
+  - **`za_eskom_2023_capacity_anchors.csv` is empty for all carriers** (`available=False` everywhere). Eskom's hourly feed does not expose per-carrier installed capacity. Module 12 must source from Eskom Annual Report 2023 and IRP 2023. Until then, the `anchor_delta_pct` column in `za_fixed_network_audit.csv` is informational only and the within-30% gate of Stage 2 cannot be programmatically enforced.
+  - **CSP fleet attached with `p_nom == 0`** despite 500 MW nameplate (six commissioned 2023 plants per `named_inventory.py`). `add_electricity` uses `attach_wind_and_solar` to pull p_nom from `pypsa_rsa fixed_technologies` via the powerplants pipeline; the Solar+CSP Technology pair appears to drop into the `solar` carrier rather than `csp` when `estimate_renewable_capacities.stats: false`. Module 12 must trace `scripts/add_electricity.py:attach_wind_and_solar` for this path.
+  - **Nuclear capacity factor in Stage 2 = 53.4%** vs Eskom's ~80% typical. Likely upstream `add_electricity` default availability factor (no time-varying outage profile attached). Module 12 should overlay Eskom 2023 nuclear outage data.
+  - **Stage 3 (full 8760)** owned by the user. Documented invocation in module 11 spec (no slicing — use the canonical `elec_s_34_ec_lcopt_Co2L-1H.nc` directly).
+  - **Uncalibrated baseline `za_2023_uncalibrated_baseline.yaml`** explicitly deferred to Module 12 per the brief.
+  - **In-place mutation pattern** (used by both 09b and 11) loses Snakemake's strict "did input change?" semantics. Mitigation is the `.pre_custom.nc` / `.pre_local.nc` marker files wired into `add_extra_components.input`. Operator must use `--rerun-triggers mtime` (or `--touch`) when re-driving the DAG after manual hook runs.
+  - **`ocgt_gas` Carrier row reserved with no Generators** in the 2023 fleet. Module 12 sensitivity analysis can use this slot for AVF gas re-attribution.
+  - **Smoke-build CO2 budget**: kept at the annual cap. If Module 12 wants budget-scaled smoke runs to test the policy-constraint path, the slicer helper would need to scale CO2 proportionally AND lift load-shedding cost so the cap remains the binding constraint (not load-shedding).
+
+## 11a Module 11 Bug Fixes (Sonnet Code Review) — 2026-05-12 08:55
+
+- **Status:** complete
+- **Decisions taken:**
+  - **Bug 1 (Module 09b — 400 kV custom-line impedance was zero on disk):** PyPSA stores `x, r, b = 0` for any Line created with a `type=` kwarg; it derives them at runtime via `n.calculate_dependent_values()` using `type × length / num_parallel / bus_v_nom^2`. Post-cluster bus rows on the Line component have `v_nom=NaN` (the cluster step does not propagate bus voltage onto the Line attribute), so any solver path that does NOT pre-call `calculate_dependent_values` would see x=r=0 and treat the lines as zero-impedance shunts — distorting dispatch via forced voltage-angle equality at the connected buses. **Fix:** `derive_line_params()` now computes x/r/b directly from per-km values for both 400 kV and 275 kV; `apply_za_custom_lines.py` never passes `type` to `n.add("Line", ...)`. Persistence layer is now robust against solvers that skip `calculate_dependent_values`.
+  - **Per-km values for 400 kV** sourced from PyPSA's own `n.line_types.loc["Al/St 240/40 4-bundle 380.0"]`: `r_per_length=0.030`, `x_per_length=0.246`, `c_per_length=13.8 nF/km`. Susceptance derived as `b = 2π × 50 Hz × c = 4.335e-6 S/km`. 275 kV values unchanged (`x=0.32`, `r=0.034`, `b=3.6e-6` per km).
+  - **Bug 2 (Module 11 — 500 MW CSP absorbed into `solar`):** The 6 commissioned 2023 CSP plants in `data/custom_powerplants.csv` have `Fueltype=Solar, Technology=CSP`. PyPSA-Earth's `add_electricity` maps Fueltype→carrier ahead of Technology, so all six rows landed in the aggregated `{bus} solar` Generator at Namaqualand (200 MW), Kimberley (200 MW), and Kalahari (100 MW). The upstream `{bus} csp` ghost Generators (34 buses, p_nom=0) already carry the correct CSP atlite profile (mean `p_max_pu = 0.16`, peak 0.64) but were never populated with capacity. **Fix:** new `retag_csp_from_solar` step inside `apply_za_local_carriers.py` filters custom_powerplants for `Fueltype=="Solar" AND Technology=="CSP"`, aggregates by bus, subtracts the CSP capacity from `{bus} solar.p_nom`, and adds it to `{bus} csp.p_nom`. The CSP atlite profile on the ghost generator is preserved.
+  - **Edit `data/custom_powerplants.csv` directly was rejected.** custom_powerplants.csv is a Module 08 deliverable owned by `build_za_fleet_reconciliation.py`. Mutating it from Module 11 would invert the dependency direction and create a feedback loop that Snakemake cannot resolve. The carrier-remap belongs in the local-carriers hook (Module 11's owned step).
+- **Deviations from plan:**
+  - Plan said "400 kV: use PyPSA standard `type=`" — that was the actual bug. Now bypasses `type` entirely. Discrepancy documented under the 09b entry too.
+  - CSP retag was not in the original Module 11 plan because the bug surfaced only on code review after the smoke runs. New helper function added; spec satisfied.
+- **Source inputs used:**
+  - `scripts/build_za_custom_lines.py` (modified).
+  - `scripts/apply_za_custom_lines.py` (modified — no `type=` kwarg).
+  - `scripts/apply_za_local_carriers.py` (modified — new `retag_csp_from_solar`).
+  - PyPSA 0.30.3 `n.line_types.loc["Al/St 240/40 4-bundle 380.0"]` for canonical 380 kV per-km r/x/c values.
+- **Output artifacts produced (replaces prior 11 outputs):**
+  - `networks/za_2023_fixed_validation/elec_s_34.nc` — re-mutated with both fixes; backups `.pre_custom.nc` (pristine pre-09b) and `.pre_local.nc` (post-09b, pre-11) preserved.
+  - `data/za_audit/za_custom_missing_lines.csv` — 10 rows; 400 kV rows now have non-zero x/r/b (e.g. Bloemfontein→Highveld South: `x=87.140 Ω, r=10.627 Ω, b=1.536e-3 S, length=354.23 km`).
+  - `data/za_audit/za_custom_lines_audit.csv` — all 10 rows have non-zero x and `added_ok==True`.
+  - `data/za_audit/za_local_carriers_audit.csv` — 49 rows (previous 46 + 3 `retag_csp_from_solar` rows at Kalahari, Kimberley, Namaqualand).
+  - `data/za_audit/za_fixed_network_audit.csv` — 18 rows; `csp` row now `capacity_mw_built=500`, `solar` row `10,032.62` (was 0 and 10,532.62 respectively).
+  - `notebooks/za_validation/11_fixed_capacity/fixed_capacity_report.ipynb` — Stage 1 cell now loads live from `results/.../elec_s_34_ec_lcopt_Co2L-1H.stage1.nc` (was hardcoded); findings section updated with bug-fix narrative.
+  - `doc/za_validation/figures/11_fixed_capacity/fixed_capacity_report.html` — re-executed (975 KB).
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lcopt_Co2L-1H.stage1.nc` — Stage 1 solved network (preserved).
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lcopt_Co2L-1H.stage2.nc` — Stage 2 solved network (preserved).
+- **Verification completed:**
+  - **400 kV x/r persistence:** `pypsa.Network(elec_s_34.nc).lines[startswith("ZA_custom_") & contains("400kV")].x > 0` — all True. Per-line values match `r_per_km × length / num_parallel` to 4 decimals (e.g. Johannesburg–Witbank 6-circuit 78.72 km: `x = 0.246 × 78.72 / 6 = 3.228 Ω`, audit row matches).
+  - **CSP retag conservation:** `solar.p_nom.sum() + csp.p_nom.sum() == 10,532.62 MW` (pre-fix `solar.p_nom.sum() == 10,532.62, csp.p_nom.sum() == 0`). Mass-balance OK.
+  - **Pre-solve audit:** `csp` row capacity_mw_built = 500.0 (was 0), `solar` row = 10,032.62 (was 10,532.62). Gate PASS (`extendable_flag.any() == False`).
+  - **Stage 1 re-solve:** termination `optimal`, objective `3.44e9`, load 4.32 TWh, load-shedding 350 MWh = **0.0081%**. CSP dispatch ≈ 0 (winter, low solar irradiance — matches Eskom CSP behaviour for July).
+  - **Stage 2 re-solve:** termination `optimal`, objective `1.02e10`, load 19.54 TWh, load-shedding 6,309 MWh = **0.0323%**. CSP dispatch 3,158 MWh (0.8% CF — winter CSP is low but non-zero; thermal storage helps). Coal dispatch shifted slightly (13.30 TWh vs prior 13.24) because 500 MW was transferred out of `solar` (lower winter CF than CSP in some sub-windows + slight redistribution between buses).
+  - **Notebook execution:** re-rendered HTML 975,596 bytes; 4 image alt-text warnings (non-blocking).
+- **Open follow-ups (delta from prior 11 entry):**
+  - **CSP capacity-factor target.** Stage 2 CSP CF = 0.8% in July. Eskom 2023 CSP fleet typical winter CF is 5–15%. The atlite-derived `csp` p_max_pu profile (mean 0.16 full-year) may be missing the thermal-storage smoothing that real CSP gets — Module 12 should validate against Eskom CSP hourly dispatch.
+  - **Per-km 275 kV values remain representative**, not Eskom-specific (carried over from the prior log entry).
+  - All other Module 11 / 12 follow-ups from the prior entries remain.

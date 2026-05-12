@@ -271,6 +271,88 @@ rule build_za_grid_spatial:
         "scripts/build_za_grid_spatial.py"
 
 
+rule build_za_custom_lines:
+    input:
+        unmatched="data/za_audit/za_osm_vs_stclair_ratings_comparison.csv",
+        network="networks/" + RDIR + "elec_s_34.nc",
+    output:
+        custom_lines="data/za_audit/za_custom_missing_lines.csv",
+    log:
+        "logs/" + RDIR + "build_za_custom_lines.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_custom_lines"
+    script:
+        "scripts/build_za_custom_lines.py"
+
+
+rule apply_za_custom_lines:
+    input:
+        custom_lines="data/za_audit/za_custom_missing_lines.csv",
+        network_in="networks/" + RDIR + "elec_s_34.nc",
+    output:
+        backup="networks/" + RDIR + "elec_s_34.pre_custom.nc",
+        audit="data/za_audit/za_custom_lines_audit.csv",
+    log:
+        "logs/" + RDIR + "apply_za_custom_lines.log",
+    script:
+        "scripts/apply_za_custom_lines.py"
+
+
+rule apply_za_local_carriers:
+    input:
+        network_in="networks/" + RDIR + "elec_s_34.nc",
+        custom_lines_marker="networks/" + RDIR + "elec_s_34.pre_custom.nc",
+        carrier_rows="data/za_audit/za_local_carrier_cost_rows.csv",
+        attachment="data/za_audit/za_2023_other_re_attachment.csv",
+        hourly="data/za_validation/eskom_2023_hourly_clean.csv",
+        custom_pp="data/custom_powerplants.csv",
+    output:
+        backup="networks/" + RDIR + "elec_s_34.pre_local.nc",
+        audit="data/za_audit/za_local_carriers_audit.csv",
+    log:
+        "logs/" + RDIR + "apply_za_local_carriers.log",
+    script:
+        "scripts/apply_za_local_carriers.py"
+
+
+rule build_za_fixed_network_audit:
+    input:
+        network="networks/" + RDIR + "elec_s_34_ec_lcopt_Co2L-1H.nc",
+        anchor="data/za_audit/za_eskom_2023_capacity_anchors.csv",
+        local_marker="networks/" + RDIR + "elec_s_34.pre_local.nc",
+    output:
+        audit="data/za_audit/za_fixed_network_audit.csv",
+    log:
+        "logs/" + RDIR + "build_za_fixed_network_audit.log",
+    script:
+        "scripts/build_za_fixed_network_audit.py"
+
+
+rule build_za_earth_rsa_diagnostic:
+    input:
+        reconciliation="data/za_audit/za_powerplant_reconciliation.csv",
+        existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
+        grid_reconciliation=ancient("data/za_audit/za_grid_reconciliation.csv"),
+        elec_s_34="networks/" + RDIR + "elec_s_34.nc",
+        transfer_limits="data/za_audit/za_rsa_interregional_transfer_limits.csv",
+        clean_substations="resources/" + RDIR + "osm/clean/all_clean_substations.geojson",
+        pm_config="configs/powerplantmatching_config.yaml",
+    output:
+        fleet_comparison="data/za_audit/za_ppm_vs_rsa_fleet_comparison.csv",
+        ppm_only="data/za_audit/za_ppm_plants_not_in_rsa.csv",
+        rsa_only="data/za_audit/za_rsa_plants_not_in_ppm.csv",
+        substations_comparison="data/za_audit/za_substations_comparison.csv",
+        rsa_substations_derived="data/za_audit/za_rsa_substations_derived.csv",
+        ratings_comparison="data/za_audit/za_osm_vs_stclair_ratings_comparison.csv",
+        report="doc/za_earth_rsa_baseline_diagnostic.md",
+    log:
+        "logs/" + RDIR + "build_za_earth_rsa_diagnostic.log",
+    benchmark:
+        "benchmarks/" + RDIR + "build_za_earth_rsa_diagnostic"
+    script:
+        "scripts/build_za_earth_rsa_diagnostic.py"
+
+
 rule clean:
     run:
         try:
@@ -1046,12 +1128,30 @@ if config["augmented_line_connection"].get("add_to_snakefile") == True:
             "scripts/augmented_line_connections.py"
 
 
+def _za_custom_lines_marker(wildcards):
+    # Force apply_za_custom_lines to run before add_extra_components consumes
+    # elec_s_34.nc for the za_2023_fixed_validation run. Other wildcards have
+    # no marker (returns empty list -> no dependency).
+    if wildcards.simpl == "" and wildcards.clusters == "34":
+        return ["networks/" + RDIR + "elec_s_34.pre_custom.nc"]
+    return []
+
+
+def _za_local_carriers_marker(wildcards):
+    # Force apply_za_local_carriers to run before add_extra_components.
+    if wildcards.simpl == "" and wildcards.clusters == "34":
+        return ["networks/" + RDIR + "elec_s_34.pre_local.nc"]
+    return []
+
+
 rule add_extra_components:
     params:
         transmission_efficiency=config["sector"]["transmission_efficiency"],
     input:
         network="networks/" + RDIR + "elec_s{simpl}_{clusters}.nc",
         tech_costs="resources/" + RDIR + f"costs_{config['costs']['year']}_elec.csv",
+        za_custom_lines_marker=_za_custom_lines_marker,
+        za_local_carriers_marker=_za_local_carriers_marker,
     output:
         "networks/" + RDIR + "elec_s{simpl}_{clusters}_ec.nc",
     log:

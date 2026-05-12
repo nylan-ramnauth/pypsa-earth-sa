@@ -41,85 +41,6 @@ Secunda_coal,Hard Coal,600.04,-26.5036,29.1803,True,Witbank
 Sasolburg_coal,Hard Coal,128.0,-26.5036,29.1803,True,Witbank
 Sasol_ice,Natural Gas,174.6,-26.8102,27.8277,True,Vaal
 Sasol_ocgt,Natural Gas,250.0,-26.8102,27.8277,True,Vaal
-Aries Solar,Solar,9.65,-29.496506,20.785119,True,Namaqualand
-De Aar Solar PV,Solar,48.25,-30.6234,24.0283,True,Hydra Central
-Droogfontein Solar PV Project,Solar,48.25,-28.6133,24.7468,True,Kimberley
-Greefspan PV Power Plant1,Solar,10.0,-29.393781,23.307708,True,Kimberley
-Herbert PV Power Plant,Solar,19.9,-29.0019,23.8019,True,Kimberley
-Kalkbult,Solar,72.5,-30.1607,24.1349,True,Hydra Central
-Kathu Solar Energy Facility,Solar,75.0,-27.612908,23.025886,True,Kalahari
-Konkoonsies Solar,Solar,9.65,-28.889147,19.555275,True,Namaqualand
-Lesedi Power Company,Solar,64.0,-28.3154,23.3501,True,Kimberley
-Letsatsi Power Company,Solar,64.0,-28.9134,25.9199,True,Welkom
-Mulilo Renewable Energy Solar PV De Aar,Solar,9.65,-30.6279,24.005453,True,Hydra Central
-Mulilo Renewable Energy Solar PV Prieska,Solar,19.9,-29.967661,22.319683,True,Kimberley
-RustMo1 Solar Farm,Solar,6.76,-25.737892,27.418314,True,Rustenburg
-SlimSun Swartland Solar Park,Solar,5.0,-33.35,18.529708,True,West Coast
-Solar Capital De Aar,Solar,75.0,-30.604753,24.095239,True,Hydra Central
-Soutpan Solar Park,Solar,28.0,-22.991667,29.251667,True,Polokwane
-Touwsrivier Project,Solar,36.0,-33.410389,19.9276,True,Outeniqua
-Witkop Solar Park,Solar,30.0,-24.041667,29.361667,True,Polokwane
-Aurora,Solar,9.0,-32.641344,18.497289,True,West Coast
-Boshoff Solar Park,Solar,60.0,-28.4628,25.1891,True,Kimberley
-Jasper Power Company,Solar,75.0,-28.3133,23.3751,True,Kimberley
-Linde,Solar,36.8,-30.9986,24.6506,True,Hydra Central
-Project Dreunberg,Solar,69.9,-30.8373,26.2055,True,Hydra Central
-Sishen Solar Facility,Solar,74.0,-27.583611,22.932778,True,Kalahari
-Solar Capital De Aar 3,Solar,75.0,-30.604753,24.095239,True,Hydra Central
-Upington Solar PV,Solar,8.9,-28.5493,21.1038,True,Kimberley
-Vredendal,Solar,8.8,-31.634886,18.505356,True,Vredendal
-Adams Solar PV 2,Solar,75.0,-27.378969,23.012989,True,Kalahari
-Electra Capital (Pty) Ltd,Solar,75.0,-32.4148,18.7379,True,West Coast
-Mulilo Prieska PV,Solar,75.0,-30.0375,22.317222,True,Kimberley
-Mulilo Sonnedix Prieska PV,Solar,75.0,-30.024444,22.362778,True,Kimberley
-Pulida Solar Park,Solar,75.0,-29.086944,24.903333,True,Kimberley
-Tom Burke Solar Park,Solar,60.0,-23.072778,27.989444,True,Lephalale
-Aggeneys Solar,Solar,40.0,-29.235794,18.897656,True,Namaqualand
-Bokamoso,Solar,67.9,-27.1583,26.4009,True,Carletonville
-De Wildt,Solar,50.0,-25.6332,27.9307,True,Pretoria
-Droogfontein Solar Power,Solar,75.0,-28.5677,24.7023,True,Kimberley
-Dyasons Klip 1,Solar,75.0,-28.5493,21.1038,True,Kimberley
-Dyasons Klip 2,Solar,75.0,-28.5707,21.0613,True,Kimberley
-Greefspan PV Power Plant2,Solar,55.0,-29.3857,23.3172,True,Kimberley
-Konkoonsies II Solar PV Facility,Solar,75.0,-28.898811,19.557383,True,Namaqualand
-Loeriesfontein Orange,Solar,75.0,-30.918109,19.441043,True,Vredendal
-Sirius Solar PV Project One,Solar,75.0,-28.547361,21.09495,True,Kimberley
-Waterloo Solar Park,Solar,75.0,-27.0322,24.7931,True,Kalahari
-Zeerust,Solar,75.0,-25.5748,26.0718,True,Carletonville
-Cookhouse Wind Farm,Wind,135.0,-32.7333,25.9093,True,Gqeberha
-Dassieklip Wind Energy Facility,Wind,26.19,-34.2275,19.383,True,Outeniqua
-Umoya Energy Wind Farm,Wind,65.4,-33.0928,18.3989,True,West Coast
-Jeffreys Bay Wind Farm,Wind,133.86,-34.0107,24.8808,True,Gqeberha
-Kouga Wind Farm,Wind,77.6,-34.14656,24.7004,True,Gqeberha
-Metrowind Van Stadens Wind Farm,Wind,86.6,-33.96222,25.24444,True,Gqeberha
-Nobelsfontein Phase 1,Wind,72.75,-31.750833,23.173333,True,Hydra Central
-Red Cap Gibson Bay,Wind,110.0,-34.1286,24.4818,True,Gqeberha
-Eskom Sere,Wind,100.0,-31.496857,18.063376,True,Vredendal
-Amakhala Emoyeni,Wind,137.9,-32.875798,25.99753,True,Gqeberha
-Aurora Wind Power,Wind,90.8,-32.83425,17.995611,True,West Coast
-Chaba Wind Farm,Wind,20.6,-32.5901,27.9623,True,East London
-Gouda Wind Project,Wind,135.2,-33.2564,19.0184,True,Outeniqua
-Grassridge Wind Farm,Wind,59.8,-33.6551,25.5915,True,Gqeberha
-Tsitsikamma Community Wind Farm,Wind,94.8,-34.0735,24.5067,True,Gqeberha
-Waainek Wind Farm,Wind,23.4,-32.5901,26.4569,True,Gqeberha
-Dorper Wind Farm,Wind,97.0,-31.4809,26.4393,True,Hydra Central
-Khobab Wind Farm,Wind,137.7,-30.4344,19.5538,True,Vredendal
-Loeriesfontein 2 Wind Farm,Wind,138.2,-30.380404,19.589285,True,Vredendal
-Longyuan Mulilo De Aar Maanhaarberg Wind Energy Facility,Wind,139.0,-30.716667,23.920556,True,Hydra Central
-Longyuan Mulilo Green Energy De Aar 2 North Wind Energy Facility,Wind,96.5,-30.7349,23.8665,True,Hydra Central
-Nojoli Wind Farm,Wind,86.6,-32.771,25.91566,True,Gqeberha
-Noupoort Wind Farm,Wind,79.1,-31.172814,25.016449,True,Hydra Central
-Copperton Windfarm,Wind,102.0,-29.9078,22.3391,True,Kimberley
-Excelsior Wind Energy Facility,Wind,31.9,-34.2423,20.2307,True,Outeniqua
-Garob Wind Farm,Wind,135.9,-29.959,22.4131,True,Kimberley
-Golden Valley Wind,Wind,117.72,-32.8875,25.9418,True,Gqeberha
-Kangnas Wind Farm,Wind,136.7,-29.6001,18.357,True,Namaqualand
-The Karusa Wind Farm,Wind,139.8,-32.8858,20.6567,True,Greater Komsberg
-Nxuba Wind Farm,Wind,138.9,-32.73767,25.96684,True,Gqeberha
-Oyster Bay Wind Farm,Wind,140.0,-34.11639,24.64889,True,Gqeberha
-Perdekraal East Wind Farm,Wind,107.76,-33.054444,20.100278,True,Greater Komsberg
-Roggeveld Wind Farm,Wind,140.0,-32.917233,20.509089,True,Greater Komsberg
-Soetwater Wind Farm,Wind,139.4,-32.754,20.6396,True,Outeniqua
 Kaxu Solar One,Solar,100.0,-28.8793,19.5929,True,Namaqualand
 Khi Solar One,Solar,50.0,-28.5364,21.0782,True,Kimberley
 Bokpoort CSP project,Solar,50.0,-28.7333,21.9955,True,Kimberley
@@ -133,21 +54,13 @@ ColleyWobbles,Hydro,65.0,-32.05,28.58333,True,Mthatha
 ENERGY Joburg Landfill Gas to Electircity Project,Bioenergy,7.56,-26.194954,28.032528,True,Johannesburg
 Ngodwana Energy,Bioenergy,25.0,-25.480898,30.974305,True,Lowveld
 Sappi,Bioenergy,144.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV,Solar,642.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_2,Solar,208.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_3,Solar,368.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_4,Solar,308.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_5,Solar,811.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_6,Solar,1504.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_7,Solar,669.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_8,Solar,413.0,-25.3447,30.394,True,Middelburg
-Existing distributed solar PV_9,Solar,516.0,-25.3447,30.394,True,Middelburg
 Drakensberg,Hydro,1000.0,-28.56283,29.08275,True,Ladysmith
 Ingula,Hydro,1324.0,-28.165,29.3512,True,Ladysmith
 Palmiet,Hydro,400.0,-34.19722,18.97361,True,Peninsula
 Steenbras,Hydro,180.0,-34.153,18.9,True,Peninsula
 Hex,Battery,20.0,-33.64,19.48,True,Outeniqua
 Amakhala,Wind,137.9,-32.692,26.1083,True,Gqeberha
+Aurora,Wind,90.8,-32.83425,17.995611,True,West Coast
 Chaba,Wind,20.6,-32.5901,27.9623,True,East London
 Cookhouse,Wind,135.0,-32.7333,25.9093,True,Gqeberha
 Copperton,Wind,102.0,-34.1286,24.4818,True,Gqeberha
@@ -181,48 +94,47 @@ Soetwater,Wind,139.4,-32.754,20.6396,True,Outeniqua
 Tsitsikama,Wind,94.8,-34.0735,24.5067,True,Gqeberha
 Waainek,Wind,23.4,-32.5901,26.4569,True,Gqeberha
 Wesley_ciskei,Wind,32.7,-33.29028,27.37222,True,Gqeberha
-Aries Solar_2,Solar,9.65,-29.496506,20.785119,True,Namaqualand
-De Aar Solar PV_2,Solar,48.25,-30.6234,24.0283,True,Hydra Central
-Droogfontein Solar PV Project_2,Solar,48.25,-28.6133,24.7468,True,Kimberley
-Greefspan PV Power Plant1_2,Solar,10.0,-29.393781,23.307708,True,Kimberley
-Herbert PV Power Plant_2,Solar,19.9,-29.0019,23.8019,True,Kimberley
-Kalkbult_2,Solar,72.5,-30.160833,24.135833,True,Hydra Central
-Kathu Solar Energy Facility_2,Solar,75.0,-27.612908,23.025886,True,Kalahari
-Konkoonsies Solar_2,Solar,9.65,-28.889147,19.555275,True,Namaqualand
-Lesedi Power Company_2,Solar,64.0,-28.3154,23.3501,True,Kimberley
-Letsatsi Power Company_2,Solar,64.0,-28.9134,25.9199,True,Welkom
-Mulilo Renewable Energy Solar PV De Aar_2,Solar,9.65,-30.6279,24.005453,True,Hydra Central
-Mulilo Renewable Energy Solar PV Prieska_2,Solar,19.9,-29.967661,22.319683,True,Kimberley
-RustMo1 Solar Farm_2,Solar,6.76,-25.737892,27.418314,True,Rustenburg
-SlimSun Swartland Solar Park_2,Solar,5.0,-33.35,18.529708,True,West Coast
-Solar Capital De Aar_2,Solar,75.0,-30.604753,24.095239,True,Hydra Central
-Soutpan Solar Park_2,Solar,28.0,-22.991667,29.251667,True,Polokwane
-Touwsrivier Project_2,Solar,36.0,-33.410389,19.9276,True,Outeniqua
-Witkop Solar Park_2,Solar,30.0,-24.041667,29.361667,True,Polokwane
-Aurora_2,Solar,9.0,-32.641344,18.497289,True,West Coast
-Boshoff Solar Park_2,Solar,60.0,-28.4628,25.1891,True,Kimberley
-Jasper Power Company_2,Solar,75.0,-28.3133,23.3751,True,Kimberley
-Linde_2,Solar,36.8,-30.9986,24.6506,True,Hydra Central
-Project Dreunberg_2,Solar,69.9,-30.8373,26.2055,True,Hydra Central
-Sishen Solar Facility_2,Solar,74.0,-27.583611,22.932778,True,Kalahari
-Solar Capital De Aar 3_2,Solar,75.0,-30.604753,24.095239,True,Hydra Central
-Upington Solar PV_2,Solar,8.9,-28.5493,21.1038,True,Kimberley
-Vredendal_2,Solar,8.8,-31.634886,18.505356,True,Vredendal
-Adams Solar PV 2_2,Solar,75.0,-27.378969,23.012989,True,Kalahari
-Electra Capital (Pty) Ltd_2,Solar,75.0,-32.4148,18.7379,True,West Coast
-Mulilo Prieska PV_2,Solar,75.0,-30.0375,22.317222,True,Kimberley
-Mulilo Sonnedix Prieska PV_2,Solar,75.0,-30.024444,22.362778,True,Kimberley
-Pulida Solar Park_2,Solar,75.0,-29.086944,24.903333,True,Kimberley
-Tom Burke Solar Park_2,Solar,60.0,-23.072778,27.989444,True,Lephalale
-Aggeneys Solar_2,Solar,40.0,-29.235794,18.897656,True,Namaqualand
-Droogfontein Solar Power_2,Solar,75.0,-26.854002,26.642111,True,Carletonville
-Dyasons Klip 1_2,Solar,75.0,-28.5493,21.1038,True,Kimberley
-Dyasons Klip 2_2,Solar,75.0,-28.5707,21.0613,True,Kimberley
-Konkoonsies II Solar PV Facility_2,Solar,75.0,-28.898811,19.557383,True,Namaqualand
-Sirius Solar PV Project One_2,Solar,75.0,-28.547361,21.09495,True,Kimberley
-Loeriesfontein Orange_2,Solar,75.0,-30.918109,19.441043,True,Vredendal
-Greefspan PV Power Plant2_2,Solar,55.0,-29.3857,23.3172,True,Kimberley
-De Wildt_2,Solar,50.0,-25.6332,27.9307,True,Pretoria
-Bokamoso_2,Solar,67.9,-27.1583,26.4009,True,Carletonville
-Waterloo Solar Park_2,Solar,75.0,-27.0322,24.7931,True,Kalahari
-Zeerust_2,Solar,75.0,-25.5748,26.0718,True,Carletonville
+Aries Solar,Solar,9.65,-29.496506,20.785119,True,Namaqualand
+De Aar Solar PV,Solar,48.25,-30.6234,24.0283,True,Hydra Central
+Droogfontein Solar PV Project,Solar,48.25,-28.6133,24.7468,True,Kimberley
+Greefspan PV Power Plant1,Solar,10.0,-29.393781,23.307708,True,Kimberley
+Herbert PV Power Plant,Solar,19.9,-29.0019,23.8019,True,Kimberley
+Kalkbult,Solar,72.5,-30.160833,24.135833,True,Hydra Central
+Kathu Solar Energy Facility,Solar,75.0,-27.612908,23.025886,True,Kalahari
+Konkoonsies Solar,Solar,9.65,-28.889147,19.555275,True,Namaqualand
+Lesedi Power Company,Solar,64.0,-28.3154,23.3501,True,Kimberley
+Letsatsi Power Company,Solar,64.0,-28.9134,25.9199,True,Welkom
+Mulilo Renewable Energy Solar PV De Aar,Solar,9.65,-30.6279,24.005453,True,Hydra Central
+Mulilo Renewable Energy Solar PV Prieska,Solar,19.9,-29.967661,22.319683,True,Kimberley
+RustMo1 Solar Farm,Solar,6.76,-25.737892,27.418314,True,Rustenburg
+SlimSun Swartland Solar Park,Solar,5.0,-33.35,18.529708,True,West Coast
+Solar Capital De Aar,Solar,75.0,-30.604753,24.095239,True,Hydra Central
+Soutpan Solar Park,Solar,28.0,-22.991667,29.251667,True,Polokwane
+Touwsrivier Project,Solar,36.0,-33.410389,19.9276,True,Outeniqua
+Witkop Solar Park,Solar,30.0,-24.041667,29.361667,True,Polokwane
+Boshoff Solar Park,Solar,60.0,-28.4628,25.1891,True,Kimberley
+Jasper Power Company,Solar,75.0,-28.3133,23.3751,True,Kimberley
+Linde,Solar,36.8,-30.9986,24.6506,True,Hydra Central
+Project Dreunberg,Solar,69.9,-30.8373,26.2055,True,Hydra Central
+Sishen Solar Facility,Solar,74.0,-27.583611,22.932778,True,Kalahari
+Solar Capital De Aar 3,Solar,75.0,-30.604753,24.095239,True,Hydra Central
+Upington Solar PV,Solar,8.9,-28.5493,21.1038,True,Kimberley
+Vredendal,Solar,8.8,-31.634886,18.505356,True,Vredendal
+Adams Solar PV 2,Solar,75.0,-27.378969,23.012989,True,Kalahari
+Electra Capital (Pty) Ltd,Solar,75.0,-32.4148,18.7379,True,West Coast
+Mulilo Prieska PV,Solar,75.0,-30.0375,22.317222,True,Kimberley
+Mulilo Sonnedix Prieska PV,Solar,75.0,-30.024444,22.362778,True,Kimberley
+Pulida Solar Park,Solar,75.0,-29.086944,24.903333,True,Kimberley
+Tom Burke Solar Park,Solar,60.0,-23.072778,27.989444,True,Lephalale
+Aggeneys Solar,Solar,40.0,-29.235794,18.897656,True,Namaqualand
+Droogfontein Solar Power,Solar,75.0,-26.854002,26.642111,True,Carletonville
+Dyasons Klip 1,Solar,75.0,-28.5493,21.1038,True,Kimberley
+Dyasons Klip 2,Solar,75.0,-28.5707,21.0613,True,Kimberley
+Konkoonsies II Solar PV Facility,Solar,75.0,-28.898811,19.557383,True,Namaqualand
+Sirius Solar PV Project One,Solar,75.0,-28.547361,21.09495,True,Kimberley
+Loeriesfontein Orange,Solar,75.0,-30.918109,19.441043,True,Vredendal
+Greefspan PV Power Plant2,Solar,55.0,-29.3857,23.3172,True,Kimberley
+De Wildt,Solar,50.0,-25.6332,27.9307,True,Pretoria
+Bokamoso,Solar,67.9,-27.1583,26.4009,True,Carletonville
+Waterloo Solar Park,Solar,75.0,-27.0322,24.7931,True,Kalahari
+Zeerust,Solar,75.0,-25.5748,26.0718,True,Carletonville

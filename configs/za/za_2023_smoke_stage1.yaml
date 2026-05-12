@@ -1,0 +1,7 @@
+# Stage 1 smoke build overlay (7 days, 2023-07-01 to 2023-07-07).
+# Use with: snakemake --configfiles configs/za/za_2023_fixed_validation.yaml configs/za/za_2023_smoke_stage1.yaml
+
+snapshots:
+  start: "2023-07-01"
+  end: "2023-07-08"
+  inclusive: "left"

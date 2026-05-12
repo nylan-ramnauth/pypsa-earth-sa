@@ -84,6 +84,11 @@ notebooks/za_validation/*
 !notebooks/za_validation/03_profiles/profile_validation.ipynb
 !notebooks/za_validation/06_demand_import_export/
 !notebooks/za_validation/06_demand_import_export/demand_import_export_overview.ipynb
+!notebooks/za_validation/10_diagnostic/
+!notebooks/za_validation/10_diagnostic/earth_rsa_diagnostic.ipynb
+!notebooks/za_validation/11_fixed_capacity/
+!notebooks/za_validation/11_fixed_capacity/fixed_capacity_report.ipynb
+!notebooks/za_validation/11_fixed_capacity/module12_readiness_report.ipynb
 
 # Specific configuration files
 configs/scenarios/config.*.yaml

@@ -32,7 +32,7 @@ current module pass.
 | `07_costs_fuels_efficiencies_and_coUE.md` | Lock costs, fuels, efficiencies, emissions, local carrier cost rows, and COUE/load-shedding cost units |
 | `08_fleet_reconciliation_and_custom_powerplants.md` | Reconcile plant fleet, freeze `custom_powerplants.csv`, smoke-test normalization |
 | `09_grid_spatial_and_transmission_model.md` | Audit OSM grid, RSA supply regions, custom busmap/subregions, optional corridor caps |
-| `10_earth_rsa_baseline_diagnostic.md` | Diagnostic only: quantify PPM vs RSA fleet gap, OSM vs RSA grid per voltage, line ratings delta, GEGIS vs Eskom demand |
+| `10_earth_rsa_baseline_diagnostic.md` | Diagnostic only: quantify PPM vs RSA fleet gap, OSM vs RSA grid per voltage, OSM vs RSA substations, OSM vs St Clair line-ratings delta |
 | `11_fixed_capacity_network_build.md` | Build fixed 2023 PyPSA-Earth network with no expansion and validated carrier/input attachment |
 | `12_dispatch_calibration_and_availability.md` | Solve fixed dispatch, produce interim calibration reports, add availability/outage constraints only as needed |
 | `13_validation_reporting_and_acceptance.md` | Produce final validation reports, tolerance checks, acceptance artifacts, provenance docs |
@@ -52,7 +52,7 @@ current module pass.
 | `07_costs_fuels_efficiencies_and_coUE.md` | review fixes applied | needs re-review | none | pending re-freeze after cost-year/load-shedding review |
 | `08_fleet_reconciliation_and_custom_powerplants.md` | review fixes applied | needs re-review | none | pending re-freeze after custom_powerplants header/filter review |
 | `09_grid_spatial_and_transmission_model.md` | review fixes applied | needs re-review | none | pending re-freeze after Eskom-34 custom-busmap review |
-| `10_earth_rsa_baseline_diagnostic.md` | new | needs review | none | pending first review |
+| `10_earth_rsa_baseline_diagnostic.md` | implemented | in progress | none | pending verification run |
 | `11_fixed_capacity_network_build.md` | review fixes applied | needs re-review | none | pending re-freeze after local-hook/audit-schema review |
 | `12_dispatch_calibration_and_availability.md` | review fixes applied | needs re-review | none | pending re-freeze after output-wildcard/EAF-input review |
 | `13_validation_reporting_and_acceptance.md` | review fixes applied | agreed | none | frozen after provenance/PHS detection clarification |

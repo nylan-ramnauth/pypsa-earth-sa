@@ -41,85 +41,6 @@ Secunda_coal,Hard Coal,Steam Turbine,PP,ZA,600.04,,,,,,1990,,,-26.5036,29.1803,,
 Sasolburg_coal,Hard Coal,Steam Turbine,PP,ZA,128.0,,,,,,1990,,,-26.5036,29.1803,,RSA_FIXED_TECHNOLOGIES,Witbank
 Sasol_ice,Natural Gas,OCGT,PP,ZA,174.6,,,,,,1990,,,-26.8102,27.8277,,RSA_FIXED_TECHNOLOGIES,Vaal
 Sasol_ocgt,Natural Gas,OCGT,PP,ZA,250.0,,,,,,1990,,,-26.8102,27.8277,,RSA_FIXED_TECHNOLOGIES,Vaal
-Aries Solar,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-29.496506,20.785119,,RSA_FIXED_TECHNOLOGIES,Namaqualand
-De Aar Solar PV,Solar,PV,PP,ZA,48.25,,,,,,2014,,,-30.6234,24.0283,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Droogfontein Solar PV Project,Solar,PV,PP,ZA,48.25,,,,,,2014,,,-28.6133,24.7468,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Greefspan PV Power Plant1,Solar,PV,PP,ZA,10.0,,,,,,2014,,,-29.393781,23.307708,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Herbert PV Power Plant,Solar,PV,PP,ZA,19.9,,,,,,2014,,,-29.0019,23.8019,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Kalkbult,Solar,PV,PP,ZA,72.5,,,,,,2014,,,-30.1607,24.1349,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Kathu Solar Energy Facility,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-27.612908,23.025886,,RSA_FIXED_TECHNOLOGIES,Kalahari
-Konkoonsies Solar,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-28.889147,19.555275,,RSA_FIXED_TECHNOLOGIES,Namaqualand
-Lesedi Power Company,Solar,PV,PP,ZA,64.0,,,,,,2014,,,-28.3154,23.3501,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Letsatsi Power Company,Solar,PV,PP,ZA,64.0,,,,,,2014,,,-28.9134,25.9199,,RSA_FIXED_TECHNOLOGIES,Welkom
-Mulilo Renewable Energy Solar PV De Aar,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-30.6279,24.005453,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Mulilo Renewable Energy Solar PV Prieska,Solar,PV,PP,ZA,19.9,,,,,,2014,,,-29.967661,22.319683,,RSA_FIXED_TECHNOLOGIES,Kimberley
-RustMo1 Solar Farm,Solar,PV,PP,ZA,6.76,,,,,,2013,,,-25.737892,27.418314,,RSA_FIXED_TECHNOLOGIES,Rustenburg
-SlimSun Swartland Solar Park,Solar,PV,PP,ZA,5.0,,,,,,2015,,,-33.35,18.529708,,RSA_FIXED_TECHNOLOGIES,West Coast
-Solar Capital De Aar,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-30.604753,24.095239,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Soutpan Solar Park,Solar,PV,PP,ZA,28.0,,,,,,2014,,,-22.991667,29.251667,,RSA_FIXED_TECHNOLOGIES,Polokwane
-Touwsrivier Project,Solar,PV,PP,ZA,36.0,,,,,,2014,,,-33.410389,19.9276,,RSA_FIXED_TECHNOLOGIES,Outeniqua
-Witkop Solar Park,Solar,PV,PP,ZA,30.0,,,,,,2014,,,-24.041667,29.361667,,RSA_FIXED_TECHNOLOGIES,Polokwane
-Aurora,Solar,PV,PP,ZA,9.0,,,,,,2014,,,-32.641344,18.497289,,RSA_FIXED_TECHNOLOGIES,West Coast
-Boshoff Solar Park,Solar,PV,PP,ZA,60.0,,,,,,2014,,,-28.4628,25.1891,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Jasper Power Company,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-28.3133,23.3751,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Linde,Solar,PV,PP,ZA,36.8,,,,,,2013,,,-30.9986,24.6506,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Project Dreunberg,Solar,PV,PP,ZA,69.9,,,,,,2014,,,-30.8373,26.2055,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Sishen Solar Facility,Solar,PV,PP,ZA,74.0,,,,,,2014,,,-27.583611,22.932778,,RSA_FIXED_TECHNOLOGIES,Kalahari
-Solar Capital De Aar 3,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-30.604753,24.095239,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Upington Solar PV,Solar,PV,PP,ZA,8.9,,,,,,2014,,,-28.5493,21.1038,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Vredendal,Solar,PV,PP,ZA,8.8,,,,,,2014,,,-31.634886,18.505356,,RSA_FIXED_TECHNOLOGIES,Vredendal
-Adams Solar PV 2,Solar,PV,PP,ZA,75.0,,,,,,2017,,,-27.378969,23.012989,,RSA_FIXED_TECHNOLOGIES,Kalahari
-Electra Capital (Pty) Ltd,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-32.4148,18.7379,,RSA_FIXED_TECHNOLOGIES,West Coast
-Mulilo Prieska PV,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-30.0375,22.317222,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Mulilo Sonnedix Prieska PV,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-30.024444,22.362778,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Pulida Solar Park,Solar,PV,PP,ZA,75.0,,,,,,2017,,,-29.086944,24.903333,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Tom Burke Solar Park,Solar,PV,PP,ZA,60.0,,,,,,2016,,,-23.072778,27.989444,,RSA_FIXED_TECHNOLOGIES,Lephalale
-Aggeneys Solar,Solar,PV,PP,ZA,40.0,,,,,,2020,,,-29.235794,18.897656,,RSA_FIXED_TECHNOLOGIES,Namaqualand
-Bokamoso,Solar,PV,PP,ZA,67.9,,,,,,2020,,,-27.1583,26.4009,,RSA_FIXED_TECHNOLOGIES,Carletonville
-De Wildt,Solar,PV,PP,ZA,50.0,,,,,,2021,,,-25.6332,27.9307,,RSA_FIXED_TECHNOLOGIES,Pretoria
-Droogfontein Solar Power,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5677,24.7023,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Dyasons Klip 1,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5493,21.1038,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Dyasons Klip 2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5707,21.0613,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Greefspan PV Power Plant2,Solar,PV,PP,ZA,55.0,,,,,,2021,,,-29.3857,23.3172,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Konkoonsies II Solar PV Facility,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.898811,19.557383,,RSA_FIXED_TECHNOLOGIES,Namaqualand
-Loeriesfontein Orange,Solar,PV,PP,ZA,75.0,,,,,,2023,,,-30.918109,19.441043,,RSA_FIXED_TECHNOLOGIES,Vredendal
-Sirius Solar PV Project One,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.547361,21.09495,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Waterloo Solar Park,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-27.0322,24.7931,,RSA_FIXED_TECHNOLOGIES,Kalahari
-Zeerust,Solar,PV,PP,ZA,75.0,,,,,,2021,,,-25.5748,26.0718,,RSA_FIXED_TECHNOLOGIES,Carletonville
-Cookhouse Wind Farm,Wind,Onshore,PP,ZA,135.0,,,,,,2014,,,-32.7333,25.9093,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Dassieklip Wind Energy Facility,Wind,Onshore,PP,ZA,26.19,,,,,,2014,,,-34.2275,19.383,,RSA_FIXED_TECHNOLOGIES,Outeniqua
-Umoya Energy Wind Farm,Wind,Onshore,PP,ZA,65.4,,,,,,2014,,,-33.0928,18.3989,,RSA_FIXED_TECHNOLOGIES,West Coast
-Jeffreys Bay Wind Farm,Wind,Onshore,PP,ZA,133.86,,,,,,2014,,,-34.0107,24.8808,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Kouga Wind Farm,Wind,Onshore,PP,ZA,77.6,,,,,,2014,,,-34.14656,24.7004,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Metrowind Van Stadens Wind Farm,Wind,Onshore,PP,ZA,86.6,,,,,,2014,,,-33.96222,25.24444,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Nobelsfontein Phase 1,Wind,Onshore,PP,ZA,72.75,,,,,,2014,,,-31.750833,23.173333,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Red Cap Gibson Bay,Wind,Onshore,PP,ZA,110.0,,,,,,2014,,,-34.1286,24.4818,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Eskom Sere,Wind,Onshore,PP,ZA,100.0,,,,,,2014,,,-31.496857,18.063376,,RSA_FIXED_TECHNOLOGIES,Vredendal
-Amakhala Emoyeni,Wind,Onshore,PP,ZA,137.9,,,,,,2017,,,-32.875798,25.99753,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Aurora Wind Power,Wind,Onshore,PP,ZA,90.8,,,,,,2017,,,-32.83425,17.995611,,RSA_FIXED_TECHNOLOGIES,West Coast
-Chaba Wind Farm,Wind,Onshore,PP,ZA,20.6,,,,,,2017,,,-32.5901,27.9623,,RSA_FIXED_TECHNOLOGIES,East London
-Gouda Wind Project,Wind,Onshore,PP,ZA,135.2,,,,,,2017,,,-33.2564,19.0184,,RSA_FIXED_TECHNOLOGIES,Outeniqua
-Grassridge Wind Farm,Wind,Onshore,PP,ZA,59.8,,,,,,2017,,,-33.6551,25.5915,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Tsitsikamma Community Wind Farm,Wind,Onshore,PP,ZA,94.8,,,,,,2017,,,-34.0735,24.5067,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Waainek Wind Farm,Wind,Onshore,PP,ZA,23.4,,,,,,2017,,,-32.5901,26.4569,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Dorper Wind Farm,Wind,Onshore,PP,ZA,97.0,,,,,,2018,,,-31.4809,26.4393,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Khobab Wind Farm,Wind,Onshore,PP,ZA,137.7,,,,,,2018,,,-30.4344,19.5538,,RSA_FIXED_TECHNOLOGIES,Vredendal
-Loeriesfontein 2 Wind Farm,Wind,Onshore,PP,ZA,138.2,,,,,,2018,,,-30.380404,19.589285,,RSA_FIXED_TECHNOLOGIES,Vredendal
-Longyuan Mulilo De Aar Maanhaarberg Wind Energy Facility,Wind,Onshore,PP,ZA,139.0,,,,,,2018,,,-30.716667,23.920556,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Longyuan Mulilo Green Energy De Aar 2 North Wind Energy Facility,Wind,Onshore,PP,ZA,96.5,,,,,,2018,,,-30.7349,23.8665,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Nojoli Wind Farm,Wind,Onshore,PP,ZA,86.6,,,,,,2018,,,-32.771,25.91566,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Noupoort Wind Farm,Wind,Onshore,PP,ZA,79.1,,,,,,2018,,,-31.172814,25.016449,,RSA_FIXED_TECHNOLOGIES,Hydra Central
-Copperton Windfarm,Wind,Onshore,PP,ZA,102.0,,,,,,2021,,,-29.9078,22.3391,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Excelsior Wind Energy Facility,Wind,Onshore,PP,ZA,31.9,,,,,,2021,,,-34.2423,20.2307,,RSA_FIXED_TECHNOLOGIES,Outeniqua
-Garob Wind Farm,Wind,Onshore,PP,ZA,135.9,,,,,,2021,,,-29.959,22.4131,,RSA_FIXED_TECHNOLOGIES,Kimberley
-Golden Valley Wind,Wind,Onshore,PP,ZA,117.72,,,,,,2021,,,-32.8875,25.9418,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Kangnas Wind Farm,Wind,Onshore,PP,ZA,136.7,,,,,,2021,,,-29.6001,18.357,,RSA_FIXED_TECHNOLOGIES,Namaqualand
-The Karusa Wind Farm,Wind,Onshore,PP,ZA,139.8,,,,,,2021,,,-32.8858,20.6567,,RSA_FIXED_TECHNOLOGIES,Greater Komsberg
-Nxuba Wind Farm,Wind,Onshore,PP,ZA,138.9,,,,,,2021,,,-32.73767,25.96684,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Oyster Bay Wind Farm,Wind,Onshore,PP,ZA,140.0,,,,,,2021,,,-34.11639,24.64889,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Perdekraal East Wind Farm,Wind,Onshore,PP,ZA,107.76,,,,,,2021,,,-33.054444,20.100278,,RSA_FIXED_TECHNOLOGIES,Greater Komsberg
-Roggeveld Wind Farm,Wind,Onshore,PP,ZA,140.0,,,,,,2021,,,-32.917233,20.509089,,RSA_FIXED_TECHNOLOGIES,Greater Komsberg
-Soetwater Wind Farm,Wind,Onshore,PP,ZA,139.4,,,,,,2021,,,-32.754,20.6396,,RSA_FIXED_TECHNOLOGIES,Outeniqua
 Kaxu Solar One,Solar,CSP,PP,ZA,100.0,,,,,,2015,,,-28.8793,19.5929,,RSA_FIXED_TECHNOLOGIES,Namaqualand
 Khi Solar One,Solar,CSP,PP,ZA,50.0,,,,,,2015,,,-28.5364,21.0782,,RSA_FIXED_TECHNOLOGIES,Kimberley
 Bokpoort CSP project,Solar,CSP,PP,ZA,50.0,,,,,,2016,,,-28.7333,21.9955,,RSA_FIXED_TECHNOLOGIES,Kimberley
@@ -133,21 +54,13 @@ ColleyWobbles,Hydro,Reservoir,PP,ZA,65.0,,,,,,2020,,,-32.05,28.58333,,RSA_FIXED_
 ENERGY Joburg Landfill Gas to Electircity Project,Bioenergy,Steam Turbine,PP,ZA,7.56,,,,,,2020,,,-26.194954,28.032528,,RSA_FIXED_TECHNOLOGIES,Johannesburg
 Ngodwana Energy,Bioenergy,Steam Turbine,PP,ZA,25.0,,,,,,2020,,,-25.480898,30.974305,,RSA_FIXED_TECHNOLOGIES,Lowveld
 Sappi,Bioenergy,Steam Turbine,PP,ZA,144.0,,,,,,2020,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV,Solar,PV,PP,ZA,642.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_2,Solar,PV,PP,ZA,208.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_3,Solar,PV,PP,ZA,368.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_4,Solar,PV,PP,ZA,308.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_5,Solar,PV,PP,ZA,811.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_6,Solar,PV,PP,ZA,1504.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_7,Solar,PV,PP,ZA,669.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_8,Solar,PV,PP,ZA,413.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Existing distributed solar PV_9,Solar,PV,PP,ZA,516.0,,,,,,2023,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
 Drakensberg,Hydro,Pumped Storage,Store,ZA,1000.0,,,,,21700.0,1990,,,-28.56283,29.08275,,RSA_FIXED_TECHNOLOGIES,Ladysmith
 Ingula,Hydro,Pumped Storage,Store,ZA,1324.0,,,,,27400.0,1990,,,-28.165,29.3512,,RSA_FIXED_TECHNOLOGIES,Ladysmith
 Palmiet,Hydro,Pumped Storage,Store,ZA,400.0,,,,,10000.0,1990,,,-34.19722,18.97361,,RSA_FIXED_TECHNOLOGIES,Peninsula
 Steenbras,Hydro,Pumped Storage,Store,ZA,180.0,,,,,2700.0,1990,,,-34.153,18.9,,RSA_FIXED_TECHNOLOGIES,Peninsula
 Hex,Battery,Battery Storage,Store,ZA,20.0,,,,,,2023,,,-33.64,19.48,,RSA_FIXED_TECHNOLOGIES,Outeniqua
 Amakhala,Wind,Onshore,PP,ZA,137.9,,,,,,2016,,,-32.692,26.1083,,REIPPPP,Gqeberha
+Aurora,Wind,Onshore,PP,ZA,90.8,,,,,,2015,,,-32.83425,17.995611,,REIPPPP,West Coast
 Chaba,Wind,Onshore,PP,ZA,20.6,,,,,,2015,,,-32.5901,27.9623,,REIPPPP,East London
 Cookhouse,Wind,Onshore,PP,ZA,135.0,,,,,,2014,,,-32.7333,25.9093,,REIPPPP,Gqeberha
 Copperton,Wind,Onshore,PP,ZA,102.0,,,,,,2020,,,-34.1286,24.4818,,REIPPPP,Gqeberha
@@ -181,48 +94,47 @@ Soetwater,Wind,Onshore,PP,ZA,139.4,,,,,,2022,,,-32.754,20.6396,,REIPPPP,Outeniqu
 Tsitsikama,Wind,Onshore,PP,ZA,94.8,,,,,,2016,,,-34.0735,24.5067,,REIPPPP,Gqeberha
 Waainek,Wind,Onshore,PP,ZA,23.4,,,,,,2016,,,-32.5901,26.4569,,REIPPPP,Gqeberha
 Wesley_ciskei,Wind,Onshore,PP,ZA,32.7,,,,,,2021,,,-33.29028,27.37222,,REIPPPP,Gqeberha
-Aries Solar_2,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-29.496506,20.785119,,REIPPPP,Namaqualand
-De Aar Solar PV_2,Solar,PV,PP,ZA,48.25,,,,,,2014,,,-30.6234,24.0283,,REIPPPP,Hydra Central
-Droogfontein Solar PV Project_2,Solar,PV,PP,ZA,48.25,,,,,,2014,,,-28.6133,24.7468,,REIPPPP,Kimberley
-Greefspan PV Power Plant1_2,Solar,PV,PP,ZA,10.0,,,,,,2014,,,-29.393781,23.307708,,REIPPPP,Kimberley
-Herbert PV Power Plant_2,Solar,PV,PP,ZA,19.9,,,,,,2014,,,-29.0019,23.8019,,REIPPPP,Kimberley
-Kalkbult_2,Solar,PV,PP,ZA,72.5,,,,,,2014,,,-30.160833,24.135833,,REIPPPP,Hydra Central
-Kathu Solar Energy Facility_2,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-27.612908,23.025886,,REIPPPP,Kalahari
-Konkoonsies Solar_2,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-28.889147,19.555275,,REIPPPP,Namaqualand
-Lesedi Power Company_2,Solar,PV,PP,ZA,64.0,,,,,,2014,,,-28.3154,23.3501,,REIPPPP,Kimberley
-Letsatsi Power Company_2,Solar,PV,PP,ZA,64.0,,,,,,2014,,,-28.9134,25.9199,,REIPPPP,Welkom
-Mulilo Renewable Energy Solar PV De Aar_2,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-30.6279,24.005453,,REIPPPP,Hydra Central
-Mulilo Renewable Energy Solar PV Prieska_2,Solar,PV,PP,ZA,19.9,,,,,,2014,,,-29.967661,22.319683,,REIPPPP,Kimberley
-RustMo1 Solar Farm_2,Solar,PV,PP,ZA,6.76,,,,,,2013,,,-25.737892,27.418314,,REIPPPP,Rustenburg
-SlimSun Swartland Solar Park_2,Solar,PV,PP,ZA,5.0,,,,,,2015,,,-33.35,18.529708,,REIPPPP,West Coast
-Solar Capital De Aar_2,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-30.604753,24.095239,,REIPPPP,Hydra Central
-Soutpan Solar Park_2,Solar,PV,PP,ZA,28.0,,,,,,2014,,,-22.991667,29.251667,,REIPPPP,Polokwane
-Touwsrivier Project_2,Solar,PV,PP,ZA,36.0,,,,,,2014,,,-33.410389,19.9276,,REIPPPP,Outeniqua
-Witkop Solar Park_2,Solar,PV,PP,ZA,30.0,,,,,,2014,,,-24.041667,29.361667,,REIPPPP,Polokwane
-Aurora_2,Solar,PV,PP,ZA,9.0,,,,,,2014,,,-32.641344,18.497289,,REIPPPP,West Coast
-Boshoff Solar Park_2,Solar,PV,PP,ZA,60.0,,,,,,2014,,,-28.4628,25.1891,,REIPPPP,Kimberley
-Jasper Power Company_2,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-28.3133,23.3751,,REIPPPP,Kimberley
-Linde_2,Solar,PV,PP,ZA,36.8,,,,,,2013,,,-30.9986,24.6506,,REIPPPP,Hydra Central
-Project Dreunberg_2,Solar,PV,PP,ZA,69.9,,,,,,2014,,,-30.8373,26.2055,,REIPPPP,Hydra Central
-Sishen Solar Facility_2,Solar,PV,PP,ZA,74.0,,,,,,2014,,,-27.583611,22.932778,,REIPPPP,Kalahari
-Solar Capital De Aar 3_2,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-30.604753,24.095239,,REIPPPP,Hydra Central
-Upington Solar PV_2,Solar,PV,PP,ZA,8.9,,,,,,2014,,,-28.5493,21.1038,,REIPPPP,Kimberley
-Vredendal_2,Solar,PV,PP,ZA,8.8,,,,,,2014,,,-31.634886,18.505356,,REIPPPP,Vredendal
-Adams Solar PV 2_2,Solar,PV,PP,ZA,75.0,,,,,,2017,,,-27.378969,23.012989,,REIPPPP,Kalahari
-Electra Capital (Pty) Ltd_2,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-32.4148,18.7379,,REIPPPP,West Coast
-Mulilo Prieska PV_2,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-30.0375,22.317222,,REIPPPP,Kimberley
-Mulilo Sonnedix Prieska PV_2,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-30.024444,22.362778,,REIPPPP,Kimberley
-Pulida Solar Park_2,Solar,PV,PP,ZA,75.0,,,,,,2017,,,-29.086944,24.903333,,REIPPPP,Kimberley
-Tom Burke Solar Park_2,Solar,PV,PP,ZA,60.0,,,,,,2016,,,-23.072778,27.989444,,REIPPPP,Lephalale
-Aggeneys Solar_2,Solar,PV,PP,ZA,40.0,,,,,,2020,,,-29.235794,18.897656,,REIPPPP,Namaqualand
-Droogfontein Solar Power_2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-26.854002,26.642111,,REIPPPP,Carletonville
-Dyasons Klip 1_2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5493,21.1038,,REIPPPP,Kimberley
-Dyasons Klip 2_2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5707,21.0613,,REIPPPP,Kimberley
-Konkoonsies II Solar PV Facility_2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.898811,19.557383,,REIPPPP,Namaqualand
-Sirius Solar PV Project One_2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.547361,21.09495,,REIPPPP,Kimberley
-Loeriesfontein Orange_2,Solar,PV,PP,ZA,75.0,,,,,,2023,,,-30.918109,19.441043,,REIPPPP,Vredendal
-Greefspan PV Power Plant2_2,Solar,PV,PP,ZA,55.0,,,,,,2021,,,-29.3857,23.3172,,REIPPPP,Kimberley
-De Wildt_2,Solar,PV,PP,ZA,50.0,,,,,,2021,,,-25.6332,27.9307,,REIPPPP,Pretoria
-Bokamoso_2,Solar,PV,PP,ZA,67.9,,,,,,2020,,,-27.1583,26.4009,,REIPPPP,Carletonville
-Waterloo Solar Park_2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-27.0322,24.7931,,REIPPPP,Kalahari
-Zeerust_2,Solar,PV,PP,ZA,75.0,,,,,,2021,,,-25.5748,26.0718,,REIPPPP,Carletonville
+Aries Solar,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-29.496506,20.785119,,REIPPPP,Namaqualand
+De Aar Solar PV,Solar,PV,PP,ZA,48.25,,,,,,2014,,,-30.6234,24.0283,,REIPPPP,Hydra Central
+Droogfontein Solar PV Project,Solar,PV,PP,ZA,48.25,,,,,,2014,,,-28.6133,24.7468,,REIPPPP,Kimberley
+Greefspan PV Power Plant1,Solar,PV,PP,ZA,10.0,,,,,,2014,,,-29.393781,23.307708,,REIPPPP,Kimberley
+Herbert PV Power Plant,Solar,PV,PP,ZA,19.9,,,,,,2014,,,-29.0019,23.8019,,REIPPPP,Kimberley
+Kalkbult,Solar,PV,PP,ZA,72.5,,,,,,2014,,,-30.160833,24.135833,,REIPPPP,Hydra Central
+Kathu Solar Energy Facility,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-27.612908,23.025886,,REIPPPP,Kalahari
+Konkoonsies Solar,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-28.889147,19.555275,,REIPPPP,Namaqualand
+Lesedi Power Company,Solar,PV,PP,ZA,64.0,,,,,,2014,,,-28.3154,23.3501,,REIPPPP,Kimberley
+Letsatsi Power Company,Solar,PV,PP,ZA,64.0,,,,,,2014,,,-28.9134,25.9199,,REIPPPP,Welkom
+Mulilo Renewable Energy Solar PV De Aar,Solar,PV,PP,ZA,9.65,,,,,,2014,,,-30.6279,24.005453,,REIPPPP,Hydra Central
+Mulilo Renewable Energy Solar PV Prieska,Solar,PV,PP,ZA,19.9,,,,,,2014,,,-29.967661,22.319683,,REIPPPP,Kimberley
+RustMo1 Solar Farm,Solar,PV,PP,ZA,6.76,,,,,,2013,,,-25.737892,27.418314,,REIPPPP,Rustenburg
+SlimSun Swartland Solar Park,Solar,PV,PP,ZA,5.0,,,,,,2015,,,-33.35,18.529708,,REIPPPP,West Coast
+Solar Capital De Aar,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-30.604753,24.095239,,REIPPPP,Hydra Central
+Soutpan Solar Park,Solar,PV,PP,ZA,28.0,,,,,,2014,,,-22.991667,29.251667,,REIPPPP,Polokwane
+Touwsrivier Project,Solar,PV,PP,ZA,36.0,,,,,,2014,,,-33.410389,19.9276,,REIPPPP,Outeniqua
+Witkop Solar Park,Solar,PV,PP,ZA,30.0,,,,,,2014,,,-24.041667,29.361667,,REIPPPP,Polokwane
+Boshoff Solar Park,Solar,PV,PP,ZA,60.0,,,,,,2014,,,-28.4628,25.1891,,REIPPPP,Kimberley
+Jasper Power Company,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-28.3133,23.3751,,REIPPPP,Kimberley
+Linde,Solar,PV,PP,ZA,36.8,,,,,,2013,,,-30.9986,24.6506,,REIPPPP,Hydra Central
+Project Dreunberg,Solar,PV,PP,ZA,69.9,,,,,,2014,,,-30.8373,26.2055,,REIPPPP,Hydra Central
+Sishen Solar Facility,Solar,PV,PP,ZA,74.0,,,,,,2014,,,-27.583611,22.932778,,REIPPPP,Kalahari
+Solar Capital De Aar 3,Solar,PV,PP,ZA,75.0,,,,,,2014,,,-30.604753,24.095239,,REIPPPP,Hydra Central
+Upington Solar PV,Solar,PV,PP,ZA,8.9,,,,,,2014,,,-28.5493,21.1038,,REIPPPP,Kimberley
+Vredendal,Solar,PV,PP,ZA,8.8,,,,,,2014,,,-31.634886,18.505356,,REIPPPP,Vredendal
+Adams Solar PV 2,Solar,PV,PP,ZA,75.0,,,,,,2017,,,-27.378969,23.012989,,REIPPPP,Kalahari
+Electra Capital (Pty) Ltd,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-32.4148,18.7379,,REIPPPP,West Coast
+Mulilo Prieska PV,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-30.0375,22.317222,,REIPPPP,Kimberley
+Mulilo Sonnedix Prieska PV,Solar,PV,PP,ZA,75.0,,,,,,2016,,,-30.024444,22.362778,,REIPPPP,Kimberley
+Pulida Solar Park,Solar,PV,PP,ZA,75.0,,,,,,2017,,,-29.086944,24.903333,,REIPPPP,Kimberley
+Tom Burke Solar Park,Solar,PV,PP,ZA,60.0,,,,,,2016,,,-23.072778,27.989444,,REIPPPP,Lephalale
+Aggeneys Solar,Solar,PV,PP,ZA,40.0,,,,,,2020,,,-29.235794,18.897656,,REIPPPP,Namaqualand
+Droogfontein Solar Power,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-26.854002,26.642111,,REIPPPP,Carletonville
+Dyasons Klip 1,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5493,21.1038,,REIPPPP,Kimberley
+Dyasons Klip 2,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.5707,21.0613,,REIPPPP,Kimberley
+Konkoonsies II Solar PV Facility,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.898811,19.557383,,REIPPPP,Namaqualand
+Sirius Solar PV Project One,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-28.547361,21.09495,,REIPPPP,Kimberley
+Loeriesfontein Orange,Solar,PV,PP,ZA,75.0,,,,,,2023,,,-30.918109,19.441043,,REIPPPP,Vredendal
+Greefspan PV Power Plant2,Solar,PV,PP,ZA,55.0,,,,,,2021,,,-29.3857,23.3172,,REIPPPP,Kimberley
+De Wildt,Solar,PV,PP,ZA,50.0,,,,,,2021,,,-25.6332,27.9307,,REIPPPP,Pretoria
+Bokamoso,Solar,PV,PP,ZA,67.9,,,,,,2020,,,-27.1583,26.4009,,REIPPPP,Carletonville
+Waterloo Solar Park,Solar,PV,PP,ZA,75.0,,,,,,2020,,,-27.0322,24.7931,,REIPPPP,Kalahari
+Zeerust,Solar,PV,PP,ZA,75.0,,,,,,2021,,,-25.5748,26.0718,,REIPPPP,Carletonville

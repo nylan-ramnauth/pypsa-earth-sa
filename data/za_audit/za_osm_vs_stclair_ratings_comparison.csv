@@ -1,0 +1,70 @@
+bus0,bus1,n_lines,voltage_max_kv,osm_s_nom_total_mw,n_osm_lines,st_clair_n1_mw,ratio_osm_to_stclair,direction,notes
+Bloemfontein,Carletonville,1,765,5512.0800,1,2468.3500,2.2331,osm_over,
+Bloemfontein,Highveld South,1,400,,0,492.0796,,unmatched,no_osm_lines_found
+Bloemfontein,Hydra Central,3,765,1787.4800,1,1645.6700,1.0862,within_20pct,
+Bloemfontein,Kimberley,2,275,7355.4100,1,699.3200,10.5180,osm_over,
+Bloemfontein,Welkom,5,400,23887.2800,1,4902.4800,4.8725,osm_over,
+Carletonville,Highveld South,1,765,5512.0800,1,2266.5500,2.4319,osm_over,
+Carletonville,Kalahari,1,400,1934.9400,1,662.6400,2.9200,osm_over,
+Carletonville,Lephalale,2,400,1787.4800,1,698.6000,2.5587,osm_over,
+Carletonville,Midrand,1,400,3557.0800,1,1251.6000,2.8420,osm_over,
+Carletonville,Pretoria,1,275,,0,465.0517,,unmatched,no_osm_lines_found
+Carletonville,Rustenburg,3,400,5418.2900,1,1651.6500,3.2805,osm_over,
+Carletonville,West Rand,2,400,4552.4800,1,454.7700,10.0106,osm_over,
+East London,Gqeberha,2,400,2426.5000,1,241.8300,10.0339,osm_over,
+East London,Mthatha,1,400,2229.8800,1,764.5600,2.9165,osm_over,
+East London,Welkom,1,400,1787.4800,1,455.6500,3.9229,osm_over,
+Empangeni,Highveld South,2,765,3722.4200,1,1371.4000,2.7143,osm_over,
+Empangeni,Newcastle,3,400,5460.7400,1,2118.8000,2.5773,osm_over,
+Empangeni,Pinetown,2,275,1216.6000,1,600.3800,2.0264,osm_over,
+Gqeberha,Hydra Central,2,400,3722.4200,1,801.0500,4.6469,osm_over,
+Greater Komsberg,Outeniqua,3,400,5952.3000,1,1752.7000,3.3961,osm_over,
+Greater Komsberg,Peninsula,1,400,7299.5500,1,856.7300,8.5203,osm_over,
+Highveld South,Ladysmith,2,400,3574.9500,1,974.7900,3.6674,osm_over,
+Highveld South,Middelburg,2,400,2709.1400,1,721.6500,3.7541,osm_over,
+Highveld South,Newcastle,4,400,7444.8400,1,3486.8400,2.1351,osm_over,
+Highveld South,Welkom,4,765,16386.5900,1,4136.4000,3.9616,osm_over,
+Highveld South,West Rand,1,400,,0,1119.5404,,unmatched,no_osm_lines_found
+Highveld South,Witbank,7,400,17119.5600,1,9983.7900,1.7147,osm_over,
+Hydra Central,Kimberley,1,400,7594.4900,1,753.2400,10.0825,osm_over,
+Hydra Central,Outeniqua,3,400,5509.9000,1,1803.2200,3.0556,osm_over,
+Hydra Central,Welkom,2,765,9087.0300,1,843.9800,10.7669,osm_over,
+Johannesburg,Middelburg,1,400,,0,1017.6889,,unmatched,no_osm_lines_found
+Johannesburg,Midrand,3,400,4620.6300,1,1842.0000,2.5085,osm_over,
+Johannesburg,Nigel,1,275,884.8000,1,644.7000,1.3724,osm_over,
+Johannesburg,Polokwane,2,400,,0,557.3345,,unmatched,no_osm_lines_found
+Johannesburg,Pretoria,8,400,1130.5800,1,6447.0000,0.1754,osm_under,
+Johannesburg,Vaal,1,275,,0,633.0067,,unmatched,no_osm_lines_found
+Johannesburg,Warmbad,1,275,,0,461.3918,,unmatched,no_osm_lines_found
+Johannesburg,West Rand,1,275,393.2400,1,644.7000,0.6100,osm_under,
+Johannesburg,Witbank,6,400,,0,6170.3782,,unmatched,no_osm_lines_found
+Kalahari,Kimberley,3,275,4921.1500,1,1336.3600,3.6825,osm_over,
+Kimberley,Namaqualand,1,400,3722.4200,1,823.7700,4.5188,osm_over,
+Ladysmith,Newcastle,3,400,3827.4300,1,1304.1800,2.9347,osm_over,
+Ladysmith,Pinetown,4,400,4840.7100,1,2504.4200,1.9329,osm_over,
+Lephalale,Polokwane,2,400,5362.4300,1,1038.4200,5.1640,osm_over,
+Lephalale,Pretoria,2,400,3574.9500,1,1521.3800,2.3498,osm_over,
+Lephalale,Rustenburg,5,400,12666.5000,1,3334.7300,3.7984,osm_over,
+Lowveld,Middelburg,2,275,4368.1500,1,921.0000,4.7428,osm_over,
+Lowveld,Phalaborwa,2,275,2138.2700,1,673.1900,3.1763,osm_over,
+Middelburg,Phalaborwa,3,400,4791.5500,1,1936.4800,2.4744,osm_over,
+Middelburg,Witbank,11,400,19294.6900,1,15047.9900,1.2822,osm_over,
+Mthatha,Pinetown,1,400,6173.5000,1,1025.8900,6.0177,osm_over,
+Namaqualand,Vredendal,1,400,3574.9500,1,807.3000,4.4283,osm_over,
+Newcastle,Pinetown,2,400,3574.9500,1,1054.9500,3.3887,osm_over,
+Nigel,Vaal,2,275,3551.4900,1,685.3100,5.1823,osm_over,
+Nigel,Welkom,1,275,,0,277.3843,,unmatched,no_osm_lines_found
+Nigel,Witbank,2,275,,0,859.4210,,unmatched,no_osm_lines_found
+Outeniqua,Peninsula,3,400,4312.2900,1,2178.1100,1.9798,osm_over,
+Peninsula,West Coast,2,400,3722.4200,1,1788.0000,2.0819,osm_over,
+Phalaborwa,Polokwane,1,400,1861.2100,1,1182.5800,1.5739,osm_over,
+Polokwane,Warmbad,1,275,1069.1300,1,325.8900,3.2807,osm_over,
+Pretoria,Rustenburg,1,400,1787.4800,1,1251.6000,1.4282,osm_over,
+Vaal,Welkom,1,275,1941.6500,1,311.5400,6.2324,osm_over,
+Vaal,West Rand,2,275,2039.9600,1,921.0000,2.2149,osm_over,
+Vaal,Witbank,2,400,3574.9500,1,1284.0300,2.7842,osm_over,
+Vredendal,West Coast,1,400,1787.4800,1,820.1800,2.1794,osm_over,
+_summary_,osm_over,122,0,276746.6500,52,93287.9700,,osm_over,n_corridors=52
+_summary_,within_20pct,3,0,1787.4800,1,1645.6700,,within_20pct,n_corridors=1
+_summary_,osm_under,9,0,1523.8200,2,7091.7000,,osm_under,n_corridors=2
+_summary_,unmatched,17,0,0.0000,0,12053.2800,,unmatched,n_corridors=10

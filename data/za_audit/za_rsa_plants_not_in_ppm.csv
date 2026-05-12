@@ -1,0 +1,69 @@
+canonical_name,carrier,capacity_mw_final,lat_final,lon_final,status_2023,decision
+Arnot,coal,1050.0000,-25.9444,29.7917,operating,include
+Arnot,coal,1050.0000,-25.9444,29.7917,operating,include
+Camden,coal,570.0000,-26.6201,30.0911,operating,include
+Camden,coal,911.0000,-26.6201,30.0911,operating,include
+Duvha,coal,1725.0000,-25.9595,29.3409,operating,include
+Grootvlei,coal,380.0000,-26.7695,28.4995,operating,include
+Grootvlei,coal,190.0000,-26.7695,28.4995,operating,include
+Hendrina,coal,760.0000,-26.0314,29.6014,operating,include
+Hendrina,coal,338.0000,-26.6201,30.0911,operating,include
+Kelvin,coal,160.0000,-26.1158,28.1138,operating,include
+Kendal,coal,1920.0000,-26.0880,28.9689,operating,include
+Kendal,coal,1920.0000,-26.0880,28.9689,operating,include
+Kriel,coal,1215.0000,-26.2540,29.1801,operating,include
+Kriel,coal,1425.0000,-26.2540,29.1801,operating,include
+Kusile,coal,2880.0000,-25.9201,28.9249,operating,include
+Kusile,coal,720.0000,-25.9201,28.9249,commissioning,include
+Lethabo,coal,1779.0000,-26.7403,27.9750,operating,include
+Lethabo,coal,1779.0000,-26.7403,27.9750,operating,include
+Majuba,coal,1818.0000,-27.0955,29.7706,operating,include
+Majuba,coal,1989.0000,-27.0955,29.7706,operating,include
+Matimba,coal,1845.0000,-23.6678,27.6128,operating,include
+Matimba,coal,1845.0000,-23.6678,27.6128,operating,include
+Matla,coal,1725.0000,-26.2804,29.1423,operating,include
+Matla,coal,1725.0000,-26.2804,29.1423,operating,include
+Medupi,coal,3600.0000,-23.4200,27.3300,operating,include
+Medupi,coal,717.0000,-23.4200,27.3300,operating,include
+Tutuka,coal,1755.0000,-26.7756,29.3521,operating,include
+Tutuka,coal,1755.0000,-26.7756,29.3521,operating,include
+Koeberg,nuclear,1854.0000,-33.6736,18.4282,operating,include
+Avon,ocgt_diesel,670.0000,-29.2510,31.0941,operating,include
+Dedisa,ocgt_diesel,335.0000,-33.4433,25.4022,operating,include
+Secunda_coal,sasol_coal,600.0400,-26.5036,29.1803,operating,include
+Sasolburg_coal,sasol_coal,128.0000,-26.5036,29.1803,operating,include
+Sasol_ice,sasol_gas,174.6000,-26.8102,27.8277,operating,include
+Sasol_ocgt,sasol_gas,250.0000,-26.8102,27.8277,operating,include
+Kaxu Solar One,csp,100.0000,-28.8793,19.5929,operating,include
+Khi Solar One,csp,50.0000,-28.5364,21.0782,operating,include
+Bokpoort CSP project,csp,50.0000,-28.7333,21.9955,operating,include
+!XiNa Solar One,csp,100.0000,-28.8906,19.5918,operating,include
+Kathu Solar Park,csp,100.0000,-27.6095,23.0276,operating,include
+Neusberg Hydro Electrical Project,hydro,10.0000,-28.7527,20.5335,operating,include
+Stortemelk Hydro,hydro,4.2200,-28.5142,28.4101,operating,include
+ColleyWobbles,hydro,65.0000,-32.0500,28.5833,operating,include
+ENERGY Joburg Landfill Gas to Electircity Project,biomass,7.5600,-26.1950,28.0325,operating,include
+Ngodwana Energy,biomass,25.0000,-25.4809,30.9743,operating,include
+Mondi,biomass,120.0000,,,operating,include
+Sappi,biomass,144.0000,-25.3447,30.3940,operating,include
+Ingula,PHS,1324.0000,-28.1650,29.3512,operating,include
+Hex,battery,20.0000,-33.6400,19.4800,commissioning,include
+Kangnas,onwind,136.7000,-29.4982,18.3336,operating,include
+Loeriesfontein2,onwind,138.2000,-30.3804,19.5893,operating,include
+Metrowind,onwind,86.6000,-33.9622,25.2444,operating,include
+Nxuba,onwind,138.9000,-32.7377,25.9668,operating,include
+Roggeveld,onwind,140.0000,-32.9172,20.5091,operating,include
+Tsitsikama,onwind,94.8000,-34.0735,24.5067,operating,include
+Wesley_ciskei,onwind,32.7000,-33.2903,27.3722,operating,include
+Greefspan PV Power Plant1,solar,10.0000,-29.3938,23.3077,operating,include
+Konkoonsies Solar,solar,9.6500,-28.8891,19.5553,operating,include
+Mulilo Renewable Energy Solar PV De Aar,solar,9.6500,-30.6279,24.0055,operating,include
+Mulilo Renewable Energy Solar PV Prieska,solar,19.9000,-29.9677,22.3197,operating,include
+Solar Capital De Aar 3,solar,75.0000,-30.6048,24.0952,operating,include
+Upington Solar PV,solar,8.9000,-28.5493,21.1038,operating,include
+Mulilo Sonnedix Prieska PV,solar,75.0000,-30.0244,22.3628,operating,include
+Droogfontein Solar Power,solar,75.0000,-26.8540,26.6421,operating,include
+Dyasons Klip 1,solar,75.0000,-28.5493,21.1038,operating,include
+Dyasons Klip 2,solar,75.0000,-28.5707,21.0613,operating,include
+Sirius Solar PV Project One,solar,75.0000,-28.5474,21.0950,operating,include
+Loeriesfontein Orange,solar,75.0000,-30.9181,19.4410,operating,include

@@ -1,0 +1,57 @@
+action,carrier,name,bus,p_nom,p_nom_extendable,marginal_cost,co2_emissions,mean_p_max_pu
+patch_standard_carrier_cost,coal,Highveld South coal,Highveld South,9706.0,False,40.563840575,1.01,
+patch_standard_carrier_cost,coal,Lephalale coal,Lephalale,8007.0,False,40.563840575,1.01,
+patch_standard_carrier_cost,coal,Middelburg coal,Middelburg,5735.0,False,40.563840575,1.01,
+patch_standard_carrier_cost,coal,Midrand coal,Midrand,160.0,False,40.563840575,1.01,
+patch_standard_carrier_cost,coal,Vaal coal,Vaal,3558.0,False,40.563840575,1.01,
+patch_standard_carrier_cost,coal,Witbank coal,Witbank,14258.04,False,40.563840575,1.01,
+patch_standard_carrier_cost,nuclear,Peninsula nuclear,Peninsula,1854.0,False,16.388513,0.0,
+add_carrier,sasol_coal,,,,False,18.015066575,1.347,
+add_carrier,sasol_gas,,,,False,48.491445556,0.432,
+add_carrier,ocgt_diesel,,,,False,380.282473988,0.574,
+add_carrier,ocgt_gas,,,,False,200.844403752,0.574,
+add_carrier,other_re,,,,False,0.0,0.0,
+split_sasol_coal,sasol_coal,Witbank sasol_coal,Witbank,128.0,False,18.015066575,1.347,1.0
+add_generator,ocgt_diesel,East London ocgt_diesel,East London,171.0,False,380.282473988,0.574,1.0
+add_generator,ocgt_diesel,Gqeberha ocgt_diesel,Gqeberha,335.0,False,380.282473988,0.574,1.0
+add_generator,ocgt_diesel,Outeniqua ocgt_diesel,Outeniqua,740.0,False,380.282473988,0.574,1.0
+add_generator,ocgt_diesel,Peninsula ocgt_diesel,Peninsula,1503.0,False,380.282473988,0.574,1.0
+add_generator,ocgt_diesel,Pinetown ocgt_diesel,Pinetown,670.0,False,380.282473988,0.574,1.0
+add_generator,sasol_gas,Vaal sasol_gas,Vaal,424.6,False,48.491445556,0.432,1.0
+retag_csp_from_solar,csp,Kalahari csp,Kalahari,100.0,False,0.0,0.0,0.18004589139626184
+retag_csp_from_solar,csp,Kimberley csp,Kimberley,200.0,False,0.0,0.0,0.18071259875135665
+retag_csp_from_solar,csp,Namaqualand csp,Namaqualand,200.0,False,0.0,0.0,0.18913724653166167
+add_other_re,other_re,East London other_re,East London,1.2833847006917398,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Gqeberha other_re,Gqeberha,2.6317420169110197,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Mthatha other_re,Mthatha,1.8136945561879798,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Bloemfontein other_re,Bloemfontein,0.48225949265249995,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Welkom other_re,Welkom,0.8079544207047601,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Johannesburg other_re,Johannesburg,1.6841893022935202,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Midrand other_re,Midrand,0.70884484215264,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Nigel other_re,Nigel,1.8744731924263198,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Pretoria other_re,Pretoria,2.02255065148158,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Vaal other_re,Vaal,1.0152431200962,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,West Rand other_re,West Rand,1.8501417139260599,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Hydra Central other_re,Hydra Central,2.20974619848624,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Empangeni other_re,Empangeni,2.3217142122462597,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Ladysmith other_re,Ladysmith,1.8002342192329799,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Newcastle other_re,Newcastle,1.46147495662854,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Pinetown other_re,Pinetown,2.3492198316159,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Lephalale other_re,Lephalale,1.6941571813430998,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Phalaborwa other_re,Phalaborwa,1.5963692162601602,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Polokwane other_re,Polokwane,2.8497388247499598,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Warmbad other_re,Warmbad,1.52523408825684,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Highveld South other_re,Highveld South,2.15888019509016,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Lowveld other_re,Lowveld,0.8277385539745798,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Middelburg other_re,Middelburg,1.2837533379489,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Witbank other_re,Witbank,1.45639768559796,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Carletonville other_re,Carletonville,3.40580130278094,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Rustenburg other_re,Rustenburg,0.34244770936068,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Kalahari other_re,Kalahari,0.99595422521658,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Kimberley other_re,Kimberley,0.88468566325848,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Namaqualand other_re,Namaqualand,0.29608838340821997,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Vredendal other_re,Vredendal,0.6823009898496,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Greater Komsberg other_re,Greater Komsberg,0.24023816844282,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Outeniqua other_re,Outeniqua,3.12597428608836,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,Peninsula other_re,Peninsula,0.22176447071508,False,0.0,0.0,0.5363468514094947
+add_other_re,other_re,West Coast other_re,West Coast,0.67560828992334,False,0.0,0.0,0.5363468514094947
