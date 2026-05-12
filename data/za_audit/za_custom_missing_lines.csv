@@ -1,11 +1,1 @@
 name,bus0,bus1,v_nom,type,x,r,b,length,num_parallel,s_nom,s_nom_extendable,carrier,source_note
-ZA_custom_Bloemfontein_Highveld South_400kV,Bloemfontein,Highveld South,380.0,,87.14024469593222,10.626859109260028,0.001535581141288074,354.22863697533427,1.0,492.0796,False,AC,pypsa_standard_400kV_4bundle_380_per_km
-ZA_custom_Carletonville_Pretoria_275kV,Carletonville,Pretoria,275.0,,66.90355308473478,7.108502515253072,0.0007526649722032664,209.0736033897962,1.0,465.0517,False,AC,hand_override_275kV_singlecircuit
-ZA_custom_Highveld South_West Rand_400kV,Highveld South,West Rand,380.0,,55.05836196942791,6.714434386515599,0.000970235768851504,223.81447955051996,1.0,1119.5404,False,AC,pypsa_standard_400kV_4bundle_380_per_km
-ZA_custom_Johannesburg_Middelburg_400kV,Johannesburg,Middelburg,380.0,,40.07603363894217,4.887321175480752,0.0007062179098569687,162.9107058493584,1.0,1017.6889,False,AC,pypsa_standard_400kV_4bundle_380_per_km
-ZA_custom_Johannesburg_Polokwane_400kV,Johannesburg,Polokwane,380.0,,40.52879597912516,4.942536095015263,0.002856785862918822,329.5024063343509,2.0,557.3345,False,AC,pypsa_standard_400kV_4bundle_380_per_km
-ZA_custom_Johannesburg_Vaal_275kV,Johannesburg,Vaal,275.0,,33.98254237484912,3.610645127327719,0.00038230360171705256,106.19544492140349,1.0,633.0067,False,AC,hand_override_275kV_singlecircuit
-ZA_custom_Johannesburg_Warmbad_275kV,Johannesburg,Warmbad,275.0,,36.77384135381676,3.907220643843031,0.0004137057152304385,114.91825423067738,1.0,461.3918,False,AC,hand_override_275kV_singlecircuit
-ZA_custom_Johannesburg_Witbank_400kV,Johannesburg,Witbank,380.0,,3.2275820285368204,0.39360756445570977,0.002047546550298602,78.72151289114196,6.0,6170.3782,False,AC,pypsa_standard_400kV_4bundle_380_per_km
-ZA_custom_Nigel_Welkom_275kV,Nigel,Welkom,275.0,,68.29619911165499,7.256471155613343,0.0007683322400061185,213.42562222392183,1.0,277.3843,False,AC,hand_override_275kV_singlecircuit
-ZA_custom_Nigel_Witbank_275kV,Nigel,Witbank,275.0,,15.786029196750764,1.677265602154769,0.0007103713138537843,98.66268247969228,2.0,859.421,False,AC,hand_override_275kV_singlecircuit

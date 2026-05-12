@@ -43,15 +43,14 @@ INPUT_MANIFEST = DATA_AUDIT / "input_file_manifest.csv"
 TAXONOMY_DOC = Path("doc/za_carrier_taxonomy.md")
 SMOKE_SCRIPT = Path("scripts/za_validation/smoke_carrier_taxonomy.py")
 
-# 15-row RSA → V1 carrier mapping. The mapping itself is the lock; module 05
-# owns this table and downstream modules consume it via the generated CSV.
+# RSA → V1 carrier mapping. The mapping itself is the lock; module 05 owns
+# this table and downstream modules consume it via the generated CSV. Module 12
+# removes Sasol and the aggregate `other_re` artifact from the active baseline.
 TAXONOMY_ROWS: list[dict] = [
     {"carrier_name": "coal",         "source_concept": "coal",                       "treatment": "upstream conventional generator", "component": "Generator",   "is_local": False, "owning_modules": "05|07|08", "notes": "Eskom coal fleet"},
-    {"carrier_name": "sasol_coal",   "source_concept": "sasol_coal",                 "treatment": "local generator with explicit cost/emissions", "component": "Generator", "is_local": True,  "owning_modules": "05|07|08|10", "notes": "Sasol Secunda coal-to-liquid"},
     {"carrier_name": "nuclear",      "source_concept": "nuclear",                    "treatment": "upstream conventional generator", "component": "Generator",   "is_local": False, "owning_modules": "05|07|08", "notes": "Koeberg"},
     {"carrier_name": "ocgt_diesel",  "source_concept": "ocgt_diesel / diesel peaker","treatment": "local generator with explicit cost/emissions", "component": "Generator", "is_local": True,  "owning_modules": "05|07|08|10", "notes": "Ankerlig/Gourikwa diesel peakers"},
     {"carrier_name": "ocgt_gas",     "source_concept": "ocgt_avf / gas OCGT",        "treatment": "local generator with explicit cost/emissions", "component": "Generator", "is_local": True,  "owning_modules": "05|07|08|10", "notes": "AVF gas OCGT"},
-    {"carrier_name": "sasol_gas",    "source_concept": "sasol_gas",                  "treatment": "local generator with explicit cost/emissions", "component": "Generator", "is_local": True,  "owning_modules": "05|07|08|10", "notes": "Sasol natural gas"},
     {"carrier_name": "onwind",       "source_concept": "wind",                       "treatment": "upstream renewable generator (atlite profile)", "component": "Generator", "is_local": False, "owning_modules": "05|03|08", "notes": "REIPPPP wind fleet"},
     {"carrier_name": "solar",        "source_concept": "solar PV",                   "treatment": "upstream renewable generator (atlite profile)", "component": "Generator", "is_local": False, "owning_modules": "05|03|08", "notes": "REIPPPP utility PV"},
     {"carrier_name": "csp",          "source_concept": "solar_csp / csp",            "treatment": "upstream renewable generator (atlite profile)", "component": "Generator", "is_local": False, "owning_modules": "05|03|08", "notes": "500 MW / 1.375 TWh anchor; never mapped to PV"},
@@ -59,8 +58,7 @@ TAXONOMY_ROWS: list[dict] = [
     {"carrier_name": "ror",          "source_concept": "run-of-river hydro",         "treatment": "PyPSA-Earth ror/hydro-compatible", "component": "Generator",   "is_local": False, "owning_modules": "05|08", "notes": "small RoR plants"},
     {"carrier_name": "PHS",          "source_concept": "pumped storage",             "treatment": "PyPSA-Earth storage-compatible PHS", "component": "StorageUnit", "is_local": False, "owning_modules": "05|08", "notes": "Drakensberg / Ingula; PHS energy checked"},
     {"carrier_name": "battery",      "source_concept": "battery",                    "treatment": "upstream Store; only 2023-active batteries that pass normalization", "component": "Store", "is_local": False, "owning_modules": "05|08", "notes": "include only after Module 08 reconciliation"},
-    {"carrier_name": "biomass",      "source_concept": "biomass",                    "treatment": "upstream biomass carrier; only when 2023-active reconciled", "component": "Generator", "is_local": False, "owning_modules": "05|08", "notes": "absorbed by other_re if not separately validated; bioenergy normalizes to biomass"},
-    {"carrier_name": "other_re",     "source_concept": "Other RE",                   "treatment": "local exogenous generator using Eskom 8760 Other RE series", "component": "Generator", "is_local": True, "owning_modules": "05|07|08|10", "notes": "Eskom Other RE accounting"},
+    {"carrier_name": "biomass",      "source_concept": "biomass",                    "treatment": "excluded from V1 baseline until explicit expansion-compatible rows are sourced", "component": "Generator", "is_local": False, "owning_modules": "05|08|12", "notes": "bioenergy stays excluded; Eskom Other RE omission is quantified separately"},
 ]
 
 # Optional V1 carriers handled outside the Generator carrier set:
@@ -76,12 +74,10 @@ SUPPLEMENTAL_ROWS: list[dict] = [
 # scenario workbook conventions.
 RSA_TO_V1: dict[str, str] = {
     "coal":          "coal",
-    "sasol_coal":    "sasol_coal",
     "nuclear":       "nuclear",
     "ocgt_diesel":   "ocgt_diesel",
     "ocgt_avf":      "ocgt_gas",
     "ocgt_gas":      "ocgt_gas",
-    "sasol_gas":     "sasol_gas",
     "wind":          "onwind",
     "onwind":        "onwind",
     "solar":         "solar",
@@ -97,7 +93,6 @@ RSA_TO_V1: dict[str, str] = {
     "battery_4h":    "battery",
     "biomass":       "biomass",
     "bioenergy":     "biomass",
-    "other_re":      "other_re",
     "hydro_import":  "hydro_import",
 }
 
@@ -106,6 +101,9 @@ RSA_TO_V1: dict[str, str] = {
 # do not violate the gate.
 RSA_EXCLUDED_BY_BOUNDARY: set[str] = {
     "solar_pv_rooftop",  # embedded/rooftop PV excluded by za_system_boundary
+    "sasol_coal",        # captive industrial generation removed before Module 12 baseline
+    "sasol_gas",         # captive industrial generation removed before Module 12 baseline
+    "other_re",          # aggregate accounting artifact removed; 238 GWh/yr omission logged
 }
 RSA_PENDING_MODULE_08: set[str] = {
     "rmippp",            # Risk Mitigation IPP procurement program — module 08 reconciles per-plant carrier

@@ -2,20 +2,19 @@
 # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""ZA Calibration Plan Module 11 — apply_za_local_carriers hook.
+"""ZA Calibration Plan Module 11/12 — apply_za_local_carriers hook.
 
 Runs against the clustered network `elec_s_34.nc` (after Module 09b custom-line
 injection). pypsa-earth's upstream `add_electricity` only attaches carriers
 listed under `electricity.conventional_carriers` (here: coal, nuclear) so
-Sasol/OCGT plants in `data/custom_powerplants.csv` arrive un-attached. This
-hook closes that gap and attaches the locked `other_re` exogenous Generator.
+OCGT plants in `data/custom_powerplants.csv` arrive un-attached. This hook
+closes that gap.
 
-Adds Carrier rows for: sasol_coal, sasol_gas, ocgt_diesel, ocgt_gas, other_re.
-Splits 128 MW Sasolburg_coal from the aggregated `Witbank coal` row into a new
-`Witbank sasol_coal` generator. Attaches Sasol_ice + Sasol_ocgt as `sasol_gas`
-on Vaal. Attaches Oil-fueltype OCGTs as `ocgt_diesel` at their `bus` columns.
-Attaches 34 `other_re` generators (one per supply area) with the Eskom 8760
-"Other RE" profile (per-unit), p_nom = 50.58 MW * area weight, p_min_pu = 0.
+Adds Carrier rows for: ocgt_diesel and ocgt_gas. Attaches Oil-fueltype OCGTs as
+`ocgt_diesel` at their `bus` columns. Sasol rows are removed upstream during
+Module 12 fleet reconciliation, and `other_re` is intentionally omitted as a
+known 238 GWh/yr accounting gap pending explicit small-hydro/landfill/biogas
+rows in the expansion handoff.
 
 Upstream Carrier rows are not mutated. Network mutation is in-place; a backup
 `.pre_local.nc` is written first.
@@ -30,8 +29,6 @@ import pypsa
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("apply_za_local_carriers")
-
-OTHER_RE_PNOM_MW = 50.58  # End-of-2023 installed capacity anchor (Module 02).
 
 
 def _load_carrier_costs(path: Path) -> pd.DataFrame:
@@ -100,7 +97,7 @@ def patch_standard_carrier_costs(n: pypsa.Network, costs: pd.DataFrame, audit_ro
 
 def add_local_carriers(n: pypsa.Network, costs: pd.DataFrame, audit_rows: list) -> None:
     upstream_carriers = set(n.carriers.index)
-    for carrier in ["sasol_coal", "sasol_gas", "ocgt_diesel", "ocgt_gas", "other_re"]:
+    for carrier in ["ocgt_diesel", "ocgt_gas"]:
         if carrier in upstream_carriers:
             raise SystemExit(f"Upstream Carrier '{carrier}' unexpectedly present; aborting to avoid mutation.")
         if carrier not in costs.index:
@@ -138,52 +135,16 @@ def _generator_kwargs(costs_row: pd.Series, bus: str, carrier: str, p_nom: float
     return kw
 
 
-def split_sasol_coal(n: pypsa.Network, custom_pp: pd.DataFrame, costs: pd.DataFrame, audit_rows: list) -> None:
-    sasol_coal_rows = custom_pp[custom_pp["Name"].str.contains("Sasolburg_coal", case=False, na=False)]
-    if sasol_coal_rows.empty:
-        logger.warning("No Sasolburg_coal row in custom_powerplants.csv; skipping sasol_coal split")
-        return
-    total = float(sasol_coal_rows["Capacity"].sum())
-    bus = str(sasol_coal_rows.iloc[0]["bus"])
-    agg_name = f"{bus} coal"
-    if agg_name not in n.generators.index:
-        raise SystemExit(f"Aggregate coal generator '{agg_name}' not found; cannot split sasol_coal")
-
-    prior = float(n.generators.at[agg_name, "p_nom"])
-    if prior < total:
-        raise SystemExit(f"Aggregate '{agg_name}' p_nom {prior} < sasol_coal target {total}")
-    n.generators.at[agg_name, "p_nom"] = prior - total
-    new_name = f"{bus} sasol_coal"
-    kw = _generator_kwargs(costs.loc["sasol_coal"], bus=bus, carrier="sasol_coal", p_nom=total)
-    n.add("Generator", new_name, **kw)
-    logger.info("Split %.1f MW Sasolburg_coal off '%s' (%.1f -> %.1f) into '%s'",
-                total, agg_name, prior, prior - total, new_name)
-    audit_rows.append({
-        "action": "split_sasol_coal",
-        "carrier": "sasol_coal",
-        "name": new_name,
-        "bus": bus,
-        "p_nom": total,
-        "p_nom_extendable": False,
-        "marginal_cost": kw.get("marginal_cost", np.nan),
-        "co2_emissions": float(costs.loc["sasol_coal", "co2_emissions"]),
-        "mean_p_max_pu": 1.0,
-    })
-
-
 def attach_oil_and_gas(n: pypsa.Network, custom_pp: pd.DataFrame, costs: pd.DataFrame, audit_rows: list) -> None:
     # Per scripts/za_fleet/named_inventory.py:
     #   Fueltype == "Oil"          -> ocgt_diesel  (Ankerlig/Gourikwa/Acacia/PortRex/Avon/Dedisa)
-    #   Fueltype == "Natural Gas" + Name startswith "Sasol_"  -> sasol_gas
-    #   Fueltype == "Natural Gas" + not Sasol                 -> ocgt_gas
+    #   Fueltype == "Natural Gas"  -> ocgt_gas     (Sasol is removed upstream)
     is_oil = custom_pp["Fueltype"] == "Oil"
     is_ng = custom_pp["Fueltype"] == "Natural Gas"
-    is_sasol_ng = is_ng & custom_pp["Name"].str.lower().str.startswith("sasol_")
 
     plants_by_carrier = {
         "ocgt_diesel": custom_pp[is_oil],
-        "sasol_gas":   custom_pp[is_ng & is_sasol_ng],
-        "ocgt_gas":    custom_pp[is_ng & ~is_sasol_ng],
+        "ocgt_gas":    custom_pp[is_ng],
     }
 
     for carrier, df in plants_by_carrier.items():
@@ -256,74 +217,6 @@ def retag_csp_from_solar(n: pypsa.Network, custom_pp: pd.DataFrame, audit_rows: 
         })
 
 
-def _load_other_re_profile(hourly_path: Path, snapshots: pd.DatetimeIndex) -> pd.Series:
-    df = pd.read_csv(hourly_path)
-    df["ts"] = pd.to_datetime(df["Date Time Hour Beginning"])
-    df = df.set_index("ts").sort_index()
-    if "Other RE" not in df.columns:
-        raise SystemExit("Column 'Other RE' missing from Eskom hourly CSV")
-    raw = pd.to_numeric(df["Other RE"], errors="coerce").fillna(0.0)
-    per_unit = (raw / OTHER_RE_PNOM_MW).clip(lower=0.0, upper=1.0)
-    aligned = per_unit.reindex(snapshots)
-    if aligned.isna().any():
-        # Map by hour-of-year if exact snapshot timestamps don't match.
-        per_unit_2023 = per_unit.copy()
-        # Use month/day/hour key, ignoring year, to remap into snapshot index.
-        key_src = pd.MultiIndex.from_arrays([per_unit_2023.index.month, per_unit_2023.index.day, per_unit_2023.index.hour])
-        per_unit_2023.index = key_src
-        per_unit_2023 = per_unit_2023[~per_unit_2023.index.duplicated()]
-        key_dst = pd.MultiIndex.from_arrays([snapshots.month, snapshots.day, snapshots.hour])
-        aligned = pd.Series(per_unit_2023.reindex(key_dst).values, index=snapshots).fillna(0.0)
-    return aligned
-
-
-def attach_other_re(n: pypsa.Network, attachment_path: Path, hourly_path: Path, costs: pd.DataFrame, audit_rows: list) -> None:
-    att = pd.read_csv(attachment_path)
-    att34 = att[att["layer_key"] == 34].copy()
-    if att34.empty:
-        raise SystemExit("No layer_key==34 rows in other_re attachment CSV")
-    total_weight = float(att34["weight"].sum())
-    if not np.isclose(total_weight, 1.0, atol=1e-3):
-        raise SystemExit(f"other_re weights for layer_key=34 do not sum to 1.0 (got {total_weight})")
-
-    missing = set(att34["target_region_id"]) - set(n.buses.index)
-    if missing:
-        raise SystemExit(f"other_re target buses missing from clustered network: {sorted(missing)}")
-
-    profile = _load_other_re_profile(hourly_path, n.snapshots)
-    mean_profile = float(profile.mean())
-
-    for _, r in att34.iterrows():
-        bus = str(r["target_region_id"])
-        w = float(r["weight"])
-        p_nom = OTHER_RE_PNOM_MW * w
-        name = f"{bus} other_re"
-        if name in n.generators.index:
-            raise SystemExit(f"Generator '{name}' already exists")
-        n.add(
-            "Generator",
-            name,
-            bus=bus,
-            carrier="other_re",
-            p_nom=p_nom,
-            p_nom_extendable=False,
-            p_min_pu=0.0,
-            marginal_cost=0.0,
-        )
-        n.generators_t.p_max_pu[name] = profile.values
-        audit_rows.append({
-            "action": "add_other_re",
-            "carrier": "other_re",
-            "name": name,
-            "bus": bus,
-            "p_nom": p_nom,
-            "p_nom_extendable": False,
-            "marginal_cost": 0.0,
-            "co2_emissions": 0.0,
-            "mean_p_max_pu": mean_profile,
-        })
-
-
 def assert_no_upstream_carrier_mutation(before: pd.DataFrame, after: pd.DataFrame) -> None:
     cols = [c for c in before.columns if c in after.columns]
     for carrier in before.index:
@@ -339,8 +232,6 @@ def assert_no_upstream_carrier_mutation(before: pd.DataFrame, after: pd.DataFram
 def main(
     network_in: Path,
     carrier_costs_path: Path,
-    attachment_path: Path,
-    hourly_path: Path,
     custom_pp_path: Path,
     backup_out: Path,
     audit_out: Path,
@@ -359,10 +250,8 @@ def main(
     # assertion only catches unintended mutations by subsequent steps.
     upstream_carriers = n.carriers.copy()
     add_local_carriers(n, costs, audit_rows)
-    split_sasol_coal(n, custom_pp, costs, audit_rows)
     attach_oil_and_gas(n, custom_pp, costs, audit_rows)
     retag_csp_from_solar(n, custom_pp, audit_rows)
-    attach_other_re(n, attachment_path, hourly_path, costs, audit_rows)
 
     assert_no_upstream_carrier_mutation(upstream_carriers, n.carriers.loc[upstream_carriers.index])
 
@@ -386,8 +275,6 @@ if __name__ == "__main__":
         main(
             network_in=Path(snakemake.input.network_in),
             carrier_costs_path=Path(snakemake.input.carrier_rows),
-            attachment_path=Path(snakemake.input.attachment),
-            hourly_path=Path(snakemake.input.hourly),
             custom_pp_path=Path(snakemake.input.custom_pp),
             backup_out=Path(snakemake.output.backup),
             audit_out=Path(snakemake.output.audit),
@@ -398,8 +285,6 @@ if __name__ == "__main__":
         ap = argparse.ArgumentParser()
         ap.add_argument("--network", default="networks/za_2023_fixed_validation/elec_s_34.nc")
         ap.add_argument("--carrier-rows", default="data/za_audit/za_local_carrier_cost_rows.csv")
-        ap.add_argument("--attachment", default="data/za_audit/za_2023_other_re_attachment.csv")
-        ap.add_argument("--hourly", default="data/za_validation/eskom_2023_hourly_clean.csv")
         ap.add_argument("--custom-pp", default="data/custom_powerplants.csv")
         ap.add_argument("--backup", default="networks/za_2023_fixed_validation/elec_s_34.pre_local.nc")
         ap.add_argument("--audit", default="data/za_audit/za_local_carriers_audit.csv")
@@ -407,8 +292,6 @@ if __name__ == "__main__":
         main(
             network_in=Path(args.network),
             carrier_costs_path=Path(args.carrier_rows),
-            attachment_path=Path(args.attachment),
-            hourly_path=Path(args.hourly),
             custom_pp_path=Path(args.custom_pp),
             backup_out=Path(args.backup),
             audit_out=Path(args.audit),

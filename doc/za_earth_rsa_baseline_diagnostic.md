@@ -8,10 +8,10 @@ and what PyPSA-RSA uses (modules 06–09 overrides).
 
 | Dimension | Earth side | RSA side | Verdict |
 |---|---|---|---|
-| Fleet | PPM live query, 263 plants | 141 plants | total delta +14300 MW |
+| Fleet | PPM live query, 263 plants | 137 plants | total delta +15452 MW |
 | Lines (220kV+) | 380 | 310 | see Comparison 2 |
 | Substations (220kV+) | 2723 | 164 | ratio 16.604 |
-| Ratings (65 corridors) | s_nom from elec_s_34 | St Clair N-1 | over=52, under=2, within=1, unmatched=10 |
+| Ratings (65 corridors) | s_nom from elec_s_34 | St Clair N-1 | over=52, under=2, within=11, unmatched=0 |
 
 ---
 
@@ -34,8 +34,6 @@ against `za_powerplant_reconciliation.csv`. Per-carrier aggregate:
 | ocgt_gas    |                 1359.54 |                    0    |    1359.54 |                   5 |                   0 |                  0 | delta>500MW: +1360 |
 | onwind      |                 5555.4  |                 3506.78 |    2048.62 |                  24 |                   7 |                 28 | delta>500MW: +2049 |
 | ror         |                   56.12 |                    0    |      56.12 |                   8 |                   0 |                  0 | nan                |
-| sasol_coal  |                    0    |                  728.04 |    -728.04 |                   0 |                   2 |                  0 | delta>500MW: -728  |
-| sasol_gas   |                    0    |                  424.6  |    -424.6  |                   0 |                   2 |                  0 | nan                |
 | solar       |                 6420.2  |                 2296.81 |    4123.39 |                 112 |                  12 |                 33 | delta>500MW: +4123 |
 
 ![Fleet capacity by carrier](figures/10_diagnostic/01_fleet_capacity_by_carrier.png)
@@ -122,9 +120,9 @@ to the 65-corridor St Clair N-1 table.
 **Per-direction summary (corridor count):**
 
 - `osm_over` (ratio > 1.2): 52
-- `within_20pct`: 1
+- `within_20pct`: 11
 - `osm_under` (ratio < 0.8): 2
-- `unmatched` (no OSM lines): 10
+- `unmatched` (no OSM lines): 0
 
 ![Ratings ratio distribution](figures/10_diagnostic/04a_ratings_ratio_distribution.png)
 ![Ratings scatter](figures/10_diagnostic/04b_ratings_scatter.png)
@@ -146,18 +144,18 @@ Top 10 most over-rated corridors (OSM > St Clair):
 
 Top 10 most under-rated corridors (OSM < St Clair):
 
-| bus0           | bus1          |   n_lines |   voltage_max_kv |   osm_s_nom_total_mw |   n_osm_lines |   st_clair_n1_mw |   ratio_osm_to_stclair | direction    |   notes |
-|:---------------|:--------------|----------:|-----------------:|---------------------:|--------------:|-----------------:|-----------------------:|:-------------|--------:|
-| Johannesburg   | Pretoria      |         8 |              400 |              1130.58 |             1 |          6447    |                 0.1754 | osm_under    |     nan |
-| Johannesburg   | West Rand     |         1 |              275 |               393.24 |             1 |           644.7  |                 0.61   | osm_under    |     nan |
-| Bloemfontein   | Hydra Central |         3 |              765 |              1787.48 |             1 |          1645.67 |                 1.0862 | within_20pct |     nan |
-| Middelburg     | Witbank       |        11 |              400 |             19294.7  |             1 |         15048    |                 1.2822 | osm_over     |     nan |
-| Johannesburg   | Nigel         |         1 |              275 |               884.8  |             1 |           644.7  |                 1.3724 | osm_over     |     nan |
-| Pretoria       | Rustenburg    |         1 |              400 |              1787.48 |             1 |          1251.6  |                 1.4282 | osm_over     |     nan |
-| Phalaborwa     | Polokwane     |         1 |              400 |              1861.21 |             1 |          1182.58 |                 1.5739 | osm_over     |     nan |
-| Highveld South | Witbank       |         7 |              400 |             17119.6  |             1 |          9983.79 |                 1.7147 | osm_over     |     nan |
-| Ladysmith      | Pinetown      |         4 |              400 |              4840.71 |             1 |          2504.42 |                 1.9329 | osm_over     |     nan |
-| Outeniqua      | Peninsula     |         3 |              400 |              4312.29 |             1 |          2178.11 |                 1.9798 | osm_over     |     nan |
+| bus0           | bus1       |   n_lines |   voltage_max_kv |   osm_s_nom_total_mw |   n_osm_lines |   st_clair_n1_mw |   ratio_osm_to_stclair | direction    |   notes |
+|:---------------|:-----------|----------:|-----------------:|---------------------:|--------------:|-----------------:|-----------------------:|:-------------|--------:|
+| Johannesburg   | Pretoria   |         8 |              400 |              1130.58 |             1 |          6447    |                 0.1754 | osm_under    |     nan |
+| Johannesburg   | West Rand  |         1 |              275 |               393.24 |             1 |           644.7  |                 0.61   | osm_under    |     nan |
+| Nigel          | Welkom     |         1 |              275 |               277.38 |             1 |           277.38 |                 1      | within_20pct |     nan |
+| Johannesburg   | Vaal       |         1 |              275 |               633.01 |             1 |           633.01 |                 1      | within_20pct |     nan |
+| Johannesburg   | Warmbad    |         1 |              275 |               461.39 |             1 |           461.39 |                 1      | within_20pct |     nan |
+| Johannesburg   | Witbank    |         6 |              400 |              6170.38 |             1 |          6170.38 |                 1      | within_20pct |     nan |
+| Highveld South | West Rand  |         1 |              400 |              1119.54 |             1 |          1119.54 |                 1      | within_20pct |     nan |
+| Carletonville  | Pretoria   |         1 |              275 |               465.05 |             1 |           465.05 |                 1      | within_20pct |     nan |
+| Johannesburg   | Polokwane  |         2 |              400 |               557.33 |             1 |           557.33 |                 1      | within_20pct |     nan |
+| Johannesburg   | Middelburg |         1 |              400 |              1017.69 |             1 |          1017.69 |                 1      | within_20pct |     nan |
 
 ---
 

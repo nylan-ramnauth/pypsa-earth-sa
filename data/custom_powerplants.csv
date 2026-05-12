@@ -37,10 +37,6 @@ Gariep,Hydro,Reservoir,PP,ZA,360.0,,,,,,1990,,,-30.62396,25.50403,,RSA_FIXED_TEC
 Vanderkloof,Hydro,Reservoir,PP,ZA,240.0,,,,,,1990,,,-29.99337,24.73384,,RSA_FIXED_TECHNOLOGIES,Hydra Central
 Avon,Oil,OCGT,PP,ZA,670.0,,,,,,1990,,,-29.251,31.0941,,RSA_FIXED_TECHNOLOGIES,Pinetown
 Dedisa,Oil,OCGT,PP,ZA,335.0,,,,,,1990,,,-33.4433,25.4022,,RSA_FIXED_TECHNOLOGIES,Gqeberha
-Secunda_coal,Hard Coal,Steam Turbine,PP,ZA,600.04,,,,,,1990,,,-26.5036,29.1803,,RSA_FIXED_TECHNOLOGIES,Witbank
-Sasolburg_coal,Hard Coal,Steam Turbine,PP,ZA,128.0,,,,,,1990,,,-26.5036,29.1803,,RSA_FIXED_TECHNOLOGIES,Witbank
-Sasol_ice,Natural Gas,OCGT,PP,ZA,174.6,,,,,,1990,,,-26.8102,27.8277,,RSA_FIXED_TECHNOLOGIES,Vaal
-Sasol_ocgt,Natural Gas,OCGT,PP,ZA,250.0,,,,,,1990,,,-26.8102,27.8277,,RSA_FIXED_TECHNOLOGIES,Vaal
 Kaxu Solar One,Solar,CSP,PP,ZA,100.0,,,,,,2015,,,-28.8793,19.5929,,RSA_FIXED_TECHNOLOGIES,Namaqualand
 Khi Solar One,Solar,CSP,PP,ZA,50.0,,,,,,2015,,,-28.5364,21.0782,,RSA_FIXED_TECHNOLOGIES,Kimberley
 Bokpoort CSP project,Solar,CSP,PP,ZA,50.0,,,,,,2016,,,-28.7333,21.9955,,RSA_FIXED_TECHNOLOGIES,Kimberley
@@ -54,10 +50,10 @@ ColleyWobbles,Hydro,Reservoir,PP,ZA,65.0,,,,,,2020,,,-32.05,28.58333,,RSA_FIXED_
 ENERGY Joburg Landfill Gas to Electircity Project,Bioenergy,Steam Turbine,PP,ZA,7.56,,,,,,2020,,,-26.194954,28.032528,,RSA_FIXED_TECHNOLOGIES,Johannesburg
 Ngodwana Energy,Bioenergy,Steam Turbine,PP,ZA,25.0,,,,,,2020,,,-25.480898,30.974305,,RSA_FIXED_TECHNOLOGIES,Lowveld
 Sappi,Bioenergy,Steam Turbine,PP,ZA,144.0,,,,,,2020,,,-25.3447,30.394,,RSA_FIXED_TECHNOLOGIES,Middelburg
-Drakensberg,Hydro,Pumped Storage,Store,ZA,1000.0,,,,,21700.0,1990,,,-28.56283,29.08275,,RSA_FIXED_TECHNOLOGIES,Ladysmith
-Ingula,Hydro,Pumped Storage,Store,ZA,1324.0,,,,,27400.0,1990,,,-28.165,29.3512,,RSA_FIXED_TECHNOLOGIES,Ladysmith
-Palmiet,Hydro,Pumped Storage,Store,ZA,400.0,,,,,10000.0,1990,,,-34.19722,18.97361,,RSA_FIXED_TECHNOLOGIES,Peninsula
-Steenbras,Hydro,Pumped Storage,Store,ZA,180.0,,,,,2700.0,1990,,,-34.153,18.9,,RSA_FIXED_TECHNOLOGIES,Peninsula
+Drakensberg,Hydro,Pumped Storage,Store,ZA,1000.0,,21.7,,,21700.0,1990,,,-28.56283,29.08275,,RSA_FIXED_TECHNOLOGIES,Ladysmith
+Ingula,Hydro,Pumped Storage,Store,ZA,1324.0,,20.694864048338367,,,27400.0,1990,,,-28.165,29.3512,,RSA_FIXED_TECHNOLOGIES,Ladysmith
+Palmiet,Hydro,Pumped Storage,Store,ZA,400.0,,25.0,,,10000.0,1990,,,-34.19722,18.97361,,RSA_FIXED_TECHNOLOGIES,Peninsula
+Steenbras,Hydro,Pumped Storage,Store,ZA,180.0,,15.0,,,2700.0,1990,,,-34.153,18.9,,RSA_FIXED_TECHNOLOGIES,Peninsula
 Hex,Battery,Battery Storage,Store,ZA,20.0,,,,,,2023,,,-33.64,19.48,,RSA_FIXED_TECHNOLOGIES,Outeniqua
 Amakhala,Wind,Onshore,PP,ZA,137.9,,,,,,2016,,,-32.692,26.1083,,REIPPPP,Gqeberha
 Aurora,Wind,Onshore,PP,ZA,90.8,,,,,,2015,,,-32.83425,17.995611,,REIPPPP,West Coast

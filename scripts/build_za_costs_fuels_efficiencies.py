@@ -174,8 +174,9 @@ capacity validation baseline before Module 10 (network build) and Module 11
   Module 12.
 - PyPSA-Earth/technology-data defaults are used where the carrier maps
   cleanly. PyPSA-RSA values from the Module 04 audit override defaults for
-  ZA local carriers (`sasol_coal`, `sasol_gas`, `ocgt_diesel`, `ocgt_gas`,
-  `other_re`) and are recorded for the other V1 carriers as evidence.
+  coal, nuclear, and ZA OCGT carriers (`ocgt_diesel`, `ocgt_gas`). Sasol and
+  the aggregate `other_re` artifact are removed from the active Module 12
+  baseline.
 - PyPSA-RSA workbooks themselves are NOT re-parsed in this module — the
   Module 04 audit CSV (`pypsa_rsa_cost_fuel_emissions_audit.csv`) is the
   only allowed source.
@@ -228,23 +229,23 @@ double-count.
 
 Module 07 produces the data sidecar `za_local_carrier_cost_rows.csv` and
 the importable EUR/ZAR helper. The `apply_za_local_carriers` hook itself —
-which inserts these rows into the PyPSA network after `add_electricity` —
-is implemented by Module 10. See `scripts/za_costs/currency.py` for the
-EUR-to-ZAR helper that Module 10 imports.
+which patches coal/nuclear costs and inserts OCGT rows into the PyPSA network
+after `add_electricity` — is implemented by Module 10/12. See
+`scripts/za_costs/currency.py` for the EUR-to-ZAR helper that Module 10 imports.
 
 ## Artifacts
 
 - `{AUDIT_OUT}` — {audit_count} rows
-- `{LOCAL_ROWS_OUT}` — {local_count} rows ({{sasol_coal, sasol_gas, ocgt_diesel, ocgt_gas, other_re}})
+- `{LOCAL_ROWS_OUT}` — {local_count} rows ({{coal, nuclear, ocgt_diesel, ocgt_gas}})
 - `{FXRATE_OUT}` — 1 row
 - `{COLS_REFS_OUT}` — {len(cols_refs)} rows ({{CSIR, Nova, Deloitte}})
 
 ## V1 Limitations (recorded for Module 12)
 
 - `costs.year: 2030` (no `costs_2023.csv` upstream).
-- `other_re` is an aggregate Eskom category; CO2 emissions factor = 0
-  under biogenic-neutral V1 accounting; the aggregate-category limitation
-  must be flagged in reporting metadata.
+- `other_re` is an aggregate Eskom category removed from the Module 12
+  structural baseline; the 238 GWh/yr omission must be flagged in reporting
+  metadata and replaced by explicit small-hydro/landfill/biogas rows later.
 - PyPSA-RSA fuel-price base year is treated as **2018 ZAR** for the
   ME_IRP23 scenario set; Module 12 should sensitivity-check.
 - Capital cost is left blank in the local-carrier sidecar; Module 08 owns

@@ -9,8 +9,8 @@ battery_4h,25,battery,resolved
 solar_csp,21,csp,resolved
 solar_pv_rooftop,18,,excluded_by_boundary
 bioenergy,15,biomass,resolved
-sasol_gas,14,sasol_gas,resolved
-sasol_coal,13,sasol_coal,resolved
+sasol_gas,14,,excluded_by_boundary
+sasol_coal,13,,excluded_by_boundary
 ocgt_avf,12,ocgt_gas,resolved
 phs,8,PHS,resolved
 nuclear,7,nuclear,resolved

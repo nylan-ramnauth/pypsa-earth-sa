@@ -30,10 +30,6 @@ Tutuka,coal,1755.0000,-26.7756,29.3521,operating,include
 Koeberg,nuclear,1854.0000,-33.6736,18.4282,operating,include
 Avon,ocgt_diesel,670.0000,-29.2510,31.0941,operating,include
 Dedisa,ocgt_diesel,335.0000,-33.4433,25.4022,operating,include
-Secunda_coal,sasol_coal,600.0400,-26.5036,29.1803,operating,include
-Sasolburg_coal,sasol_coal,128.0000,-26.5036,29.1803,operating,include
-Sasol_ice,sasol_gas,174.6000,-26.8102,27.8277,operating,include
-Sasol_ocgt,sasol_gas,250.0000,-26.8102,27.8277,operating,include
 Kaxu Solar One,csp,100.0000,-28.8793,19.5929,operating,include
 Khi Solar One,csp,50.0000,-28.5364,21.0782,operating,include
 Bokpoort CSP project,csp,50.0000,-28.7333,21.9955,operating,include

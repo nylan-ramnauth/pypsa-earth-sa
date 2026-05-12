@@ -21,6 +21,23 @@ import pypsa
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("apply_za_custom_lines")
 
+AUDIT_COLUMNS = [
+    "name",
+    "bus0",
+    "bus1",
+    "v_nom_kv",
+    "length_km",
+    "num_parallel",
+    "s_nom_built",
+    "s_nom_target",
+    "x",
+    "r",
+    "b",
+    "type_used",
+    "source_note",
+    "added_ok",
+]
+
 
 def add_line(n: pypsa.Network, row: pd.Series) -> dict:
     kwargs = dict(
@@ -70,6 +87,12 @@ def main(custom_lines_path: Path, network_in: Path, backup_out: Path, audit_out:
     shutil.copy2(network_in, backup_out)
     logger.info("Backed up %s -> %s", network_in, backup_out)
 
+    if custom.empty:
+        audit_out.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(columns=AUDIT_COLUMNS).to_csv(audit_out, index=False)
+        logger.info("No custom lines requested; wrote empty audit to %s", audit_out)
+        return
+
     n = pypsa.Network(str(network_in))
     prior = len(n.lines)
 
@@ -88,7 +111,7 @@ def main(custom_lines_path: Path, network_in: Path, backup_out: Path, audit_out:
     n.export_to_netcdf(str(network_in))
     logger.info("Saved patched network to %s", network_in)
 
-    audit = pd.DataFrame(audit_rows)
+    audit = pd.DataFrame(audit_rows, columns=AUDIT_COLUMNS)
     audit_out.parent.mkdir(parents=True, exist_ok=True)
     audit.to_csv(audit_out, index=False)
     logger.info("Wrote audit (%d rows) to %s", len(audit), audit_out)

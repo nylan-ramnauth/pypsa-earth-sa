@@ -15,15 +15,14 @@ loads under `electricity.custom_powerplants: replace`.
 ## Per-carrier totals (custom_powerplants.csv)
 
 Fueltype
-Hard Coal      41424.04
-Hydro           3587.02
-Wind            3506.78
-Oil             3419.00
-Solar           2787.81
-Nuclear         1854.00
-Natural Gas      424.60
-Bioenergy        176.56
-Battery           20.00
+Hard Coal    40696.00
+Hydro         3587.02
+Wind          3506.78
+Oil           3419.00
+Solar         2787.81
+Nuclear       1854.00
+Bioenergy      176.56
+Battery         20.00
 
 ## Eskom 2023 capacity anchors (informational)
 
@@ -86,7 +85,7 @@ tolerance):
 
 ## Smoke diff status counts
 
-{'ok': 139, 'unintended_addition': 16}
+{'ok': 135}
 
 If any row has `status` other than `ok` or `pending_smoke`, see
 `data/za_audit/za_powerplants_normalization_diff.csv` for details.
@@ -104,8 +103,8 @@ If any row has `status` other than `ok` or `pending_smoke`, see
 
 ## Artifacts
 
-- `data/custom_powerplants.csv` — 139 rows
-- `data/za_audit/za_powerplant_reconciliation.csv` — 141 reconciliation rows
+- `data/custom_powerplants.csv` — 135 rows
+- `data/za_audit/za_powerplant_reconciliation.csv` — 137 reconciliation rows
 - `data/za_audit/za_named_plant_inventory.csv` — 30 named-plant rows
 - `data/za_audit/za_eskom_2023_capacity_anchors.csv` — 17 anchor rows
 - `data/za_audit/za_phs_storage_hours.csv` — PHS storage audit

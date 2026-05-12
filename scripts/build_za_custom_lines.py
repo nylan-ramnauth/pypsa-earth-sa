@@ -41,6 +41,22 @@ logger = logging.getLogger("build_za_custom_lines")
 # (n.line_types.loc['Al/St 240/40 4-bundle 380.0']); b derived from c_per_length × 2pi*f.
 P_400KV = {"x_per_km": 0.246, "r_per_km": 0.030, "b_per_km": 4.335e-6, "v_nom": 380.0}
 P_275KV = {"x_per_km": 0.32,  "r_per_km": 0.034, "b_per_km": 3.6e-6,   "v_nom": 275.0}
+CUSTOM_LINE_COLUMNS = [
+    "name",
+    "bus0",
+    "bus1",
+    "v_nom",
+    "type",
+    "x",
+    "r",
+    "b",
+    "length",
+    "num_parallel",
+    "s_nom",
+    "s_nom_extendable",
+    "carrier",
+    "source_note",
+]
 
 
 def haversine_km(lon0: float, lat0: float, lon1: float, lat1: float) -> float:
@@ -57,7 +73,8 @@ def load_unmatched(path: Path) -> pd.DataFrame:
     mask = df["notes"].fillna("") == "no_osm_lines_found"
     unmatched = df.loc[mask].copy()
     if unmatched.empty:
-        raise SystemExit(f"No 'no_osm_lines_found' rows in {path}")
+        logger.info("No 'no_osm_lines_found' rows in %s; emitting empty custom-line artifact", path)
+        return pd.DataFrame(columns=["bus0", "bus1", "voltage_kv", "st_clair_n1_mw", "n_circuits"])
     unmatched = unmatched.rename(columns={"n_lines": "n_circuits", "voltage_max_kv": "voltage_kv"})
     logger.info("Loaded %d unmatched corridors from %s", len(unmatched), path)
     return unmatched[["bus0", "bus1", "voltage_kv", "st_clair_n1_mw", "n_circuits"]].reset_index(drop=True)
@@ -88,6 +105,9 @@ def derive_line_params(voltage_kv: int, length_km: float, num_parallel: int) -> 
 
 
 def build_custom_lines_df(unmatched: pd.DataFrame, buses: pd.DataFrame) -> pd.DataFrame:
+    if unmatched.empty:
+        return pd.DataFrame(columns=CUSTOM_LINE_COLUMNS)
+
     missing_buses = set()
     for col in ("bus0", "bus1"):
         missing_buses |= set(unmatched[col]) - set(buses.index)
@@ -120,16 +140,17 @@ def build_custom_lines_df(unmatched: pd.DataFrame, buses: pd.DataFrame) -> pd.Da
                 "source_note": params["params_source"],
             }
         )
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=CUSTOM_LINE_COLUMNS)
 
 
 def main(unmatched_path: Path, network_path: Path, out_path: Path) -> None:
     unmatched = load_unmatched(unmatched_path)
-    buses = load_bus_coords(network_path)
+    buses = pd.DataFrame(columns=["x", "y"]) if unmatched.empty else load_bus_coords(network_path)
     df = build_custom_lines_df(unmatched, buses)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_path, index=False)
-    logger.info("Wrote %d custom lines to %s (total s_nom = %.1f MW)", len(df), out_path, df["s_nom"].sum())
+    total_s_nom = float(df["s_nom"].sum()) if "s_nom" in df.columns else 0.0
+    logger.info("Wrote %d custom lines to %s (total s_nom = %.1f MW)", len(df), out_path, total_s_nom)
 
 
 if __name__ == "__main__":

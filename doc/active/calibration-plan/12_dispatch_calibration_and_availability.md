@@ -42,7 +42,7 @@ issue requires a config decision (default: exclude for V1, see §2.4 of that doc
 decarbonisation target). With `coal.co2_emissions = 1.010` (Module 11 value, tCO2/MWh_el) and
 `coal.efficiency ≈ 0.356`, PyPSA's `primary_energy` constraint applies an effective emission rate
 of `1.010 / 0.356 ≈ 2.84 tCO2/MWh_el`, capping annual coal at ~27 TWh — far below South Africa's
-~150 TWh actual. This drove 76 % July load shedding in the Co2L-1H stage2 solve.
+~150 TWh actual. This drove 76 % July load shedding in the earlier `Co2L-1H` diagnostic solve.
 
 **Decision (owner: Opus/Module 12):** For the V1 calibration baseline, drop the CO2 cap entirely.
 South Africa has no binding national CO2 cap equivalent to EU ETS in 2023. The carbon tax exists
@@ -60,7 +60,9 @@ Alternatively, reinterpret `coal.co2_emissions` as tCO2/MWh_th (fuel basis, ~0.3
 upstream PyPSA-Earth convention. Either approach is acceptable; the config override is simpler
 and leaves the carrier attribute unchanged for Module 13 reporting.
 
-Document the chosen approach and rationale in `doc/za_implementation_log.md`.
+The canonical Module 12 solve label is `NoCO2-1H`; do not use a `Co2L*` opts label for
+the structural or calibrated 2023 baselines. Document the chosen approach and rationale in
+`doc/za_implementation_log.md`.
 
 ---
 
@@ -71,27 +73,35 @@ Document the chosen approach and rationale in `doc/za_implementation_log.md`.
 - CSP has 500 MW installed across 3 buses: Kalahari 100 MW, Kimberley 200 MW, Namaqualand 200 MW.
 - `p_max_pu` is correctly time-varying from the atlite CSP profile (July mean ~14 %, max ~52 %).
 - `p_min_pu = 0`, `marginal_cost = 0`. CSP is free and should always dispatch ahead of coal.
-- **Co2L full-year stage2 solve:** CSP July dispatch = **51.6 GWh** ✓ (correct behaviour).
+- **Earlier CO2-capped full-year diagnostic solve:** CSP July dispatch = **51.6 GWh** ✓ (correct behaviour).
 - **NoCO2 demo solve (July only):** CSP dispatch = **0 GWh** ✗
 
-**Root cause of demo zero:** The demo solve uses `crossover: 0` (pure barrier, no crossover step).
-Gurobi's interior-point method does not need to land on a vertex of the feasible region. When coal
-can meet all demand unconstrained, the barrier solution can sit at CSP = 0 and still satisfy KKT
-conditions within tolerance — the solver does not push to the true optimum where CSP displaces
-coal. This is a **solver artifact of the barrier-only setting**, not a model bug.
+**Superseded investigation hypothesis:** Earlier notes suspected a barrier-only
+solver artifact (`crossover: 0`) because coal could meet demand unconstrained
+while CSP sat at zero. That hypothesis is retained only as investigation
+history; it is **not** the accepted root cause.
+
+**Accepted root cause (confirmed in the `lc1_NoCO2-1H` correction):**
+PyPSA-Earth's advanced-CSP representation routes the CSP solar-field Generator
+through a CSP Store and Link before electricity reaches the parent AC bus.
+`add_extra_components.py` created those Stores and Links with zero fixed
+capacity and extendable flags. Because the Module 12 fixed-grid baseline has
+empty `extendable_carriers`, the CSP Link/Store path stayed at zero capacity,
+so positive CSP Generator nameplate could not produce electric output.
 
 **Module 12 action (Opus decides):**
 
 1. After applying Fix C, re-run the July smoke solve with the CO2 cap removed. Check whether CSP
-   dispatches in the full pipeline (not the demo re-solve). The Co2L evidence suggests CSP works
+   dispatches in the full pipeline (not the demo re-solve). The capped-solve evidence suggests CSP works
    correctly when the full Snakemake solve chain is used.
 2. If CSP still shows 0 GWh in the unconstrained baseline, investigate:
    a. Whether `apply_za_local_carriers` correctly writes the CSP `p_max_pu` time series into the
       solved network (check `elec_s_34_ec_lcopt_*.nc` generators_t.p_max_pu for CSP columns).
-   b. Whether enabling crossover (`crossover: -1` in solver options) resolves the degeneracy.
-      Note: crossover is expensive on large LPs — use only for diagnostic purposes, not production.
-   c. Whether adding a tiny positive marginal cost to CSP (e.g., `1e-3 EUR/MWh`) breaks the
-      degeneracy without materially affecting dispatch. Document if applied.
+   b. Whether each positive CSP Generator bus has a matching fixed positive
+      CSP Link `p_nom` and Store `e_nom`. This is now the primary gate.
+   c. Whether solver settings need diagnostic review only after the physical
+      CSP Link/Store path is bus-complete. Do not treat crossover as the
+      production fix for dead CSP output.
 3. CSP must dispatch in the calibrated baseline. The Eskom 2023 anchor is **1.375 TWh annual**
    (42 GWh July). Zero CSP dispatch is not acceptable for the calibration baseline.
 
@@ -127,26 +137,14 @@ behaviour). `sasol_gas` = 14.2 GWh July (occasional).
   and OCGT dispatch. At 100 % CF, `sasol_coal` displaces 95 GWh of Eskom coal — but this
   displacement is not in the Eskom data, making the coal calibration harder to interpret.
 
-**Module 12 decision (Opus):** Choose one of:
+**Decision (2026-05-12, applied): Option A — Sasol removed entirely.**
 
-**Option A — Remove Sasol entirely from `custom_powerplants.csv`:**
-- Remove `Sasolburg_coal`, `Sasol_ice`, `Sasol_ocgt` rows.
-- Rebuild fleet from `build_za_fleet_reconciliation` → full pipeline rebuild required.
-- Recommended: Sasol's self-dispatch is embedded in RSA Contracted Demand as a contracted IPP;
-  its generation is part of the demand side accounting, not a PyPSA dispatchable unit.
-
-**Option B — Convert Sasol coal to must-run (`p_min_pu = p_max_pu = 1.0`):**
-- Prevents Sasol from distorting the merit order while keeping it in the energy balance.
-- Apply via `apply_za_local_carriers` hook as a targeted `p_min_pu` override.
-- Downside: 128 MW must-run coal at a bus not co-located with Eskom coal stations may cause
-  transmission artefacts.
-
-**Recommendation:** Option A. Sasolburg is small (128 MW), and there is no Eskom hourly column
-to validate against. Removing it simplifies the calibration and avoids the must-run approximation.
-If Sasol's energy matters for annual carbon accounting, it can be added as a fixed-dispatch
-`other_re`-style accounting generator in Module 13.
-
-Document the chosen option and rebuild in `doc/za_implementation_log.md`.
+`Sasolburg_coal` (128 MW), `Sasol_ice` (175 MW), and `Sasol_ocgt` (250 MW) rows were
+removed from `custom_powerplants.csv`. The structural `lc1_NoCO2-1H` baseline was built
+and solved without Sasol. Rationale: Sasol self-dispatches for industrial process demand;
+its generation is embedded in RSA Contracted Demand, not dispatched by Eskom National
+Control. No Eskom hourly validation column exists. If Sasol energy is needed for annual
+carbon accounting, add as a fixed-dispatch accounting generator in Module 13.
 
 ---
 
@@ -157,15 +155,17 @@ the 2023 dispatch is over-optimistic (model over-produces, under-sheds) relative
 
 **Required calibration order:**
 
-1. **Smoke solve — no availability** (from Module 10 smoke stages)
-   Purpose: verify network builds and solves. Not a calibration output.
+1. **Module 12 structural baseline — no availability** ✅ DONE (2026-05-12)
+   Solved as `lc1_NoCO2-1H`. All 12 acceptance gates PASS. No Sasol, no `other_re`,
+   corrected PHS duration, CSP 500 MW / 2850 MWh TES wired via `za_fix_csp_links_stores`,
+   transmission expansion locked (`ll: c1`). Network at:
+   `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc`.
 
-2. **Baseline solve — with aggregate carrier-level monthly EAF** ← this is the true baseline
+2. **EAF-calibrated solve — with aggregate carrier-level monthly EAF**
    Apply monthly EAF from Eskom data as `p_max_pu` per carrier (coal, nuclear, OCGT, etc.).
    Formula: `p_max_pu[t] = monthly_EAF[carrier][month(t)]`.
    Source: Eskom 2023 monthly EAF by carrier or by station (aggregate to carrier if needed).
-   This solve is the primary calibration starting point. All before/after deltas are measured
-   from it, not from the no-availability smoke solve.
+   All before/after deltas are measured against the Module 12 structural baseline.
 
 3. **Diagnostic cross-check — pypsa-rsa station-level EAF**
    Compare the aggregate-EAF solve against pypsa-rsa's `plant_availability.xlsx` station-level
@@ -249,13 +249,37 @@ before/after validation comparison.
 ```text
 data/za_validation/za_2023_dispatch_calibration_before_after.csv
 data/za_validation/za_2023_dispatch_calibration_constraints.csv
-results/za_2023_fixed/networks/elec_s_34_ec_lc1_Co2L0.nc
+results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc
 doc/za_2023_dispatch_calibration_report.md
 ```
 
 The path above locks the validation wildcards to `clusters: 34`, `ll: c1`, and
-`opts: Co2L0` for the thesis handoff run. Smoke runs may use different concrete
-wildcards, but they must record the exact solved-network path.
+`opts: NoCO2-1H` for the structural baseline. Previous attempts used `ll: copt`,
+which silently enabled line expansion (~+220 MW across 82/82 lines) and thereby
+violated the fixed-grid requirement. The EAF-calibrated solve must use a
+non-`Co2L` label derived from this `lc1` baseline label.
+
+## Pre-Solve Fixes (Module 12 follow-up, 2026-05-13)
+
+The `lc1_NoCO2-1H` baseline replaces the deprecated `lcopt_NoCO2-1H` baseline.
+Three additional fixes apply before the solve is acceptable:
+
+1. **CSP electric path.** `add_extra_components.py:177-215` adds extendable
+   zero-capacity Stores + Links for advanced CSP, so with empty
+   `extendable_carriers` the CSP electric output is dead. New rule
+   `za_fix_csp_links_stores` (script `scripts/za_fleet/fix_csp_links_stores.py`)
+   sets fixed `Link.p_nom = bus-level CSP nameplate` and
+   `Store.e_nom = nameplate × capacity-weighted storage hours` from
+   `data/za_audit/za_named_plant_inventory.csv`, then flips both to
+   `*_extendable = False`. Audit at `resources/.../za_csp_fix_audit.csv`.
+2. **PHS pumping sign.** The validation notebook now reports PHS pumping as
+   positive consumption on both model side (`-storage_units_t.p.clip(upper=0)`)
+   and Eskom side (`abs(Pumped Water SCO Pumping)`).
+3. **Expansion gate.** Validation notebook (cell `module12-09`) and audit
+   script (`scripts/build_za_fixed_network_audit.py`) check
+   `*_extendable.sum() == 0` for Generators, StorageUnits, Stores, Links, and
+   Lines. Per-component counts written to
+   `data/za_audit/za_fixed_network_extendable_audit.csv`.
 
 ## Acceptance Gates
 
@@ -264,4 +288,7 @@ wildcards, but they must record the exact solved-network path.
 - Load shedding energy and hours are reported against `MLR + ILS + IOS`.
 - Every calibration constraint is justified by a validation failure.
 - Interim before/after calibration report is written before final acceptance.
-- No expansion capacity appears in solved results.
+- No expansion capacity appears in solved results (all 5 component classes).
+- CSP Link `p_nom > 0` and CSP Store `e_nom > 0` at every bus with positive
+  CSP Generator `p_nom`. Zero-capacity CSP buses are allowed.
+- PHS pumping reported as positive consumption on both model and Eskom sides.

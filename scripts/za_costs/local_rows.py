@@ -2,18 +2,20 @@
 # SPDX-FileCopyrightText: PyPSA-Earth and PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Emit `za_local_carrier_cost_rows.csv` consumed by Module 10's
+"""Emit `za_local_carrier_cost_rows.csv` consumed by Module 10/12's
 `apply_za_local_carriers` hook.
 
-One row per ZA local carrier (`sasol_coal`, `sasol_gas`, `ocgt_diesel`,
-`ocgt_gas`, `other_re`). Marginal cost is computed in EUR/MWh as
+One row per patched carrier (`coal`, `nuclear`, `ocgt_diesel`, `ocgt_gas`).
+Marginal cost is computed in EUR/MWh as
 
     marginal_cost = fuel_price_eur_per_gj * heat_rate_gj_per_mwh + VOM_eur_per_mwh
 
-using PyPSA-RSA medians from the Module 04 audit. CO2 emissions are recorded
-in tCO2/MWh (converted from kgCO2/MWh). Capital cost is left blank for the
-2023 fixed-validation baseline — Module 08 owns plant-by-plant capex
-reconciliation through `custom_powerplants.csv`. The
+using PyPSA-RSA medians from the Module 04 audit. Coal and nuclear are upstream
+carriers whose costs are patched by the local hook. Sasol and `other_re` are
+removed from the active Module 12 baseline. CO2 emissions are recorded in
+tCO2/MWh (converted from kgCO2/MWh). Capital cost is left blank for the 2023
+fixed-validation baseline — Module 08 owns plant-by-plant capex reconciliation
+through `custom_powerplants.csv`. The
 ``pypsa_earth_default_retained_reason`` column is filled when a PyPSA-Earth
 default has been kept instead of an audited PyPSA-RSA value.
 """
@@ -25,7 +27,7 @@ import pandas as pd
 
 from .audit_builder import V1_TO_RSA, PYPSA_RSA_BASE_YEAR, _fixed_tech_carrier_median, _rsa_fuel_price_2023
 
-LOCAL_CARRIERS = ["sasol_coal", "sasol_gas", "ocgt_diesel", "ocgt_gas", "other_re"]
+LOCAL_CARRIERS = ["coal", "nuclear", "ocgt_diesel", "ocgt_gas"]
 
 LOCAL_ROW_COLUMNS = [
     "carrier",
@@ -64,33 +66,6 @@ def build_local_rows(
         color = meta.get("color", "")
         nice_name = meta.get("nice_name", "")
         validation_target = meta.get("validation_target", "")
-
-        if carrier == "other_re":
-            rows.append({
-                "carrier": "other_re",
-                "capital_cost": "",
-                "marginal_cost": 0.0,
-                "fuel_price": 0.0,
-                "efficiency": "",
-                "heat_rate": "",
-                "co2_emissions": 0.0,
-                "lifetime": "",
-                "color": color,
-                "nice_name": nice_name,
-                "validation_target": validation_target,
-                "units_currency": "EUR/MWh",
-                "units_quantity": "tCO2/MWh",
-                "source": "za_v1_policy",
-                "source_path": "doc/active/calibration-plan/07_costs_fuels_efficiencies_and_coUE.md",
-                "source_hash": "",
-                "base_year": 2023,
-                "pypsa_earth_default_retained_reason": "",
-                "notes": (
-                    "zero-cost fixed exogenous accounting; biogenic-neutral CO2; "
-                    "aggregate-category (Eskom Other RE) — reporting metadata must flag this"
-                ),
-            })
-            continue
 
         rsa_carriers = V1_TO_RSA[carrier]
         med = _fixed_tech_carrier_median(df, rsa_carriers)

@@ -52,6 +52,14 @@ run:
   name: "za_2023_fixed_validation"
   shared_cutouts: true
 
+scenario:
+  simpl: [""]
+  clusters: [34]
+  # Module 12 — "c1" = cost-limit factor 1.0 → no transmission expansion.
+  # Combined with empty extendable_carriers below, locks fixed 2023 grid.
+  ll: ["c1"]
+  opts: ["NoCO2-1H"]
+
 snapshots:
   start: "2023-01-01"
   end: "2024-01-01"
@@ -72,6 +80,9 @@ load_options:
   scale: 1
 
 electricity:
+  # Module 12 — structural 2023 baseline has no binding dispatch-level CO2 cap.
+  # CO2 policy constraints are deferred to expansion/policy scenarios.
+  co2limit: null
   custom_powerplants: replace
   # Module 08 — Fleet Reconciliation. Keep rows active in 2023:
   #   DateOut >= 2022 OR DateOut isna  AND  DateIn <= 2023 OR DateIn isna
@@ -79,9 +90,9 @@ electricity:
   estimate_renewable_capacities:
     stats: false
   # Module 05 — System Boundary And Carrier Taxonomy.
-  # Upstream V1 baseline carriers; local ZA carriers (sasol_coal, sasol_gas,
-  # ocgt_diesel, ocgt_gas, other_re) are added post add_electricity by the
-  # module 10 apply_za_local_carriers hook and must NOT appear here.
+  # Upstream V1 baseline carriers. `ocgt_diesel`/`ocgt_gas` are added post
+  # add_electricity by the local hook and must NOT appear here. Sasol and
+  # `other_re` are excluded from Module 12 onward.
   conventional_carriers: [coal, nuclear]
   renewable_carriers: [solar, onwind, hydro, csp]
   extendable_carriers:
@@ -104,27 +115,11 @@ za_system_boundary:
     redstone_excluded: true
     profile_route: "native_atlite_first; documented_temporary_fallback_allowed"
 
-# Module 05 — Carrier Taxonomy lock (structural metadata only).
+# Module 05 / 12 — Carrier Taxonomy lock (structural metadata only).
 # Cost numeric values are owned by module 07 in
 # data/za_audit/za_local_carrier_cost_rows.csv. Network rows are added by
 # module 10 apply_za_local_carriers hook AFTER add_electricity.
 za_local_carriers:
-  sasol_coal:
-    component: Generator
-    color: "#4d4d4d"
-    nice_name: "Sasol coal"
-    profile_intent: "fixed dispatch from coal-equivalent availability profile (module 11)"
-    emissions_intent: "explicit row in module 07 cost CSV"
-    validation_target: "Eskom 2023 coal generation reconciliation (sub-row)"
-    availability_treatment: "owned by module 08 fleet reconciliation"
-  sasol_gas:
-    component: Generator
-    color: "#a06030"
-    nice_name: "Sasol gas"
-    profile_intent: "fixed dispatch; gas-equivalent availability"
-    emissions_intent: "explicit row in module 07"
-    validation_target: "Eskom 2023 OCGT/gas reconciliation (sub-row)"
-    availability_treatment: "owned by module 08"
   ocgt_diesel:
     component: Generator
     color: "#cc6633"
@@ -141,14 +136,11 @@ za_local_carriers:
     emissions_intent: "explicit row in module 07"
     validation_target: "Eskom 2023 OCGT/gas reconciliation"
     availability_treatment: "owned by module 08"
+
+za_known_omissions:
   other_re:
-    component: Generator
-    color: "#88c057"
-    nice_name: "Other RE"
-    profile_intent: "exogenous: Eskom 8760 'Other RE' series for V1 accounting"
-    emissions_intent: "zero CO2 by default; row in module 07"
-    validation_target: "Eskom 2023 Other RE energy total"
-    availability_treatment: "exogenous time series, no availability filter"
+    annual_generation_gwh_2023: 238
+    reason: "Eskom Other RE is an expansion-incompatible aggregate; explicit small hydro, landfill gas, and biogas candidates are deferred to Module 14."
 
 solving:
   solver:

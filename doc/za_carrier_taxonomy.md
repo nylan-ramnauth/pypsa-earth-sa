@@ -41,11 +41,11 @@ The locks are mirrored in `configs/za/za_2023_fixed_validation.yaml` under
 | RSA concept | V1 PyPSA-Earth carrier | type | notes |
 |---|---|---|---|
 | coal | `coal` | upstream conventional | Eskom large coal fleet |
-| sasol_coal | `sasol_coal` | local | explicit cost / emissions row |
+| sasol_coal | excluded from Module 12 structural baseline onward | out of boundary | captive industrial generation; removed before fixed-grid baseline because no Eskom hourly validation column exists |
 | nuclear | `nuclear` | upstream conventional | Koeberg |
 | ocgt_diesel / diesel peakers | `ocgt_diesel` | local | explicit cost / emissions row |
 | ocgt_avf / gas OCGT | `ocgt_gas` | local | explicit cost / emissions row |
-| sasol_gas | `sasol_gas` | local | explicit cost / emissions row |
+| sasol_gas | excluded from Module 12 structural baseline onward | out of boundary | Sasol gas turbines are self-dispatched industrial assets, not Eskom National Control OCGT dispatch |
 | wind | `onwind` | upstream renewable | atlite profile |
 | solar PV | `solar` | upstream renewable | atlite profile |
 | solar_csp / csp | `csp` | upstream renewable | atlite profile, never mapped to PV |
@@ -54,14 +54,16 @@ The locks are mirrored in `configs/za/za_2023_fixed_validation.yaml` under
 | pumped storage | PHS-compatible | upstream | PyPSA-Earth storage; PHS energy checked |
 | battery | `battery` | upstream store | only 2023-active batteries that pass normalization smoke; otherwise excluded with audit record |
 | hydro_import | exogenous import | not domestic | owned by module 06 |
-| biomass | `biomass` (only if 2023-active reconciled) else absorbed by `other_re` | upstream | biomass is canonical name; `bioenergy` normalizes to `biomass` |
-| Other RE | `other_re` | local | exogenous Eskom 8760 "Other RE" series |
+| biomass | excluded unless explicitly represented later | upstream candidate | biomass is canonical name; `bioenergy` normalizes to `biomass`, but no separate 2023 biomass generator is active in the Module 12 baseline |
+| Other RE | excluded from Module 12 structural baseline onward | accounting category | aggregate Eskom 8760 "Other RE" series is omitted from the dispatchable model; omission is quantified separately |
 
 **Total V1 carrier set:** `coal`, `nuclear`, `solar`, `onwind`, `hydro`, `ror`,
-`csp`, `battery`, `biomass` (conditional), `sasol_coal`, `sasol_gas`,
-`ocgt_diesel`, `ocgt_gas`, `other_re`. Pumped storage and `hydro_import` are
-treated through PyPSA storage / exogenous-load mechanisms rather than
-named generator carriers.
+`csp`, `battery` if present, `ocgt_diesel`, and reserved `ocgt_gas`. Pumped
+storage and `hydro_import` are treated through PyPSA storage /
+exogenous-load mechanisms rather than named generator carriers. `sasol_coal`,
+`sasol_gas`, `other_re`, and `biomass` are excluded from the Module 12
+structural baseline unless a later module explicitly re-opens the boundary
+with source-backed representation.
 
 ---
 
@@ -114,15 +116,19 @@ Module 08 owns the active-2023 biomass decision and must use:
 - Eskom "Other RE" audit evidence
   (Module 02 outputs and `pypsa_rsa_eskom_pu_profiles_audit.csv`)
 
-If no separately validated 2023 biomass plant exists, the energy stays inside
-the aggregate `other_re` accounting carrier; no `biomass` generator is added.
+If no separately validated 2023 biomass plant exists, no `biomass` generator
+is added. From Module 12 onward, the aggregate `other_re` accounting category
+is also excluded from the dispatchable structural baseline; its omitted energy
+is tracked as a validation/reporting gap rather than modeled as a carrier.
 
 ---
 
 ## 6. Carrier case policy
 
-- Local ZA carriers are lowercase snake_case: `sasol_coal`, `sasol_gas`,
-  `ocgt_diesel`, `ocgt_gas`, `other_re`.
+- Local ZA carriers are lowercase snake_case. The active Module 12 local set is
+  `ocgt_diesel`, with `ocgt_gas` reserved for a source-backed AVF gas OCGT row.
+  `sasol_coal`, `sasol_gas`, and `other_re` are historical taxonomy labels now
+  marked excluded by boundary.
 - Upstream PyPSA-Earth carriers retain upstream casing and names: `OCGT`,
   `CCGT`, `H2`, `biomass`, `solar`, `onwind`, `csp`, `coal`, `nuclear`,
   `hydro`, `ror`, `battery`.

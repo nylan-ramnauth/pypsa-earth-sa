@@ -303,8 +303,6 @@ rule apply_za_local_carriers:
         network_in="networks/" + RDIR + "elec_s_34.nc",
         custom_lines_marker="networks/" + RDIR + "elec_s_34.pre_custom.nc",
         carrier_rows="data/za_audit/za_local_carrier_cost_rows.csv",
-        attachment="data/za_audit/za_2023_other_re_attachment.csv",
-        hourly="data/za_validation/eskom_2023_hourly_clean.csv",
         custom_pp="data/custom_powerplants.csv",
     output:
         backup="networks/" + RDIR + "elec_s_34.pre_local.nc",
@@ -315,11 +313,30 @@ rule apply_za_local_carriers:
         "scripts/apply_za_local_carriers.py"
 
 
+rule za_fix_csp_links_stores:
+    # Module 12 — set fixed CSP Link p_nom and Store e_nom on the
+    # post-add_extra_components network. Without this, the advanced CSP path
+    # leaves Stores/Links at zero capacity (extendable=True but
+    # extendable_carriers is empty) and CSP cannot dispatch.
+    input:
+        network_in="networks/" + RDIR + "elec_s_34_ec.nc",
+        custom_pp="data/custom_powerplants.csv",
+        inventory="data/za_audit/za_named_plant_inventory.csv",
+    output:
+        backup="networks/" + RDIR + "elec_s_34_ec.pre_csp.nc",
+        audit="resources/" + RDIR + "za_csp_fix_audit.csv",
+    log:
+        "logs/" + RDIR + "za_fix_csp_links_stores.log",
+    script:
+        "scripts/za_fleet/fix_csp_links_stores.py"
+
+
 rule build_za_fixed_network_audit:
     input:
-        network="networks/" + RDIR + "elec_s_34_ec_lcopt_Co2L-1H.nc",
+        network="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H.nc",
         anchor="data/za_audit/za_eskom_2023_capacity_anchors.csv",
         local_marker="networks/" + RDIR + "elec_s_34.pre_local.nc",
+        csp_marker="networks/" + RDIR + "elec_s_34_ec.pre_csp.nc",
     output:
         audit="data/za_audit/za_fixed_network_audit.csv",
     log:
@@ -1144,6 +1161,14 @@ def _za_local_carriers_marker(wildcards):
     return []
 
 
+def _za_csp_fix_marker(wildcards):
+    # Module 12 — force za_fix_csp_links_stores to run before prepare_network
+    # consumes elec_s_34_ec.nc for the za_2023_fixed_validation run.
+    if wildcards.simpl == "" and wildcards.clusters == "34":
+        return ["networks/" + RDIR + "elec_s_34_ec.pre_csp.nc"]
+    return []
+
+
 rule add_extra_components:
     params:
         transmission_efficiency=config["sector"]["transmission_efficiency"],
@@ -1175,6 +1200,7 @@ rule prepare_network:
     input:
         "networks/" + RDIR + "elec_s{simpl}_{clusters}_ec.nc",
         tech_costs="resources/" + RDIR + f"costs_{config['costs']['year']}_elec.csv",
+        za_csp_fix_marker=_za_csp_fix_marker,
     output:
         "networks/" + RDIR + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
     log:

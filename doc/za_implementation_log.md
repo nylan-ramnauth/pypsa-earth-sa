@@ -859,3 +859,133 @@ This append-only log records implementation decisions, deviations, source inputs
   - **CSP capacity-factor target.** Stage 2 CSP CF = 0.8% in July. Eskom 2023 CSP fleet typical winter CF is 5–15%. The atlite-derived `csp` p_max_pu profile (mean 0.16 full-year) may be missing the thermal-storage smoothing that real CSP gets — Module 12 should validate against Eskom CSP hourly dispatch.
   - **Per-km 275 kV values remain representative**, not Eskom-specific (carried over from the prior log entry).
   - All other Module 11 / 12 follow-ups from the prior entries remain.
+
+## 12 Module 12 Structural Baseline and Dispatch Validation Scaffold — 2026-05-12 16:12
+
+- **Status:** structural baseline complete; EAF-calibrated solve pending source-provenance decision.
+- **Decisions taken:**
+  - The canonical 2023 fixed-validation solve label is now `NoCO2-1H`; the former `Co2L-1H` / `Co2L0` naming is treated as pre-Module-12 diagnostic output.
+  - The first no-EAF solve is the **Module 12 structural baseline**, defined as: no CO2 cap, no Sasol upstream fleet, no `other_re`, corrected PHS duration, no coal EAF overlay.
+  - Sasol upstream rows (`Secunda_coal`, `Sasolburg_coal`, `Sasol_ice`, `Sasol_ocgt`) are removed in `scripts/za_fleet/reconciliation.py` before `data/custom_powerplants.csv` is generated.
+  - PHS `Duration` is written locally as `StorageCapacity_MWh / Capacity` in `scripts/za_fleet/custom_powerplants.py`, so downstream StorageUnit `max_hours` is positive.
+  - `other_re` is no longer attached in the Module 12 active network path. The known 2023 omission is documented as 238 GWh/yr and left for an explicit later small-hydro/landfill/biogas representation if needed.
+  - Coal EAF calibration is not applied yet. Cleaned Eskom `Total PCLF` / `Total UCLF+OCLF` fields are system-wide fields and are not accepted as a coal-specific monthly EAF source without additional provenance.
+- **Source inputs used:**
+  - `configs/za/za_2023_fixed_validation.yaml`
+  - `data/za_validation/eskom_2023_hourly_clean.csv`
+  - `data/nuclear_p_max_pu.csv` (nuclear availability input retained by existing pipeline; provenance still needs a Module 12 note before calibrated solve acceptance)
+  - `data/za_audit/pypsa_rsa_availability_audit.csv` (inspected as possible availability fallback; annual/scenario-oriented, not a monthly coal EAF overlay by itself)
+- **Output artifacts produced:**
+  - `data/custom_powerplants.csv` — regenerated with 135 rows; no Sasol/Secunda/Sasolburg rows; PHS `Duration` positive.
+  - `resources/za_2023_fixed_validation/powerplants.csv` — regenerated with 135 rows; no Sasol/Secunda/Sasolburg rows; PHS `Duration` positive.
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lcopt_NoCO2-1H.nc` — prepared structural baseline network.
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lcopt_NoCO2-1H.nc` — solved structural baseline, Gurobi optimal, objective `8.3605795398e9`.
+  - `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb` — new Module 12 validation notebook that reads canonical CSV/netCDF outputs only.
+  - `doc/za_validation/figures/12_dispatch_calibration/dispatch_calibration_validation.html` — executed static HTML export.
+  - `data/za_validation/za_2023_dispatch_calibration_before_after.csv` — structural baseline vs Eskom annual/July dispatch table; EAF column will be added when calibrated netCDF exists.
+  - `data/za_validation/za_2023_dispatch_calibration_constraints.csv` — structural baseline definition and pending coal-EAF provenance gate.
+  - `doc/za_validation/figures/12_dispatch_calibration/module12_validation_checks.csv` — structural checks PASS; EAF-calibrated network PENDING.
+- **Verification completed:**
+  - `py_compile` passed for `scripts/za_fleet/reconciliation.py`, `scripts/za_fleet/custom_powerplants.py`, and `scripts/apply_za_local_carriers.py`.
+  - Snakemake dry-run passed for `build_za_fleet_reconciliation` and `build_za_fixed_network_audit` under `configs/za/za_2023_fixed_validation.yaml`.
+  - Rebuilt from fleet reconciliation through `resources/za_2023_fixed_validation/powerplants.csv`; no Sasol rows and all four PHS rows have positive `Duration`.
+  - Rebuilt through `networks/za_2023_fixed_validation/elec_s_34_ec_lcopt_NoCO2-1H.nc`; local-carrier hook patched coal/nuclear costs, attached `ocgt_diesel`, and did not attach `other_re` or Sasol carriers.
+  - Solved `results/za_2023_fixed_validation/networks/elec_s_34_ec_lcopt_NoCO2-1H.nc`; optimization status `ok`, termination `optimal`.
+  - Solved-network checks passed: no `CO2Limit`, no `sasol_*` or `other_re` generator carriers, PHS StorageUnits have positive `max_hours`, hydro StorageUnits are present and reported from `storage_units_t.p`, no extendable Generators, no extendable StorageUnits. Lines remain extendable as expected for the `lcopt` target.
+  - Module 12 notebook executed end-to-end and exported HTML. It reports structural annual gaps versus Eskom: coal +35.9 TWh, OCGT -5.23 TWh, PHS generation -3.93 TWh, wind -4.30 TWh, solar PV -1.39 TWh, CSP -1.36 TWh, load shedding -16.76 TWh.
+- **Open follow-ups:**
+  - Select and log a defensible coal/station monthly availability source before applying EAF `p_max_pu`. Candidate fallback remains pypsa-rsa availability data or another documented Eskom source; current cleaned Eskom system outage fields are insufficient alone.
+  - Add explicit provenance for retained nuclear `p_max_pu=0.534` before accepting the EAF-calibrated solve as final Module 12 evidence.
+  - Run the EAF-calibrated `NoCO2-1H` solve after provenance is logged, then rerun the Module 12 notebook so the before/after CSV includes both structural and calibrated columns.
+  - Decide in Module 13/14 whether the 238 GWh/yr `other_re` omission warrants explicit small hydro, landfill gas, or biogas candidates.
+
+## 2026-05-13 — Module 12 fixed-grid correction (lc1 + CSP + PHS)
+
+- **Driver:** `module12_implementation_review_findings.md` flagged that the prior
+  `lcopt_NoCO2-1H` structural baseline silently enabled line expansion
+  (82/82 lines extendable, +220 MW total). CSP electric output was dead because
+  `add_extra_components.py:177-215` adds zero-capacity extendable Stores/Links
+  while `extendable_carriers` is empty. PHS pumping was clipped out of the
+  comparison by the model-side helper.
+- **Config:** `configs/za/za_2023_fixed_validation.yaml:58` `ll: ["copt"]` →
+  `["c1"]`. Filename pattern `l{ll}` now resolves to
+  `elec_s_34_ec_lc1_NoCO2-1H.nc`. `extendable_carriers` already empty for all
+  classes, and `prepare_network.py:211-222` keeps `Line.s_nom_extendable=False`
+  when `factor=1`, so all 5 component classes are locked.
+- **New script:** `scripts/za_fleet/fix_csp_links_stores.py`. Joins
+  `data/custom_powerplants.csv` (plant→bus) with
+  `data/za_audit/za_named_plant_inventory.csv` (plant→storage hours parsed from
+  `notes` column). Per CSP bus, sets `Link.p_nom = Σ Generator.p_nom` for
+  `carrier=="csp"` and `Store.e_nom = p_nom × capacity-weighted storage hours`.
+  Flips both to non-extendable. Writes
+  `resources/za_2023_fixed_validation/za_csp_fix_audit.csv`. Mutates the network
+  in place, preserving `elec_s_34_ec.pre_csp.nc` as a sentinel/backup.
+- **New rule:** `za_fix_csp_links_stores` in `Snakefile` between
+  `add_extra_components` and `prepare_network`. New marker function
+  `_za_csp_fix_marker(wildcards)` injects the `.pre_csp.nc` sentinel into
+  `prepare_network` input for the ZA wildcards only.
+- **Audit script:** `scripts/build_za_fixed_network_audit.py` now writes
+  `data/za_audit/za_fixed_network_extendable_audit.csv` with per-component
+  counts (Generator/StorageUnit/Store/Link/Line); fails the gate when any
+  `n_extendable > 0`. Input switched from
+  `elec_s_34_ec_lcopt_NoCO2-1H.nc` to `elec_s_34_ec_lc1_NoCO2-1H.nc` and
+  includes the `.pre_csp.nc` sentinel as a dependency.
+- **Notebook:** `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb`
+  - `STRUCTURAL_NET` + EAF candidates: `lcopt` → `lc1`.
+  - `storage_dispatch(net, "PHS", "pumping")` returns positive consumption.
+  - Eskom Pumped Water SCO Pumping forced through `.abs()` for comparison.
+  - New `csp_link_dispatch(net)` reads `links_t.p0` for `carrier=="csp"`.
+  - Cell `module12-09` now checks `no_extendable_*` for all 5 component
+    classes plus `csp_link_p_nom_positive` and `csp_store_e_nom_positive`.
+- **Provenance doc:** `doc/active/calibration-plan/12_availability_provenance.md`
+  documents `plant_availability.xlsx:outage_profiles` (BASE,
+  `1 - planned - unplanned`, weeks 1–53, 15 stations) and the deferred
+  station-weekly → bus-coal mapping plan. No EAF solve attempted yet.
+- **Outputs to refresh after solve (next agent):**
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc`
+  - `data/za_audit/za_fixed_network_audit.csv` +
+    `data/za_audit/za_fixed_network_extendable_audit.csv`
+  - `resources/za_2023_fixed_validation/za_csp_fix_audit.csv`
+  - `doc/za_validation/figures/12_dispatch_calibration/dispatch_calibration_validation.html`
+  - `doc/za_validation/figures/12_dispatch_calibration/module12_validation_checks.csv`
+- **Verification expected:** all 5 expansion checks PASS; CSP Link p_nom > 0
+  at every CSP bus; PHS pumping reported as positive on both sides; HTML
+  exported. No EAF-calibrated solve until structural-baseline gates are green.
+
+## 2026-05-12 — Module 12 review-fix hygiene pass
+
+- **Scope:** review cleanups only; no EAF-calibrated solve and no change to the
+  accepted fixed-grid structural result
+  `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc`.
+- **Custom-line artifact:** `scripts/build_za_custom_lines.py` now treats a
+  comparison table with zero `no_osm_lines_found` rows as a valid zero-missing
+  case and emits `data/za_audit/za_custom_missing_lines.csv` with the expected
+  schema. `scripts/apply_za_custom_lines.py` writes an empty audit and leaves
+  the network untouched when that artifact has no rows.
+- **Validation notebook:** Module 12 CSP checks are bus-complete. Every bus with
+  positive CSP Generator `p_nom` must have matching fixed positive CSP Link
+  `p_nom` and Store `e_nom`; zero-capacity CSP buses remain allowed.
+- **Docs:** `doc/za_carrier_taxonomy.md` now marks `sasol_coal`, `sasol_gas`,
+  `other_re`, and `biomass` as excluded from the Module 12 structural baseline
+  unless later re-opened with explicit source-backed representation. The Module
+  12 calibration plan now records the advanced-CSP Link/Store path as the
+  accepted root cause; the earlier barrier/crossover explanation is retained
+  only as a superseded hypothesis.
+- **Verification completed:**
+  - `py_compile` passed for `scripts/build_za_custom_lines.py`,
+    `scripts/apply_za_custom_lines.py`, `scripts/build_za_fixed_network_audit.py`,
+    and `scripts/za_fleet/fix_csp_links_stores.py`.
+  - `snakemake ... data/za_audit/za_custom_missing_lines.csv` regenerated the
+    artifact as a zero-row schema-valid CSV because the current comparison has
+    no `no_osm_lines_found` corridors.
+  - The dry-run no longer schedules `build_za_custom_lines` or
+    `apply_za_custom_lines` for missing custom-line outputs. Remaining scheduled
+    downstream rules are Snakemake metadata staleness after marker mtime repair,
+    not missing custom-line artifacts.
+  - Notebook execution in place completed with 15/15 code cells executed and
+    zero null execution counts. HTML export refreshed at
+    `doc/za_validation/figures/12_dispatch_calibration/dispatch_calibration_validation.html`.
+  - `module12_validation_checks.csv` reports PASS for the structural baseline:
+    no CO2 cap, no Sasol, no `other_re`, PHS max hours, hydro StorageUnits, all
+    five no-extendable gates, and both CSP bus-complete Link/Store checks.

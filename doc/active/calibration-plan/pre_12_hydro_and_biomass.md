@@ -42,9 +42,10 @@ No hydro plants were dropped for missing inflow data.
 PHS (Drakensberg 1000 MW, Ingula 1324 MW, Palmiet 400 MW, Steenbras 180 MW) is also present
 as StorageUnits with carrier `PHS` — these were already confirmed dispatching correctly.
 
-### 1.2 Confirmed dispatch (Co2L full-year solve)
+### 1.2 Confirmed dispatch (earlier CO2-capped full-year diagnostic solve)
 
-Hydro StorageUnit dispatch from `elec_s_34_ec_lcopt_Co2L-1H.nc`, July 2023:
+Hydro StorageUnit dispatch from the earlier `elec_s_34_ec_lcopt_Co2L-1H.nc`
+diagnostic solve, July 2023:
 
 | StorageUnit | July dispatch (MWh) |
 |---|---|
@@ -152,82 +153,111 @@ Result: carrier stays `"Bioenergy"` — further excluded even if Bug 1 were fixe
 
 Bug 1 is the dominant gate; Bug 2 is secondary but must also be fixed if biomass is to be included.
 
-### 2.3 Critical question: double-count risk with `other_re`
+### 2.3 What `other_re` actually is — and why it is unsuitable for expansion
 
-Module 05 carrier taxonomy states:
+`apply_za_local_carriers.py` adds an exogenous `other_re` generator that replays Eskom's
+`Other RE` hourly column as a fixed p_max_pu profile. Confirmed numbers from
+`data/za_validation/eskom_2023_hourly_clean.csv` and the solved network:
 
-> "explicit generator only when present in 2023-active reconciliation; otherwise covered by `other_re`"
-
-The `other_re` exogenous generator replays Eskom's `Other RE` hourly timeseries (34 buses,
-total p_nom ≈ 50.6 MW distributed). The Eskom `Other RE` column (glossary definition) covers:
-**small hydro (<10 MW?), landfill gas, biomass/biogas, bagasse/biomass co-generation**.
-
-This creates a potential double-count if we add Ngodwana/Sappi/Joburg Landfill as explicit
-generators while `other_re` already represents the Eskom-reported aggregate.
-
-**Key distinction to resolve before including biomass:**
-
-| Plant | Likely Eskom treatment |
+| Metric | Value |
 |---|---|
-| Joburg Landfill Gas (7.56 MW) | Almost certainly inside Eskom `Other RE` column |
-| Ngodwana Energy (25 MW) | Likely REIPPPP bioenergy IPP → Eskom `Other RE` or separate REIPPPP row |
-| Sappi (144 MW) | Pulp mill captive co-gen; unclear if dispatched by Eskom National Control or captive; NOT a REIPPPP project |
+| Installed capacity (constant, from Eskom) | **50.58 MW** |
+| Annual generation 2023 | **238 GWh** |
+| July 2023 generation | **27 GWh** |
+| Mean dispatch | 27.1 MW (54% of 50.58 MW) |
+| Range | 1.3 – 44.2 MW |
+| Share of total RSA demand | **0.105%** |
+| Seasonal pattern | Peaks Jun–Aug (26–27 GWh/month), troughs Sep–Dec (9–11 GWh/month) |
 
-**Sasol analogy:** If Sappi is captive industrial (like Sasol), it should be excluded for the same
-reason Sasol is recommended for removal — it is not dispatched by Eskom National Control and
-its generation does not appear in any Eskom hourly column.
+The seasonal winter peak is consistent with small run-of-river hydro in the Western Cape
+winter rainfall zone, not biomass (which would be flatter). This suggests `Other RE` is
+dominated by small hydro and landfill gas, not the large biomass plants in `powerplants.csv`.
 
-### 2.4 Options for Opus
+**What Eskom aggregates into this column:**
 
-**Option A — Exclude all biomass (default, recommended for V1 baseline)**
+| Source | Likely MW | Notes |
+|---|---|---|
+| Landfill gas (Joburg, Durban municipal) | ~10–15 MW | IPP, Eskom-contracted |
+| Small biomass/biogas IPPs | ~10–15 MW | Ngodwana-class |
+| Small run-of-river hydro (<10 MW) | ~10–20 MW | Not separately metered |
+| Bagasse/biomass co-gen selling surplus | ~5–10 MW | Sugar/pulp mills with grid connection |
 
-Leave biomass excluded from `conventional_carriers`. Accept that Ngodwana/Joburg Landfill are
-already inside the `other_re` exogenous profile. Sappi and Mondi are treated as captive industrial
-(similar to Sasol decision).
+**What is NOT in `Other RE`:**
+- Sappi (144 MW) — captive pulp-mill co-gen, not dispatched by Eskom National Control
+- Mondi (120 MW) — same; captive industrial
+- Sasol coal/gas — separate captive industrial (already flagged for removal)
 
-Pros: no double-count risk; consistent with Sasol exclusion logic; `other_re` already accounts
-for bioenergy generation in aggregate.  
-Cons: Sappi 144 MW may actually sell surplus to grid at some hours, and is genuinely dispatchable.
+**The expansion incompatibility problem:**
 
-**Option B — Include Ngodwana only**
+The `other_re` generator is an exogenous accounting artefact. It has:
+- Fixed `p_nom = 50.58 MW` (not expandable, not a real technology cost curve)
+- Profile locked to Eskom's 2023 historical data
+- No technology identity (mixed landfill gas + small hydro + biogas combined)
+- No capital cost or efficiency — cannot participate in expansion optimization
 
-Add `biomass` to `conventional_carriers` in ZA config. Include only Ngodwana (25 MW, confirmed
-REIPPPP bioenergy, separately metered). Exclude Sappi/Mondi (captive industrial) and Joburg
-Landfill (inside other_re). Adjust `other_re` p_nom or profile to subtract Ngodwana generation.
+For the V1 fixed-capacity calibration this is tolerable. But the project objective is to
+hand off a calibrated network to Module 14 (capacity expansion). Carrying this artefact
+forward would inject 238 GWh/yr of generation with zero cost and no real expansion pathway —
+the optimizer could not decide whether to build more of it, retire it, or replace it.
 
-Requires:
-1. Add `biomass` to `conventional_carriers` in `za_2023_fixed_validation.yaml`
-2. Fix carrier mapping: add a pre-processing step in `reconciliation.py` or `add_electricity.py`
-   to normalise `Bioenergy → biomass` case-insensitively, OR add `"Bioenergy": "biomass"` key
-   to `carrier_dict` in `add_electricity.py:142`
-3. Add `biomass` cost row to `data/za_audit/za_local_carrier_cost_rows.csv`
-4. Verify Ngodwana bus assignment is valid after 34-cluster aggregation
-5. Audit Eskom `Other RE` series to confirm Ngodwana is NOT already included there
+The correct long-term treatment: replace with explicit technology rows (small hydro,
+landfill gas, biomass) with real cost data and expansion potential. For the 2023 baseline,
+the 0.105% supply gap from removing it is negligible.
 
-Pros: more explicit fleet; Ngodwana is a separately reported REIPPPP plant.  
-Cons: audit burden; Ngodwana 25 MW is negligible at system scale.
+### 2.4 Plant classification — double-count risk resolved
 
-**Option C — Defer to Module 13**
+| Plant | MW | Likely inside Eskom `Other RE`? | Expansion-eligible? | Decision |
+|---|---|---|---|---|
+| Joburg Landfill Gas | 7.56 | Yes — small IPP, Eskom-contracted | No (finite resource) | Exclude |
+| Ngodwana Energy | 25.00 | Yes — REIPPPP bioenergy, aggregated | Marginally | Exclude; already in other_re |
+| Sappi | 144.00 | No — captive industrial | No (like Sasol) | Exclude (Sasol logic) |
+| Mondi | 120.00 | No — captive industrial, no lat/lon | No | Exclude (dropped by build_powerplants already) |
 
-Leave biomass excluded in V1 baseline. Flag as known omission in the Module 13 validation report.
-Add audit task to review Sappi/Ngodwana generation data before Module 14 expansion.
+### 2.5 Options for Opus
 
-Pros: no risk to V1 calibration; biomass is small relative to calibration targets.  
-Cons: known blind spot in fleet completeness.
+**Option A — Remove `other_re` artefact entirely (recommended)**
 
-### 2.5 Recommendation
+Remove the `other_re` generator from `apply_za_local_carriers.py`. Accept the 238 GWh/yr
+supply gap (0.105% of demand). Do not add explicit biomass generators.
 
-**Option A for V1**: leave biomass excluded. Rationale:
-- Total biomass capacity in scope = 176.56 MW (without Mondi) — <0.5% of system.
-- Generation at realistic capacity factors: ~100–600 GWh/yr — small relative to calibration gaps
-  (coal EAF, nuclear availability, PHS dispatch).
-- Double-count risk with `other_re` is real and not easily disentangled without plant-level Eskom
-  metering data.
-- Consistent with Sasol exclusion (captive industrial logic for Sappi/Mondi).
-- Flag in Module 13 report as known omission with quantified upper bound.
+Rationale:
+- The artefact is expansion-incompatible; removing it now avoids patching it later.
+- 0.105% supply gap is within calibration noise — coal or OCGT fills it marginally.
+- All biomass plants in `powerplants.csv` are either already inside `other_re` (double-count
+  if added) or captive industrial (Sasol-class, exclude for same reasons).
+- Clean separation: Eskom's `Other RE` generation is not modelled — it is flagged as a known
+  omission in the Module 13 report with a quantified upper bound (238 GWh/yr, 27 GWh July).
 
-If Opus chooses Option B, start with Ngodwana only (25 MW) and resolve the double-count question
-by checking the NERSA licence and Eskom REIPPPP reconciliation data first.
+Implementation: comment out or remove the `attach_other_re` call in `apply_za_local_carriers.py`.
+No rebuild of fleet or powerplants required — only the hook changes.
+
+**Option B — Keep `other_re` for V1 calibration, remove before Module 14**
+
+Keep the exogenous generator through Module 13 to maintain supply balance accuracy.
+Document removal as a pre-Module 14 task.
+
+Pros: supply-demand balance exactly matches Eskom totals in V1.  
+Cons: defers the artefact problem; risks it being inherited by the expansion model.
+
+**Option C — Replace with explicit small-hydro and landfill-gas rows**
+
+Add 2–3 small explicit generators (small hydro 15 MW, landfill gas 10 MW, biogas 5 MW)
+with real cost data and expansion potential. Remove the exogenous artefact.
+
+Pros: expansion-compatible fleet from the start.  
+Cons: requires cost data sourcing and validation; overkill for V1 calibration.
+
+### 2.6 Recommendation
+
+**Option A — remove `other_re` now.** Rationale:
+- 0.105% supply gap is calibration-negligible (27 GWh/July vs ~16,000 GWh system).
+- Expansion incompatibility is a structural problem that compounds if left. Better to remove
+  the artefact cleanly in V1 than to patch it before Module 14.
+- Option C (explicit small generators) is the right long-run answer but requires data not
+  yet in scope for Module 12.
+- Flag 238 GWh/yr as known omission in Module 13 report. Assign a Module 14 task:
+  add small hydro (~15 MW), landfill gas (~10 MW), biogas (~5 MW) as expansion candidates
+  with REIPPPP cost data.
 
 ---
 
@@ -257,7 +287,8 @@ else:
 ```
 
 Note: the demo solve uses `crossover: 0` (barrier-only), so the StorageUnit dispatch pattern
-may still look flat or sub-optimal. The Co2L full-year solve is authoritative for calibration.
+may still look flat or sub-optimal. Module 12 calibration evidence should use the canonical
+`NoCO2-1H` structural baseline and EAF-calibrated outputs.
 
 ---
 
@@ -269,13 +300,14 @@ may still look flat or sub-optimal. The Co2L full-year solve is authoritative fo
 - [ ] Verify `max_hours = 3366` against IRENA ZA hydro total and `data/hydro_capacities.csv`
 - [ ] If dispatch gap > 30%: investigate IRENA normalization multiplier in `renewable.hydro` config
 
-### Biomass
-- [ ] Confirm decision: Option A (exclude, V1 default) or Option B (include Ngodwana)
-- [ ] If Option A: add explicit note in Module 13 validation report (omission flagged, quantified)
-- [ ] If Option B:
-  - [ ] Add `biomass` to `conventional_carriers` in `za_2023_fixed_validation.yaml`
-  - [ ] Fix carrier case sensitivity: add `"Bioenergy": "biomass"` to `carrier_dict` in `add_electricity.py:142`
-  - [ ] Add biomass cost row to `data/za_audit/za_local_carrier_cost_rows.csv`
-  - [ ] Verify Ngodwana is NOT already counted in Eskom `Other RE` series
-  - [ ] Verify Ngodwana bus assignment after 34-cluster (bus 135 pre-cluster → which Eskom area?)
-  - [ ] Rebuild from `build_powerplants` stage if Option B chosen
+### Biomass and `other_re` artefact
+- [ ] Decision: Option A (remove `other_re`, exclude all biomass) confirmed or overridden
+- [ ] If Option A (recommended):
+  - [ ] Remove `attach_other_re` call in `apply_za_local_carriers.py` (or comment out)
+  - [ ] No fleet rebuild needed — hook-only change, re-run from `add_extra_components` stage
+  - [ ] Flag 238 GWh/yr omission in Module 13 validation report with quantified impact
+  - [ ] Add Module 14 task: add small hydro (~15 MW), landfill gas (~10 MW), biogas (~5 MW) as explicit expansion candidates
+- [ ] If Option B (keep `other_re` through V1):
+  - [ ] Document removal as mandatory pre-Module 14 task in Module 14 plan
+  - [ ] Do not add explicit biomass generators (double-count risk confirmed)
+- [ ] All explicit biomass plants (Sappi, Mondi, Ngodwana, Joburg Landfill) remain excluded — no config changes needed

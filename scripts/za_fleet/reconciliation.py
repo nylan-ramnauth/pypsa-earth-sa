@@ -47,6 +47,13 @@ RECONCILIATION_COLUMNS = [
     "notes",
 ]
 
+SASOL_UPSTREAM_NAMES = {
+    "Secunda_coal",
+    "Sasolburg_coal",
+    "Sasol_ice",
+    "Sasol_ocgt",
+}
+
 # PyPSA-RSA carrier strings to V1 calibration plan carriers.
 RSA_TO_V1 = {
     "coal": "coal",
@@ -151,6 +158,8 @@ def build_reconciliation_rows(
         raw_name = str(r.get("Power Station Name", "")).strip()
         canonical = _canonical_name(raw_name)
         if not canonical:
+            continue
+        if canonical in SASOL_UPSTREAM_NAMES:
             continue
         cy = _to_year(r.get("commissioning_year"))
         dy = _to_year(r.get("decommissioning_year"))

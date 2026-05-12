@@ -89,6 +89,8 @@ notebooks/za_validation/*
 !notebooks/za_validation/11_fixed_capacity/
 !notebooks/za_validation/11_fixed_capacity/fixed_capacity_report.ipynb
 !notebooks/za_validation/11_fixed_capacity/module12_readiness_report.ipynb
+!notebooks/za_validation/12_dispatch_calibration/
+!notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb
 
 # Specific configuration files
 configs/scenarios/config.*.yaml

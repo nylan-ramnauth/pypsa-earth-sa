@@ -134,12 +134,15 @@ def build_custom_rows(reconciliation_rows: list[dict]) -> tuple[list[dict], list
 
         # Storage handling.
         storage_mwh = ""
+        duration = ""
         if v1 == "PHS":
             storage_mwh, src_note = _phs_storage_mwh(r["canonical_name"], cap, r.get("notes", ""))
+            if isinstance(storage_mwh, (int, float)) and storage_mwh and cap:
+                duration = float(storage_mwh) / cap
             phs_audit.append({
                 "station_name": r["canonical_name"],
                 "p_nom_mw": cap,
-                "max_hours": (storage_mwh / cap) if (isinstance(storage_mwh, (int, float)) and storage_mwh and cap) else "",
+                "max_hours": duration,
                 "storage_capacity_mwh": storage_mwh if storage_mwh != "" else "",
                 "source_path": r.get("source_rsa", ""),
                 "source_note": src_note,
@@ -155,7 +158,7 @@ def build_custom_rows(reconciliation_rows: list[dict]) -> tuple[list[dict], list
             "Country": "ZA",
             "Capacity": cap,
             "Efficiency": "",
-            "Duration": "",
+            "Duration": duration,
             "Volume_Mm3": "",
             "DamHeight_m": "",
             "StorageCapacity_MWh": storage_mwh,

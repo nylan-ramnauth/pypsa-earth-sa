@@ -26,6 +26,44 @@ logger = logging.getLogger("build_za_fixed_network_audit")
 
 ANCHOR_DELTA_THRESHOLD_PCT = 5.0
 
+# Module 12 — fixed-grid expansion gate across all 5 PyPSA component classes.
+_EXT_COMPONENTS: list[tuple[str, str, str]] = [
+    # (component_class, nom_attr, extendable_attr)
+    ("generators", "p_nom", "p_nom_extendable"),
+    ("storage_units", "p_nom", "p_nom_extendable"),
+    ("stores", "e_nom", "e_nom_extendable"),
+    ("links", "p_nom", "p_nom_extendable"),
+    ("lines", "s_nom", "s_nom_extendable"),
+]
+
+
+def _extendable_counts(n: pypsa.Network) -> pd.DataFrame:
+    """One row per component class: total count, extendable count, nameplate sum.
+
+    For fixed-grid Module 12 acceptance: every n_extendable must be 0.
+    """
+    rows = []
+    for comp, nom_attr, ext_attr in _EXT_COMPONENTS:
+        df = getattr(n, comp)
+        n_total = int(len(df))
+        if n_total == 0:
+            rows.append({
+                "component": comp,
+                "n_total": 0,
+                "n_extendable": 0,
+                "nom_sum_mw": 0.0,
+            })
+            continue
+        n_ext = int(df[ext_attr].sum()) if ext_attr in df.columns else 0
+        nom_sum = float(df[nom_attr].sum()) if nom_attr in df.columns else float("nan")
+        rows.append({
+            "component": comp,
+            "n_total": n_total,
+            "n_extendable": n_ext,
+            "nom_sum_mw": nom_sum,
+        })
+    return pd.DataFrame(rows)
+
 
 def _load_anchor(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
@@ -139,10 +177,22 @@ def main(network_path: Path, anchor_path: Path, audit_out: Path) -> int:
     audit.to_csv(audit_out, index=False)
     logger.info("Wrote audit (%d rows) to %s", len(audit), audit_out)
 
+    ext_audit = _extendable_counts(n)
+    ext_audit_out = audit_out.parent / "za_fixed_network_extendable_audit.csv"
+    ext_audit.to_csv(ext_audit_out, index=False)
+    logger.info("Wrote per-component extendable audit to %s", ext_audit_out)
+
     failures = []
     bad_extendable = audit[(audit["extendable_flag"]) & (~audit["is_load_shedding_safety_valve"])]
     if len(bad_extendable):
         failures.append(f"unintended extendable capacity in carriers: {bad_extendable['carrier'].tolist()}")
+
+    bad_components = ext_audit[ext_audit["n_extendable"] > 0]
+    if len(bad_components):
+        failures.append(
+            "unintended extendable components: "
+            + ", ".join(f"{r.component}={int(r.n_extendable)}" for r in bad_components.itertuples())
+        )
 
     overshoot = audit[
         audit["capacity_mw_anchor"].notna() & (audit["anchor_delta_pct"].abs() > ANCHOR_DELTA_THRESHOLD_PCT)
@@ -176,7 +226,7 @@ if __name__ == "__main__":
         import argparse
 
         ap = argparse.ArgumentParser()
-        ap.add_argument("--network", default="networks/za_2023_fixed_validation/elec_s_34_ec_lcopt_Co2L-1H.nc")
+        ap.add_argument("--network", default="networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H.nc")
         ap.add_argument("--anchor", default="data/za_audit/za_eskom_2023_capacity_anchors.csv")
         ap.add_argument("--audit", default="data/za_audit/za_fixed_network_audit.csv")
         args = ap.parse_args()
