@@ -1,0 +1,17 @@
+scope,metric,model,eskom,delta_pct
+annual,energy_gwh,10747.948,16755.307,-35.85
+annual,hours_with_shedding,8559.0,7035,
+annual,hourly_pearson_r,0.4772,,
+annual,peak_mw,2853.5,6830.4,
+month_01,energy_gwh,877.302,2095.568,
+month_02,energy_gwh,873.989,2174.085,
+month_03,energy_gwh,950.203,1534.242,
+month_04,energy_gwh,959.904,1988.122,
+month_05,energy_gwh,1119.981,2063.565,
+month_06,energy_gwh,880.926,724.33,
+month_07,energy_gwh,1068.582,1492.893,
+month_08,energy_gwh,883.34,1012.323,
+month_09,energy_gwh,795.688,1521.933,
+month_10,energy_gwh,794.749,335.169,
+month_11,energy_gwh,871.325,1238.922,
+month_12,energy_gwh,671.959,574.157,

@@ -279,3 +279,31 @@ PyPSA-RSA HEAD: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
 
 PyPSA-Earth HEAD at Module 08 completion: `2d76ba3569689817dc0c8bda99719670ec292f08`.
 PyPSA-RSA HEAD: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
+
+## Module 13 — Validation Evidence Package
+
+**Date:** 2026-05-13. Accepted solve: `EAF-OPC-CAP`. Network:
+`results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`.
+
+| artifact_path | hash (sha256) | source | owner | extraction_date | unresolved_warnings |
+|---|---|---|---|---|---|
+| `scripts/za_validation/build_module13_validation.py` | `75a910826900f9a1aa29fcdceb0c2e9cac449d9a2aabb9a67ed230bd8b630479` | author (Module 13) | nylan-ramnauth, opus | 2026-05-13 | none |
+| `data/za_validation/za_2023_validation_annual.csv` | `ab16fdb598a4e5b05d86a934acf365820e3fdca4ffa73a21d061085a7f0fcdba` | derived from `...EAF-OPC-CAP.nc` + `eskom_2023_targets_by_carrier.csv` | nylan-ramnauth | 2026-05-13 | per-carrier band fails — classified into `za_model_limitations.md` §1–8 |
+| `data/za_validation/za_2023_validation_monthly.csv` | `c7d56222bb1a1163d886255a61298eab27630a4d38916b95e15730b14da63efe` | derived from `...EAF-OPC-CAP.nc` + `eskom_2023_hourly_clean.csv` | nylan-ramnauth | 2026-05-13 | VRE monthly levels fail (carrier-shape OK) |
+| `data/za_validation/za_2023_validation_hourly_metrics.csv` | `cf065068a9f691b641cd5d993f457e92c60880f357f34b983b68f7b0bccca88a` | derived | nylan-ramnauth | 2026-05-13 | Stage 3 diagnostic only |
+| `data/za_validation/za_2023_validation_capacity.csv` | `55e7b5ef382c3f6272a9e231067f473d2ee623087b1d41e5c0b7759f2aea12e9` | derived | nylan-ramnauth | 2026-05-13 | onwind -2.02% vs end-2023 anchor (matches §2 limitation) |
+| `data/za_validation/za_2023_load_shedding_validation.csv` | `4dfdf016b15441b0fe5ae149cf46022b30bf3f2470225f8491b851b086d9a949` | derived | nylan-ramnauth | 2026-05-13 | LS -35.9%; downstream of §1+§2 per §7 |
+| `data/za_validation/za_2023_validation_secondary_sources.csv` | `7d204b47bbbaec08e1cf210a088c6af703d106a0961136f6cac1a1a4566bdc54` | author + IRENA / OWID / IEA published anchors | nylan-ramnauth | 2026-05-13 | none |
+| `data/za_validation/za_2023_irena_carrier_harmonization.csv` | `b3be9c1c538e67fcc78c274283d25aa6993389e1364c0229ac4ddeff5a6113bb` | author per spec §"Carrier harmonization table" | nylan-ramnauth | 2026-05-13 | none |
+| `data/za_validation/za_2023_uncalibrated_vs_calibrated.csv` | `23d5e9572681a0e192c9d8ceb9714fcb5f5775c0e33037045c4991135f7c662f` | derived from baseline `...NoCO2-1H.nc` + accepted `...EAF-OPC-CAP.nc` | nylan-ramnauth | 2026-05-13 | PHS worsens under calibration; documented in §1 |
+| `data/za_validation/za_2023_validation_plant_identity.csv` | `3b24c2a04164e261c68a9fb19aaff80d0e3951db9b62cf1bc168c8fdf6a5df6e` | derived from `za_named_plant_inventory.csv` + `custom_powerplants.csv` + network | nylan-ramnauth | 2026-05-13 | 27/27 operating pass; gate interpreted at station→bus mapping level due to elec_s_34 aggregation |
+| `data/za_validation/za_2023_validation_cost_dual_frame.csv` | `104727d7197fc36046b100bc83fbaa23bd86b2d2d2f1a8af11aecc501d1718fa` | derived; CSIR + Nova CoLS from `za_cols_reference_values.csv`; EUR/ZAR from `za_eur_zar_fxrate_2023.csv` | nylan-ramnauth | 2026-05-13 | LS solver MC is 1000 EUR/MWh, not spec 100k; policy frame uses CSIR/Nova rates |
+| `data/za_validation/za_2023_validation_manifest.json` | `c3dc190dd0f036da2ca928bc023afd0e5fedd41e93188ec33030e5d10e5d858e` | derived by builder | nylan-ramnauth | 2026-05-13 | none |
+| `doc/za_2023_validation_report.md` | `aa5612029cd3e76cd52ba5efad6bf5f23df107aebc4beaaf08b347131f56870f` | author | nylan-ramnauth, opus | 2026-05-13 | none |
+| `notebooks/za_validation/12_acceptance/before_after_comparison.ipynb` | `9a188cee6890308aa7dc0e0a4213a5d1d64555af4fd7a5d58a7c1e269c38da23` | author; executed with pypsa-earth kernel | nylan-ramnauth | 2026-05-13 | none |
+| `doc/za_validation/figures/12_acceptance/before_after_comparison.html` | `32a453bf4d64894f8bea1d9da575adb15a5cab2b39cf797f836261375fd0f305` | nbconvert HTML export | nylan-ramnauth | 2026-05-13 | none |
+
+PyPSA-Earth HEAD at Module 13 completion: `git rev-parse HEAD` in the
+`6-codebases/repos/pypsa-earth` worktree at the time the report was published.
+PyPSA-RSA HEAD: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
+

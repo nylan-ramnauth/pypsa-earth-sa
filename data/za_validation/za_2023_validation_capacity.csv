@@ -1,0 +1,11 @@
+carrier,model_pnom_mw,anchor_pnom_mw,anchor_source,delta_mw,delta_pct,tolerance_pct,pass
+coal,40696.0,40696.0,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,2.0,True
+nuclear,1854.0,1854.0,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,1.0,True
+ocgt_diesel,3419.0,3419.0,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,5.0,True
+onwind,3372.92,3442.57,Eskom 2023 raw / Module 08 fleet anchors,-69.65,-2.02,2.0,False
+solar,2287.81,2287.09,Eskom 2023 raw / Module 08 fleet anchors,0.72,0.03,2.0,True
+csp,500.0,500.0,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,2.0,True
+load shedding,40013.03,,Eskom 2023 raw / Module 08 fleet anchors,,,,
+PHS,2904.0,2904.0,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,1.0,True
+hydro,683.02,683.02,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,5.0,True
+battery,20.0,20.0,Eskom 2023 raw / Module 08 fleet anchors,0.0,0.0,,

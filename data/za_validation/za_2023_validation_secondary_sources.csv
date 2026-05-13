@@ -1,0 +1,8 @@
+carrier,model_gwh,secondary_source,secondary_gwh,delta_pct,classification,limitation_ref,note
+onwind,7312.14,IRENA Electricity Statistics 2024 (ZA wind 2023),11613.0,-37.0,weather/profile,za_model_limitations.md §2,Capacity matches; ERA5 cutout CF under-prediction.
+solar,3557.41,IRENA Electricity Statistics 2024 (ZA solar PV 2023),5015.0,-29.1,weather/profile,za_model_limitations.md §3,Capacity matches; ERA5 cutout CF under-prediction.
+csp,805.54,IRENA Electricity Statistics 2024 (ZA CSP 2023),1375.0,-41.4,weather/profile + operational,za_model_limitations.md §4,"Reported separately, not folded into IRENA 'solar' aggregate (CSP-not-PV lock)."
+hydro,1398.36,"IRENA Electricity Statistics 2024 (ZA hydro 2023, includes PHS)",6286.0,-77.7,source-definition + weather/profile,"za_model_limitations.md §1, §6",IRENA hydro aggregates reservoir + run-of-river + PHS generation; ZA reports reservoir-only here. See harmonization CSV.
+demand,222351.1,OWID Electricity Mix 2023 (ZA total demand),217000.0,2.5,boundary,RSA Contracted Demand basis differs from OWID total-system; embedded-PV boundary not in scope.,"OWID figure is whole-system electricity demand; plausibility check only, not a primary pass/fail target."
+biomass,0.0,IRENA bioenergy 2023 (ZA),0.0,0.0,boundary,Other RE excluded by design; biomass residual inside Eskom Other RE aggregate.,Carrier omitted from fixed-fleet; reported as residual uncertainty per §11 of 13_validation_reporting_and_acceptance.md.
+coal,184406.0,IEA Electricity Information 2024 (ZA coal-fired electricity 2023),165627.0,11.3,availability + operational,za_model_limitations.md §5,"Eskom primary anchor matches IEA secondary; over-dispatch is internal LP behavior, not source disagreement."

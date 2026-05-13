@@ -1,0 +1,62 @@
+[
+  {
+    "artifact": "za_2023_validation_annual.csv",
+    "rows": 11,
+    "sha256": "ab16fdb598a4e5b05d86a934acf365820e3fdca4ffa73a21d061085a7f0fcdba",
+    "path": "data/za_validation/za_2023_validation_annual.csv"
+  },
+  {
+    "artifact": "za_2023_validation_capacity.csv",
+    "rows": 10,
+    "sha256": "55e7b5ef382c3f6272a9e231067f473d2ee623087b1d41e5c0b7759f2aea12e9",
+    "path": "data/za_validation/za_2023_validation_capacity.csv"
+  },
+  {
+    "artifact": "za_2023_validation_monthly.csv",
+    "rows": 120,
+    "sha256": "c7d56222bb1a1163d886255a61298eab27630a4d38916b95e15730b14da63efe",
+    "path": "data/za_validation/za_2023_validation_monthly.csv"
+  },
+  {
+    "artifact": "za_2023_validation_hourly_metrics.csv",
+    "rows": 10,
+    "sha256": "cf065068a9f691b641cd5d993f457e92c60880f357f34b983b68f7b0bccca88a",
+    "path": "data/za_validation/za_2023_validation_hourly_metrics.csv"
+  },
+  {
+    "artifact": "za_2023_load_shedding_validation.csv",
+    "rows": 16,
+    "sha256": "4dfdf016b15441b0fe5ae149cf46022b30bf3f2470225f8491b851b086d9a949",
+    "path": "data/za_validation/za_2023_load_shedding_validation.csv"
+  },
+  {
+    "artifact": "za_2023_validation_secondary_sources.csv",
+    "rows": 7,
+    "sha256": "7d204b47bbbaec08e1cf210a088c6af703d106a0961136f6cac1a1a4566bdc54",
+    "path": "data/za_validation/za_2023_validation_secondary_sources.csv"
+  },
+  {
+    "artifact": "za_2023_irena_carrier_harmonization.csv",
+    "rows": 8,
+    "sha256": "b3be9c1c538e67fcc78c274283d25aa6993389e1364c0229ac4ddeff5a6113bb",
+    "path": "data/za_validation/za_2023_irena_carrier_harmonization.csv"
+  },
+  {
+    "artifact": "za_2023_uncalibrated_vs_calibrated.csv",
+    "rows": 28,
+    "sha256": "23d5e9572681a0e192c9d8ceb9714fcb5f5775c0e33037045c4991135f7c662f",
+    "path": "data/za_validation/za_2023_uncalibrated_vs_calibrated.csv"
+  },
+  {
+    "artifact": "za_2023_validation_plant_identity.csv",
+    "rows": 30,
+    "sha256": "3b24c2a04164e261c68a9fb19aaff80d0e3951db9b62cf1bc168c8fdf6a5df6e",
+    "path": "data/za_validation/za_2023_validation_plant_identity.csv"
+  },
+  {
+    "artifact": "za_2023_validation_cost_dual_frame.csv",
+    "rows": 12,
+    "sha256": "104727d7197fc36046b100bc83fbaa23bd86b2d2d2f1a8af11aecc501d1718fa",
+    "path": "data/za_validation/za_2023_validation_cost_dual_frame.csv"
+  }
+]

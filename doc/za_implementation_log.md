@@ -1144,3 +1144,89 @@ This append-only log records implementation decisions, deviations, source inputs
   is `-1.31%`, above the `<=0.5%` gate. The minimum next action is portable
   non-OCGT calibration: PHS dispatch, VRE annual level calibration, and the
   residual coal/load-shedding split.
+
+## Module 13 — Validation Reporting and Acceptance (2026-05-13)
+
+- **Module:** 13 (validation reporting + acceptance, evidence-package only)
+- **Accepted solve:** `EAF-OPC-CAP`
+- **Network:** `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`
+- **Reference:** `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc` (Module 10 uncalibrated baseline)
+- **Actors:** nylan-ramnauth, opus
+- **Scope:** Produce validation evidence package against accepted Module 12 solve. No re-solve. No calibration fix. All carrier residuals accepted as documented in `doc/za_model_limitations.md`.
+
+### Decisions
+
+- Stage 4b (34-region) satisfied by construction: accepted solve is `elec_s_34`.
+- Stage 4a (10-region) recorded as N/A — covered by Stage 4b.
+- Per-carrier tolerance failures classified into `za_model_limitations.md` §1–8; no unclassified failures.
+- Plant-identity gate interpreted at station→bus mapping level (custom_powerplants.csv vs named inventory). The simplified `elec_s_34` topology aggregates individual stations to bus; per-bus disaggregation is not possible from the solved network, so the gate is run at the maximum-fidelity layer the model supports.
+- Cost dual frame: solver frame uses LP-internal 1,000 EUR/MWh load-shedding MC (model safety-valve actually in network, not the spec's 100,000 EUR/MWh figure); policy frame uses CSIR R116,570/MWh (primary) and Nova R9,530/MWh (sensitivity) at frozen 2023-12-29 EUR/ZAR = 20.3477.
+- Conditional acceptance: model accepted for national annual accounting, fixed-2023 monthly shape evidence, and 34-region reliability/myopic handoff. Storage-investment expansion, VRE-investment expansion, and hydrology-sensitive scenarios are gated pending Module 14 fixes.
+
+### Inputs consumed
+
+- `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`
+- `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc`
+- `data/za_validation/eskom_2023_targets_by_carrier.csv`
+- `data/za_validation/eskom_2023_hourly_clean.csv`
+- `data/za_audit/za_named_plant_inventory.csv`
+- `data/custom_powerplants.csv`
+- `data/za_audit/za_cols_reference_values.csv`
+- `data/za_audit/za_eur_zar_fxrate_2023.csv`
+- `doc/za_model_limitations.md` (referenced; not modified)
+
+### Outputs produced
+
+- `scripts/za_validation/build_module13_validation.py` (new)
+- `data/za_validation/za_2023_validation_annual.csv`
+- `data/za_validation/za_2023_validation_monthly.csv`
+- `data/za_validation/za_2023_validation_hourly_metrics.csv`
+- `data/za_validation/za_2023_validation_capacity.csv`
+- `data/za_validation/za_2023_load_shedding_validation.csv`
+- `data/za_validation/za_2023_validation_secondary_sources.csv`
+- `data/za_validation/za_2023_irena_carrier_harmonization.csv`
+- `data/za_validation/za_2023_uncalibrated_vs_calibrated.csv`
+- `data/za_validation/za_2023_validation_plant_identity.csv`
+- `data/za_validation/za_2023_validation_cost_dual_frame.csv`
+- `data/za_validation/za_2023_validation_manifest.json`
+- `doc/za_2023_validation_report.md` (new)
+- `notebooks/za_validation/12_acceptance/before_after_comparison.ipynb` (new)
+- `doc/za_validation/figures/12_acceptance/before_after_comparison.html`
+- `doc/za_validation/figures/12_acceptance/{annual_generation_bars,capacity_bars,july_dispatch_stack_before_after,scatter_model_vs_eskom}.png`
+- Provenance + manifest appends to `doc/za_data_provenance.md`, `data/za_audit/input_file_manifest.csv`, `data/za_audit/source_hashes.csv`.
+
+### Gate outcomes
+
+- 12 structural integrity gates: PASS (from Module 12; not re-run)
+- OPC + CAP audit gates: PASS (from Module 12; not re-run)
+- Plant identity gate (27 operating stations): 27/27 PASS
+- Stage 1 annual carrier subtotal vs `TOTAL_PHYSICAL_GENERATION` (≤0.5%): **FAIL** (+4.19% per Module 12 ledger)
+- Per-carrier annual tolerance bands: 1/9 pass (ocgt_diesel within ±5%); the rest classified to `za_model_limitations.md` §1–8
+- Stage 4b 34-region: PASS by construction
+- Provenance and hash-manifest completeness: PASS
+- Implementation log entry: this section
+
+### Deviations from spec `doc/active/calibration-plan/13_validation_reporting_and_acceptance.md`
+
+- Stage 3 hourly dispatch reported as diagnostic only — does not pass; matches the tolerance-table rule that hourly is diagnostic unless Stage 1 and Stage 2 pass cleanly.
+- Plant identity gate interpreted at station→bus mapping level rather than per-station network rows; aggregation is structural to `elec_s_34`.
+- Cost dual frame solver load-shedding MC corrected to actual 1,000 EUR/MWh (the spec's 100,000 EUR/MWh figure does not match the network configuration).
+
+## Doc Asset Export: Model Data Sources DAG — 2026-05-13 18:33
+
+- **Status:** complete
+- **Decisions taken:**
+  - Exported only the Mermaid DAG from `doc/active/calibration-plan/model_data_sources.md`; the surrounding report text was not rendered into the deliverables.
+  - Produced all three requested formats so the graph can be read in Obsidian and in non-vector viewers: `pdf`, `svg`, and `png`.
+  - Kept the export adjacent to the source document for discoverability instead of moving it into a separate report directory.
+- **Deviations from plan:**
+  - None.
+- **Source inputs used:**
+  - `doc/active/calibration-plan/model_data_sources.md`
+  - `@mermaid-js/mermaid-cli` v11.14.0 via `npx`
+- **Output artifacts produced:**
+  - `doc/active/calibration-plan/model_data_sources.graph.pdf`
+  - `doc/active/calibration-plan/model_data_sources.graph.svg`
+  - `doc/active/calibration-plan/model_data_sources.graph.png`
+- **Open follow-ups:**
+  - None.

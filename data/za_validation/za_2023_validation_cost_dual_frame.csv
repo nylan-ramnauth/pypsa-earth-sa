@@ -1,0 +1,13 @@
+frame,component,value,unit,note
+solver_eur,capacity_cost,292078539149.51,EUR,sum(p_nom_opt * capital_cost) over all generators
+solver_eur,marginal_cost_excl_load_shedding,9713588804.91,EUR,sum(p * marginal_cost) over all generators excluding load shedding
+solver_eur,load_shedding_solver_penalty,10747947510.57,EUR,"load shedding generator MC = 1000 EUR/MWh (model safety-valve, not spec 100k); raw penalty"
+solver_eur,total,312540075464.98,EUR,objective from solver = 20461536315.43
+policy_zar_csir_primary,capacity_cost,5943126491052.39,ZAR,@EUR/ZAR=20.3477 frozen 2023-12-29
+policy_zar_csir_primary,marginal_cost_excl_load_shedding,197649190925.61,ZAR,
+policy_zar_csir_primary,load_shedding_cost,1252888241307.34,ZAR,CSIR CoLS R116570/MWh × 10747948 MWh ENS
+policy_zar_csir_primary,total,7393663923285.34,ZAR,primary policy-frame total
+policy_zar_nova_sensitivity,capacity_cost,5943126491052.39,ZAR,
+policy_zar_nova_sensitivity,marginal_cost_excl_load_shedding,197649190925.61,ZAR,
+policy_zar_nova_sensitivity,load_shedding_cost,102427939775.75,ZAR,Nova Economics CoLS R9530/MWh × 10747948 MWh ENS
+policy_zar_nova_sensitivity,total,6243203621753.75,ZAR,lower-sensitivity policy total

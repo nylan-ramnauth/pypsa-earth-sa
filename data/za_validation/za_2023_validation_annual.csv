@@ -1,0 +1,12 @@
+carrier,eskom_label,model_gwh,eskom_gwh,delta_gwh,delta_pct,tolerance_pct,pass,classification,limitation_ref
+coal,Thermal Generation,184406.044,165626.914,18779.13,11.34,2.0,False,availability + operational,za_model_limitations.md §5 (coal over-dispatch substitution + EAF residual)
+nuclear,Nuclear Generation,8672.715,8126.616,546.1,6.72,1.0,False,availability,za_model_limitations.md §9 (residual; minor)
+ocgt_diesel,Eskom OCGT (incl. IPP + Eskom Gas),5500.0,5250.253,249.747,4.76,5.0,True,operational (CAP row),accepted via §9 (CAP row binds 5.5 TWh)
+onwind,Wind,7312.142,11613.364,-4301.222,-37.04,2.0,False,weather/profile,za_model_limitations.md §2 (ERA5 wind CF under-prediction)
+solar,PV,3557.412,5014.845,-1457.432,-29.06,2.0,False,weather/profile,za_model_limitations.md §3 (ERA5 solar CF under-prediction)
+csp,CSP,805.537,1375.349,-569.811,-41.43,2.0,False,weather/profile + operational,za_model_limitations.md §4 (ERA5 DNI + TES heuristic)
+load shedding,MLR + ILS + IOS,10747.948,16755.307,-6007.359,-35.85,,,operational (downstream),za_model_limitations.md §7 (downstream of PHS+VRE shortfall)
+PHS,Pumped Water Generation,147.146,4294.481,-4147.335,-96.57,1.0,False,operational (LP formulation),za_model_limitations.md §1 (LP energy-only arbitrage; no reserves)
+PHS_pumping,Pumped Water SCO Pumping,196.195,5657.906,-5461.712,-96.53,,,,
+hydro,Hydro Water Generation,1398.362,1991.805,-593.443,-29.79,5.0,False,weather/profile (inflow),za_model_limitations.md §6 (ERA5 runoff under-representation + seasonality)
+battery,(no Eskom anchor),53.57,,,,,,boundary,no Eskom 2023 anchor; reported diagnostically

@@ -1,0 +1,9 @@
+irena_category,za_treatment
+solar,compare against ZA solar (PV) + csp combined; also report ZA solar and csp separately to preserve CSP-not-PV lock
+wind,compare against ZA onwind directly; no offshore in 2023
+hydro,compare against reservoir hydro + run-of-river + pumped storage generation (IRENA includes PHS)
+bioenergy,normalize to ZA biomass; biomass omitted from fixed-fleet — reported as residual uncertainty inside Eskom Other RE aggregate
+thermal_coal,compare against ZA coal directly
+nuclear,compare against ZA nuclear directly (Koeberg)
+natural_gas,compare against ZA ocgt_diesel (Eskom Gas Generation is ~0; OCGT diesel + AVF fleet)
+total_re,compare against Wind + PV + CSP + Other RE (Other RE is Eskom aggregate carrier; biogenic-neutral CO2 = 0 per V1 accounting policy)
