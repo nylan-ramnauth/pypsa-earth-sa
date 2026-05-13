@@ -1,136 +1,136 @@
 Name,Fueltype,Capacity_MW,lat,lon,bus_module08_blank,assigned_region
-Arnot,Hard Coal,1050.0,-25.94444,29.79166,False,Middelburg
-Arnot_2,Hard Coal,1050.0,-25.94444,29.79166,False,Middelburg
-Camden,Hard Coal,570.0,-26.62007,30.09113,False,Highveld South
-Camden_2,Hard Coal,911.0,-26.62007,30.09113,False,Highveld South
-Duvha,Hard Coal,1150.0,-25.95954,29.34094,False,Middelburg
-Duvha_2,Hard Coal,1725.0,-25.95954,29.34094,False,Middelburg
-Grootvlei,Hard Coal,380.0,-26.76955,28.49951,False,Highveld South
-Grootvlei_2,Hard Coal,190.0,-26.76955,28.49951,False,Highveld South
-Hendrina,Hard Coal,760.0,-26.03138,29.60138,False,Middelburg
-Hendrina_2,Hard Coal,338.0,-26.62007,30.09113,False,Highveld South
-Kelvin,Hard Coal,160.0,-26.115776,28.1138,False,Johannesburg
-Kendal,Hard Coal,1920.0,-26.08805,28.96888,False,Witbank
-Kendal_2,Hard Coal,1920.0,-26.08805,28.96888,False,Witbank
-Kriel,Hard Coal,1215.0,-26.25404,29.18008,False,Witbank
-Kriel_2,Hard Coal,1425.0,-26.25404,29.18008,False,Witbank
-Kusile,Hard Coal,2880.0,-25.92007,28.924942,False,Witbank
-Kusile_2,Hard Coal,720.0,-25.92007,28.924942,False,Witbank
-Lethabo,Hard Coal,1779.0,-26.74027,27.975,False,Vaal
-Lethabo_2,Hard Coal,1779.0,-26.74027,27.975,False,Vaal
-Majuba,Hard Coal,1818.0,-27.09555,29.77055,False,Highveld South
-Majuba_2,Hard Coal,1989.0,-27.09555,29.77055,False,Highveld South
-Matimba,Hard Coal,1845.0,-23.66777,27.61277,False,Lephalale
-Matimba_2,Hard Coal,1845.0,-23.66777,27.61277,False,Lephalale
-Matla,Hard Coal,1725.0,-26.28036,29.14229,False,Witbank
-Matla_2,Hard Coal,1725.0,-26.28036,29.14229,False,Witbank
-Medupi,Hard Coal,3600.0,-23.42,27.33,False,Lephalale
-Medupi_2,Hard Coal,717.0,-23.42,27.33,False,Lephalale
-Tutuka,Hard Coal,1755.0,-26.77565,29.35212,False,Highveld South
-Tutuka_2,Hard Coal,1755.0,-26.77565,29.35212,False,Highveld South
-Koeberg,Nuclear,1854.0,-33.673594,18.428247,False,Peninsula
-Ankerlig,Oil,1332.0,-33.592,18.4607,False,Peninsula
-Gourikwa,Oil,740.0,-34.16526,21.96077,False,Outeniqua
-Acacia,Oil,171.0,-33.88408,18.53361,False,Peninsula
-PortRex,Oil,171.0,-33.02739,27.88382,False,East London
-Gariep,Hydro,360.0,-30.62396,25.50403,False,Hydra Central
-Vanderkloof,Hydro,240.0,-29.99337,24.73384,False,Hydra Central
-Avon,Oil,670.0,-29.251,31.0941,False,Pinetown
-Dedisa,Oil,335.0,-33.4433,25.4022,False,Gqeberha
-Kaxu Solar One,Solar,100.0,-28.8793,19.5929,False,Namaqualand
-Khi Solar One,Solar,50.0,-28.5364,21.0782,False,Kimberley
-Bokpoort CSP project,Solar,50.0,-28.7333,21.9955,False,Kimberley
-!XiNa Solar One,Solar,100.0,-28.8906,19.5918,False,Namaqualand
-Karoshoek Solar One,Solar,100.0,-28.4819,21.5204,False,Kimberley
-Kathu Solar Park,Solar,100.0,-27.6095,23.0276,False,Kalahari
-Neusberg Hydro Electrical Project,Hydro,10.0,-28.752697,20.5335,False,Namaqualand
-Stortemelk Hydro,Hydro,4.22,-28.514154,28.410144,False,Ladysmith
-Kruisvallei Hydro,Hydro,3.8,-28.242503,28.307683,False,Ladysmith
-ColleyWobbles,Hydro,65.0,-32.05,28.58333,False,Mthatha
-ENERGY Joburg Landfill Gas to Electircity Project,Bioenergy,7.56,-26.194954,28.032528,False,Johannesburg
-Ngodwana Energy,Bioenergy,25.0,-25.480898,30.974305,False,Lowveld
-Sappi,Bioenergy,144.0,-25.3447,30.394,False,Middelburg
-Drakensberg,Hydro,1000.0,-28.56283,29.08275,False,Ladysmith
-Ingula,Hydro,1324.0,-28.165,29.3512,False,Ladysmith
-Palmiet,Hydro,400.0,-34.19722,18.97361,False,Peninsula
-Steenbras,Hydro,180.0,-34.153,18.9,False,Peninsula
-Hex,Battery,20.0,-33.64,19.48,False,Outeniqua
-Amakhala,Wind,137.9,-32.692,26.1083,False,Gqeberha
-Aurora,Wind,90.8,-32.83425,17.995611,False,West Coast
-Chaba,Wind,20.6,-32.5901,27.9623,False,East London
-Cookhouse,Wind,135.0,-32.7333,25.9093,False,Gqeberha
-Copperton,Wind,102.0,-34.1286,24.4818,False,Gqeberha
-Dassieklip,Wind,26.19,-34.2275,19.383,False,Outeniqua
-Dorper,Wind,97.0,-31.4809,26.4393,False,Hydra Central
-Exelsior,Wind,31.9,-34.2423,20.2307,False,Outeniqua
-Garob,Wind,135.9,-29.959,22.4131,False,Kimberley
-Golden_valley,Wind,117.72,-32.8875,25.9418,False,Gqeberha
-Gouda,Wind,135.2,-33.2564,19.0184,False,Outeniqua
-Grassridge,Wind,59.8,-33.6551,25.5915,False,Gqeberha
-Hopefield,Wind,65.4,-33.0928,18.3989,False,West Coast
-Jeffreysbay,Wind,133.86,-34.0107,24.8808,False,Gqeberha
-Kangnas,Wind,136.7,-29.498217,18.333566,False,Namaqualand
-Karusa,Wind,139.8,-32.8858,20.6567,False,Greater Komsberg
-Khobab,Wind,137.7,-30.4344,19.5538,False,Vredendal
-Kouga,Wind,77.6,-34.14656,24.7004,False,Gqeberha
-Loeriesfontein2,Wind,138.2,-30.380404,19.589285,False,Vredendal
-Mulilo_de_aar1,Wind,139.0,-30.716667,23.920556,False,Hydra Central
-Mulilo_de_aar2,Wind,96.5,-30.7349,23.8665,False,Hydra Central
-Metrowind,Wind,86.6,-33.96222,25.24444,False,Gqeberha
-Noblesfontein,Wind,72.75,-31.750833,23.173333,False,Hydra Central
-Nojoli,Wind,86.6,-32.771,25.91566,False,Gqeberha
-Noupoort,Wind,79.1,-31.172814,25.016449,False,Hydra Central
-Nxuba,Wind,138.9,-32.73767,25.96684,False,Gqeberha
-Oyster_bay,Wind,140.0,-34.11639,24.64889,False,Gqeberha
-Perdekraal_east,Wind,107.76,-33.054444,20.100278,False,Greater Komsberg
-Gibson_bay,Wind,110.0,-34.1286,24.4818,False,Gqeberha
-Roggeveld,Wind,140.0,-32.917233,20.509089,False,Greater Komsberg
-Sere,Wind,100.0,-31.496857,18.063376,False,Vredendal
-Soetwater,Wind,139.4,-32.754,20.6396,False,Outeniqua
-Tsitsikama,Wind,94.8,-34.0735,24.5067,False,Gqeberha
-Waainek,Wind,23.4,-32.5901,26.4569,False,Gqeberha
-Wesley_ciskei,Wind,32.7,-33.29028,27.37222,False,Gqeberha
-Aries Solar,Solar,9.65,-29.496506,20.785119,False,Namaqualand
-De Aar Solar PV,Solar,48.25,-30.6234,24.0283,False,Hydra Central
-Droogfontein Solar PV Project,Solar,48.25,-28.6133,24.7468,False,Kimberley
-Greefspan PV Power Plant1,Solar,10.0,-29.393781,23.307708,False,Kimberley
-Herbert PV Power Plant,Solar,19.9,-29.0019,23.8019,False,Kimberley
-Kalkbult,Solar,72.5,-30.160833,24.135833,False,Hydra Central
-Kathu Solar Energy Facility,Solar,75.0,-27.612908,23.025886,False,Kalahari
-Konkoonsies Solar,Solar,9.65,-28.889147,19.555275,False,Namaqualand
-Lesedi Power Company,Solar,64.0,-28.3154,23.3501,False,Kimberley
-Letsatsi Power Company,Solar,64.0,-28.9134,25.9199,False,Welkom
-Mulilo Renewable Energy Solar PV De Aar,Solar,9.65,-30.6279,24.005453,False,Hydra Central
-Mulilo Renewable Energy Solar PV Prieska,Solar,19.9,-29.967661,22.319683,False,Kimberley
-RustMo1 Solar Farm,Solar,6.76,-25.737892,27.418314,False,Rustenburg
-SlimSun Swartland Solar Park,Solar,5.0,-33.35,18.529708,False,West Coast
-Solar Capital De Aar,Solar,75.0,-30.604753,24.095239,False,Hydra Central
-Soutpan Solar Park,Solar,28.0,-22.991667,29.251667,False,Polokwane
-Touwsrivier Project,Solar,36.0,-33.410389,19.9276,False,Outeniqua
-Witkop Solar Park,Solar,30.0,-24.041667,29.361667,False,Polokwane
-Boshoff Solar Park,Solar,60.0,-28.4628,25.1891,False,Kimberley
-Jasper Power Company,Solar,75.0,-28.3133,23.3751,False,Kimberley
-Linde,Solar,36.8,-30.9986,24.6506,False,Hydra Central
-Project Dreunberg,Solar,69.9,-30.8373,26.2055,False,Hydra Central
-Sishen Solar Facility,Solar,74.0,-27.583611,22.932778,False,Kalahari
-Solar Capital De Aar 3,Solar,75.0,-30.604753,24.095239,False,Hydra Central
-Upington Solar PV,Solar,8.9,-28.5493,21.1038,False,Kimberley
-Vredendal,Solar,8.8,-31.634886,18.505356,False,Vredendal
-Adams Solar PV 2,Solar,75.0,-27.378969,23.012989,False,Kalahari
-Electra Capital (Pty) Ltd,Solar,75.0,-32.4148,18.7379,False,West Coast
-Mulilo Prieska PV,Solar,75.0,-30.0375,22.317222,False,Kimberley
-Mulilo Sonnedix Prieska PV,Solar,75.0,-30.024444,22.362778,False,Kimberley
-Pulida Solar Park,Solar,75.0,-29.086944,24.903333,False,Kimberley
-Tom Burke Solar Park,Solar,60.0,-23.072778,27.989444,False,Lephalale
-Aggeneys Solar,Solar,40.0,-29.235794,18.897656,False,Namaqualand
-Droogfontein Solar Power,Solar,75.0,-26.854002,26.642111,False,Carletonville
-Dyasons Klip 1,Solar,75.0,-28.5493,21.1038,False,Kimberley
-Dyasons Klip 2,Solar,75.0,-28.5707,21.0613,False,Kimberley
-Konkoonsies II Solar PV Facility,Solar,75.0,-28.898811,19.557383,False,Namaqualand
-Sirius Solar PV Project One,Solar,75.0,-28.547361,21.09495,False,Kimberley
-Loeriesfontein Orange,Solar,75.0,-30.918109,19.441043,False,Vredendal
-Greefspan PV Power Plant2,Solar,55.0,-29.3857,23.3172,False,Kimberley
-De Wildt,Solar,50.0,-25.6332,27.9307,False,Pretoria
-Bokamoso,Solar,67.9,-27.1583,26.4009,False,Carletonville
-Waterloo Solar Park,Solar,75.0,-27.0322,24.7931,False,Kalahari
-Zeerust,Solar,75.0,-25.5748,26.0718,False,Carletonville
+Arnot,Hard Coal,1050.0,-25.94444,29.79166,True,Middelburg
+Arnot_2,Hard Coal,1050.0,-25.94444,29.79166,True,Middelburg
+Camden,Hard Coal,570.0,-26.62007,30.09113,True,Highveld South
+Camden_2,Hard Coal,911.0,-26.62007,30.09113,True,Highveld South
+Duvha,Hard Coal,1150.0,-25.95954,29.34094,True,Middelburg
+Duvha_2,Hard Coal,1725.0,-25.95954,29.34094,True,Middelburg
+Grootvlei,Hard Coal,380.0,-26.76955,28.49951,True,Highveld South
+Grootvlei_2,Hard Coal,190.0,-26.76955,28.49951,True,Highveld South
+Hendrina,Hard Coal,760.0,-26.03138,29.60138,True,Middelburg
+Hendrina_2,Hard Coal,338.0,-26.62007,30.09113,True,Highveld South
+Kelvin,Hard Coal,160.0,-26.115776,28.1138,True,Johannesburg
+Kendal,Hard Coal,1920.0,-26.08805,28.96888,True,Witbank
+Kendal_2,Hard Coal,1920.0,-26.08805,28.96888,True,Witbank
+Kriel,Hard Coal,1215.0,-26.25404,29.18008,True,Witbank
+Kriel_2,Hard Coal,1425.0,-26.25404,29.18008,True,Witbank
+Kusile,Hard Coal,2880.0,-25.92007,28.924942,True,Witbank
+Kusile_2,Hard Coal,720.0,-25.92007,28.924942,True,Witbank
+Lethabo,Hard Coal,1779.0,-26.74027,27.975,True,Vaal
+Lethabo_2,Hard Coal,1779.0,-26.74027,27.975,True,Vaal
+Majuba,Hard Coal,1818.0,-27.09555,29.77055,True,Highveld South
+Majuba_2,Hard Coal,1989.0,-27.09555,29.77055,True,Highveld South
+Matimba,Hard Coal,1845.0,-23.66777,27.61277,True,Lephalale
+Matimba_2,Hard Coal,1845.0,-23.66777,27.61277,True,Lephalale
+Matla,Hard Coal,1725.0,-26.28036,29.14229,True,Witbank
+Matla_2,Hard Coal,1725.0,-26.28036,29.14229,True,Witbank
+Medupi,Hard Coal,3600.0,-23.42,27.33,True,Lephalale
+Medupi_2,Hard Coal,717.0,-23.42,27.33,True,Lephalale
+Tutuka,Hard Coal,1755.0,-26.77565,29.35212,True,Highveld South
+Tutuka_2,Hard Coal,1755.0,-26.77565,29.35212,True,Highveld South
+Koeberg,Nuclear,1854.0,-33.673594,18.428247,True,Peninsula
+Ankerlig,Oil,1332.0,-33.592,18.4607,True,Peninsula
+Gourikwa,Oil,740.0,-34.16526,21.96077,True,Outeniqua
+Acacia,Oil,171.0,-33.88408,18.53361,True,Peninsula
+PortRex,Oil,171.0,-33.02739,27.88382,True,East London
+Gariep,Hydro,360.0,-30.62396,25.50403,True,Hydra Central
+Vanderkloof,Hydro,240.0,-29.99337,24.73384,True,Hydra Central
+Avon,Oil,670.0,-29.251,31.0941,True,Pinetown
+Dedisa,Oil,335.0,-33.4433,25.4022,True,Gqeberha
+Kaxu Solar One,Solar,100.0,-28.8793,19.5929,True,Namaqualand
+Khi Solar One,Solar,50.0,-28.5364,21.0782,True,Kimberley
+Bokpoort CSP project,Solar,50.0,-28.7333,21.9955,True,Kimberley
+!XiNa Solar One,Solar,100.0,-28.8906,19.5918,True,Namaqualand
+Karoshoek Solar One,Solar,100.0,-28.4819,21.5204,True,Kimberley
+Kathu Solar Park,Solar,100.0,-27.6095,23.0276,True,Kalahari
+Neusberg Hydro Electrical Project,Hydro,10.0,-28.752697,20.5335,True,Namaqualand
+Stortemelk Hydro,Hydro,4.22,-28.514154,28.410144,True,Ladysmith
+Kruisvallei Hydro,Hydro,3.8,-28.242503,28.307683,True,Ladysmith
+ColleyWobbles,Hydro,65.0,-32.05,28.58333,True,Mthatha
+ENERGY Joburg Landfill Gas to Electircity Project,Bioenergy,7.56,-26.194954,28.032528,True,Johannesburg
+Ngodwana Energy,Bioenergy,25.0,-25.480898,30.974305,True,Lowveld
+Sappi,Bioenergy,144.0,-25.3447,30.394,True,Middelburg
+Drakensberg,Hydro,1000.0,-28.56283,29.08275,True,Ladysmith
+Ingula,Hydro,1324.0,-28.165,29.3512,True,Ladysmith
+Palmiet,Hydro,400.0,-34.19722,18.97361,True,Peninsula
+Steenbras,Hydro,180.0,-34.153,18.9,True,Peninsula
+Hex,Battery,20.0,-33.64,19.48,True,Outeniqua
+Amakhala,Wind,137.9,-32.692,26.1083,True,Gqeberha
+Aurora,Wind,90.8,-32.83425,17.995611,True,West Coast
+Chaba,Wind,20.6,-32.5901,27.9623,True,East London
+Cookhouse,Wind,135.0,-32.7333,25.9093,True,Gqeberha
+Copperton,Wind,102.0,-34.1286,24.4818,True,Gqeberha
+Dassieklip,Wind,26.19,-34.2275,19.383,True,Outeniqua
+Dorper,Wind,97.0,-31.4809,26.4393,True,Hydra Central
+Exelsior,Wind,31.9,-34.2423,20.2307,True,Outeniqua
+Garob,Wind,135.9,-29.959,22.4131,True,Kimberley
+Golden_valley,Wind,117.72,-32.8875,25.9418,True,Gqeberha
+Gouda,Wind,135.2,-33.2564,19.0184,True,Outeniqua
+Grassridge,Wind,59.8,-33.6551,25.5915,True,Gqeberha
+Hopefield,Wind,65.4,-33.0928,18.3989,True,West Coast
+Jeffreysbay,Wind,133.86,-34.0107,24.8808,True,Gqeberha
+Kangnas,Wind,136.7,-29.498217,18.333566,True,Namaqualand
+Karusa,Wind,139.8,-32.8858,20.6567,True,Greater Komsberg
+Khobab,Wind,137.7,-30.4344,19.5538,True,Vredendal
+Kouga,Wind,77.6,-34.14656,24.7004,True,Gqeberha
+Loeriesfontein2,Wind,138.2,-30.380404,19.589285,True,Vredendal
+Mulilo_de_aar1,Wind,139.0,-30.716667,23.920556,True,Hydra Central
+Mulilo_de_aar2,Wind,96.5,-30.7349,23.8665,True,Hydra Central
+Metrowind,Wind,86.6,-33.96222,25.24444,True,Gqeberha
+Noblesfontein,Wind,72.75,-31.750833,23.173333,True,Hydra Central
+Nojoli,Wind,86.6,-32.771,25.91566,True,Gqeberha
+Noupoort,Wind,79.1,-31.172814,25.016449,True,Hydra Central
+Nxuba,Wind,138.9,-32.73767,25.96684,True,Gqeberha
+Oyster_bay,Wind,140.0,-34.11639,24.64889,True,Gqeberha
+Perdekraal_east,Wind,107.76,-33.054444,20.100278,True,Greater Komsberg
+Gibson_bay,Wind,110.0,-34.1286,24.4818,True,Gqeberha
+Roggeveld,Wind,140.0,-32.917233,20.509089,True,Greater Komsberg
+Sere,Wind,100.0,-31.496857,18.063376,True,Vredendal
+Soetwater,Wind,139.4,-32.754,20.6396,True,Outeniqua
+Tsitsikama,Wind,94.8,-34.0735,24.5067,True,Gqeberha
+Waainek,Wind,23.4,-32.5901,26.4569,True,Gqeberha
+Wesley_ciskei,Wind,32.7,-33.29028,27.37222,True,Gqeberha
+Aries Solar,Solar,9.65,-29.496506,20.785119,True,Namaqualand
+De Aar Solar PV,Solar,48.25,-30.6234,24.0283,True,Hydra Central
+Droogfontein Solar PV Project,Solar,48.25,-28.6133,24.7468,True,Kimberley
+Greefspan PV Power Plant1,Solar,10.0,-29.393781,23.307708,True,Kimberley
+Herbert PV Power Plant,Solar,19.9,-29.0019,23.8019,True,Kimberley
+Kalkbult,Solar,72.5,-30.160833,24.135833,True,Hydra Central
+Kathu Solar Energy Facility,Solar,75.0,-27.612908,23.025886,True,Kalahari
+Konkoonsies Solar,Solar,9.65,-28.889147,19.555275,True,Namaqualand
+Lesedi Power Company,Solar,64.0,-28.3154,23.3501,True,Kimberley
+Letsatsi Power Company,Solar,64.0,-28.9134,25.9199,True,Welkom
+Mulilo Renewable Energy Solar PV De Aar,Solar,9.65,-30.6279,24.005453,True,Hydra Central
+Mulilo Renewable Energy Solar PV Prieska,Solar,19.9,-29.967661,22.319683,True,Kimberley
+RustMo1 Solar Farm,Solar,6.76,-25.737892,27.418314,True,Rustenburg
+SlimSun Swartland Solar Park,Solar,5.0,-33.35,18.529708,True,West Coast
+Solar Capital De Aar,Solar,75.0,-30.604753,24.095239,True,Hydra Central
+Soutpan Solar Park,Solar,28.0,-22.991667,29.251667,True,Polokwane
+Touwsrivier Project,Solar,36.0,-33.410389,19.9276,True,Outeniqua
+Witkop Solar Park,Solar,30.0,-24.041667,29.361667,True,Polokwane
+Boshoff Solar Park,Solar,60.0,-28.4628,25.1891,True,Kimberley
+Jasper Power Company,Solar,75.0,-28.3133,23.3751,True,Kimberley
+Linde,Solar,36.8,-30.9986,24.6506,True,Hydra Central
+Project Dreunberg,Solar,69.9,-30.8373,26.2055,True,Hydra Central
+Sishen Solar Facility,Solar,74.0,-27.583611,22.932778,True,Kalahari
+Solar Capital De Aar 3,Solar,75.0,-30.604753,24.095239,True,Hydra Central
+Upington Solar PV,Solar,8.9,-28.5493,21.1038,True,Kimberley
+Vredendal,Solar,8.8,-31.634886,18.505356,True,Vredendal
+Adams Solar PV 2,Solar,75.0,-27.378969,23.012989,True,Kalahari
+Electra Capital (Pty) Ltd,Solar,75.0,-32.4148,18.7379,True,West Coast
+Mulilo Prieska PV,Solar,75.0,-30.0375,22.317222,True,Kimberley
+Mulilo Sonnedix Prieska PV,Solar,75.0,-30.024444,22.362778,True,Kimberley
+Pulida Solar Park,Solar,75.0,-29.086944,24.903333,True,Kimberley
+Tom Burke Solar Park,Solar,60.0,-23.072778,27.989444,True,Lephalale
+Aggeneys Solar,Solar,40.0,-29.235794,18.897656,True,Namaqualand
+Droogfontein Solar Power,Solar,75.0,-26.854002,26.642111,True,Carletonville
+Dyasons Klip 1,Solar,75.0,-28.5493,21.1038,True,Kimberley
+Dyasons Klip 2,Solar,75.0,-28.5707,21.0613,True,Kimberley
+Konkoonsies II Solar PV Facility,Solar,75.0,-28.898811,19.557383,True,Namaqualand
+Sirius Solar PV Project One,Solar,75.0,-28.547361,21.09495,True,Kimberley
+Loeriesfontein Orange,Solar,75.0,-30.918109,19.441043,True,Vredendal
+Greefspan PV Power Plant2,Solar,55.0,-29.3857,23.3172,True,Kimberley
+De Wildt,Solar,50.0,-25.6332,27.9307,True,Pretoria
+Bokamoso,Solar,67.9,-27.1583,26.4009,True,Carletonville
+Waterloo Solar Park,Solar,75.0,-27.0322,24.7931,True,Kalahari
+Zeerust,Solar,75.0,-25.5748,26.0718,True,Carletonville

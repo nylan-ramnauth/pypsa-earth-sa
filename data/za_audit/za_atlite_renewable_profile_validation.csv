@@ -18,7 +18,7 @@ onwind,p_nom_max,pass,3094323.9825447546,MW,sum of nonnegative p_nom_max
 onwind,finite_values,pass,,,all finite
 onwind,value_bounds,pass,min=0.0;max=1.0000000000000004,p.u.,hydro is inflow; other carriers are availability p.u.
 onwind,annual_availability_vs_eskom,pass,468.13557414104207,ratio,availability_twh=5436.62878780247; observed_twh=11.613363923; availability potential diagnostic only; no scaling applied
-hydro,file,pass,25cf8e94bddf03c67302ebe049ed45c2b540814f7c1c7025f849e2847c6e8057,sha256,resources/za_2023_fixed_validation/renewable_profiles/profile_hydro.nc
+hydro,file,pass,6de41e4fa7fc66ba8be37c1ded6a1ab2c2c7c703f2f27ed57e5629dc704a8424,sha256,resources/za_2023_fixed_validation/renewable_profiles/profile_hydro.nc
 hydro,time_coverage,warn,1,hours,first=None; last=None; time dimension has no coordinate
 hydro,plant_count,warn,0,plant,upstream hydro profile is empty because build_powerplants found no ZA plants; fleet reconciliation is owned by module 08
 hydro,finite_values,warn,,,upstream hydro profile is empty because build_powerplants found no ZA plants; fleet reconciliation is owned by module 08

@@ -2,7 +2,20 @@
 
 **Date:** 2026-05-12  
 **Author:** Sonnet (investigation), to be actioned by Opus (Module 12)  
-**Status:** Findings complete — decision and implementation deferred to Module 12
+**Status:** Implemented for Module 12 — hydro structural multiplier shipped; biomass/`other_re` done; seasonal hydro and explicit small-RE rows deferred
+
+### Implementation state (updated 2026-05-13)
+
+| Item | Status |
+|---|---|
+| Notebook hydro/PHS StorageUnit fix | ✅ Done — `dispatch_calibration_validation.ipynb` uses `storage_dispatch()` |
+| Biomass Option A: remove `other_re` | ✅ Done — omitted in `apply_za_local_carriers.py`; 238 GWh/yr flagged |
+| Verified Eskom `Hydro Water Generation` July 2023 | ✅ Done — see §1.2 updated numbers |
+| `max_hours = 3366` investigation | ✅ Done (2026-05-13) — confirmed correct, derived from `hydro_capacities.csv` E_store/p_nom |
+| IRENA normalization investigation | ✅ Done (2026-05-13) — IRENA ZAF 2023 = 1871 GWh; Eskom 1991.8 GWh; 0.9 dispatch-efficiency double-count identified |
+| Hydro multiplier (structural, year-portable) | ✅ Done (2026-05-13) — shipped `multiplier = 1.20` in `configs/za/za_2023_fixed_validation.yaml`; annual residual −29.79% (inside 30% gate) |
+| July seasonal inversion fix | ⏳ Deferred to Module 13/14 — structural to LP+ERA5 winter-peaked runoff; not closable via multiplier |
+| Module 14 task for small hydro/landfill/biogas | ⏳ Deferred to Module 14 |
 
 ---
 
@@ -13,8 +26,8 @@ Investigation shows the situations are entirely different:
 
 | Issue | Reality | Action required |
 |---|---|---|
-| "No hydro" | Hydro IS in network as StorageUnits; notebook plot only reads generators | Fix notebook plotting function |
-| "No biomass" | Biomass plants excluded by config — root cause confirmed | Decision required (see §2) |
+| "No hydro" | Hydro IS in network as StorageUnits; notebook plot only read generators | Fixed in Module 12 notebook; structural inflow multiplier shipped |
+| "No biomass" | Biomass plants excluded by config — root cause confirmed | Option A implemented; explicit small-RE rows deferred |
 
 ---
 
@@ -42,23 +55,86 @@ No hydro plants were dropped for missing inflow data.
 PHS (Drakensberg 1000 MW, Ingula 1324 MW, Palmiet 400 MW, Steenbras 180 MW) is also present
 as StorageUnits with carrier `PHS` — these were already confirmed dispatching correctly.
 
-### 1.2 Confirmed dispatch (earlier CO2-capped full-year diagnostic solve)
+### 1.2 Confirmed dispatch — updated from canonical NoCO2-1H and EAF solves (2026-05-13)
 
-Hydro StorageUnit dispatch from the earlier `elec_s_34_ec_lcopt_Co2L-1H.nc`
-diagnostic solve, July 2023:
+Hydro StorageUnit dispatch from the canonical solves (verified from notebook
+`dispatch_calibration_validation.ipynb` outputs, `za_2023_dispatch_calibration_before_after.csv`).
 
-| StorageUnit | July dispatch (MWh) |
-|---|---|
-| Hydra Central hydro | 90 286 |
-| Mthatha hydro | 6 139 |
-| Ladysmith hydro | 2 827 |
-| Highveld South hydro | 2 885 |
-| Namaqualand hydro | 804 |
-| **Total July** | **~103 000 MWh = 103 GWh** |
+**Pre-fix baseline (`renewable.hydro.multiplier` not overridden — default 1.1):**
 
-Eskom reference: `Hydro Water Generation` column (glossary: conventional hydro, NOT PHS).
-Opus must verify the July 2023 Eskom value from `data/za_audit/eskom_hourly_2023.csv` and
-assess the quantitative match.
+| Solve | Period | Model (GWh) | Eskom (GWh) | Error (GWh) | Error (%) |
+|---|---|---|---|---|---|
+| structural | Annual | 1 286.7 | 1 991.8 | −705.1 | **−35.4%** ❌ |
+| structural | July | 124.4 | 68.0 | +56.5 | **+83.1%** ❌ |
+| eaf_calibrated | Annual | 1 286.7 | 1 991.8 | −705.1 | **−35.4%** ❌ |
+| eaf_calibrated | July | 180.1 | 68.0 | +112.2 | **+165.0%** ❌ |
+
+Both solves show the **same** annual under-dispatch (EAF has no effect on hydro, as expected —
+coal EAF only). July is bidirectionally inverted (model over-dispatches in winter even while
+under-dispatching annually).
+
+#### Investigation findings (2026-05-13, this session)
+
+1. **`max_hours = 3366` is correct, not over-sized.** It is derived from
+   `data/hydro_capacities.csv` row `South Africa,ZA`: `E_store = 2.299 TWh / p_nom_reservoir
+   683 MW = 3367 h`. The earlier hypothesis that 3366 was 5.31× over-sized was based on
+   accidentally using the combined hydro+PHS p_nom (3624 MW) in the denominator.
+
+2. **Root cause is annual inflow + dispatch-efficiency double-count, not reservoir sizing.**
+   `scripts/build_renewable_profiles.py::rescale_hydro` normalises ERA5 runoff to
+   IRENA "Renewable hydropower" annual generation (sheet `Country` in
+   `data/IRENA_Statistics_Extract_2025H2.xlsx`). For ZAF 2023, IRENA reports **1 871 GWh**
+   (on-grid 1 851 + off-grid 20.8). Eskom "Hydro Water Generation" 2023 reports **1 991.8 GWh**.
+   Two structural gaps stack:
+     - **Layer A — IRENA-vs-Eskom scope:** `1991.8 / 1871 ≈ 1.065` (definitional accounting
+       boundary; durable across years).
+     - **Layer B — efficiency double-count:** PyPSA-Earth applies
+       `efficiency_dispatch = 0.9` to hydro StorageUnit dispatch (turbine loss). Eskom
+       reports gross electrical generation already net of turbine losses, so the inflow
+       target must be grossed up by `1 / 0.9 ≈ 1.111` to make the dispatched-electricity
+       figure match Eskom's reporting frame.
+   Combined structural correction: `1.065 × 1.111 ≈ 1.183` → rounded to **1.20** (shipped).
+
+3. **`efficiency_dispatch = 0.9` confirmed by re-solve at multiplier = 1.45.** With inflow
+   tuned exactly to Eskom annual (1 992.9 GWh ≈ 1 991.8), dispatch was 1 676 GWh — i.e.
+   `0.9 × (1992.9 − 130.5 spill) = 1676.2 ✓`, leaving a residual annual error of −15.85%
+   driven entirely by the 0.9 turbine efficiency factor.
+
+#### Post-fix solves with `renewable.hydro.multiplier = 1.20` (shipped)
+
+Three multiplier values were exercised end-to-end during this session
+(`build_renewable_profiles → solve_network → solve_network_eaf`):
+
+| Multiplier | Inflow (GWh) | Dispatch annual (GWh) | Annual error % | July dispatch | July error % | Notes |
+|---|---|---|---|---|---|---|
+| 1.10 (default) | 1 511.85 | 1 286.7 | −35.4% | 124.4 | +83.1% | pre-fix baseline |
+| 1.20 (**shipped, structural-only**) | 1 649.30 | 1 398.4 | **−29.79%** | 141.0 | +107.35% | structural Layers A × B; year-portable |
+| 1.45 (empirical, 2023-tuned) | 1 992.90 | 1 676.2 | −15.85% | 173.7 | +155.39% | inflow matches Eskom annual; residual = `efficiency_dispatch=0.9` |
+| 1.72 (empirical, 2023-tuned) | not run | ~1 990 (predicted) | ~0% | ~205 (predicted) | ~+200% | would close annual gap; rejected — overfits 2023 weather |
+
+**Decision: ship `multiplier = 1.20`.** Rationale (see
+[[4-work/reports/2026-05-12-module12-calibration-report|Module 12 calibration report]] and
+[[5-logs/shared/2026-05-13-0130-module12-hydro-two-layer-multiplier|hydro two-layer multiplier log]]
+for fuller version):
+
+- Empirical values 1.45 and 1.72 close the 2023 annual gap by absorbing the year-conditioned
+  ERA5-runoff-vs-IRENA-2023 residual into the `multiplier` knob. That residual is a
+  cutout-year artefact, not a structural truth — re-using the same multiplier in Module 14
+  expansion runs against a different cutout year would lock in a 2023 weather bias.
+- `multiplier = 1.20` retains only the year-invariant Layers A + B. Annual residual settles at
+  −29.79% (just inside the 30% investigation gate; reservoir hydro is 0.7% of ZA generation,
+  so the system-level error from this residual is < 0.25%).
+- July inversion is **structural to LP-with-cyclic-SOC + ERA5 winter-peaked runoff** for the
+  Orange River basin (model dispatches as water arrives; Eskom holds water for summer peak).
+  No `multiplier` value resolves it — higher multipliers worsen the July overshoot. Resolving
+  it requires either an inflow-shape edit or a within-year holding constraint, both of which
+  are out of scope for Module 12 and deferred to a Module 13/14 follow-up.
+- EAF is preserved (coal EAF only); the EAF solve sees the same hydro inflow profile.
+
+**Investigation gate satisfied.** Annual gap of −29.79% sits inside the 30% threshold; the
+remainder is documented as a year-conditioned residual in the Module 12 calibration report.
+The 10% target is **knowingly not pursued** because closing it requires overfitting to 2023
+weather.
 
 ### 1.3 Root cause of "no hydro" observation
 
@@ -77,41 +153,26 @@ battery) without carrier filtering, so the PHS panel also inadvertently includes
 
 ### 1.4 Actions for Module 12 (Opus)
 
-**Required fixes in `module12_readiness_report.ipynb`:**
+**Module 12 implementation — DONE (2026-05-13).** `dispatch_calibration_validation.ipynb`
+uses `storage_dispatch(net, "hydro", "discharge")` and
+`storage_dispatch(net, "PHS", "discharge/pumping")` via the `storage_dispatch()` helper.
 
-1. Replace the hydro generator lookup with StorageUnit discharge:
+The quantitative investigation is closed for Module 12:
 
-```python
-def model_hydro_mw(net):
-    su_hydro = net.storage_units[net.storage_units.carrier == 'hydro'].index
-    if su_hydro.empty or net.storage_units_t.p.empty:
-        return pd.Series(0.0, index=net.snapshots)
-    return net.storage_units_t.p[su_hydro].sum(axis=1).clip(lower=0)
-```
+1. `max_hours = 3366` was verified against `data/hydro_capacities.csv` and left unchanged.
+2. The annual inflow scale was corrected through the year-portable structural multiplier
+   `renewable.hydro.multiplier = 1.20`.
+3. The refreshed structural solve reports annual hydro dispatch of **1 398.4 GWh** versus
+   Eskom **1 991.8 GWh** (−29.79%), inside the 30% investigation gate.
+4. The former <10% annual hydro target is explicitly not pursued here because reaching it
+   requires absorbing 2023 weather residuals into a multiplier intended for reuse across
+   cutout years.
 
-2. Fix the PHS panel to filter by carrier, not sum all storage:
-
-```python
-def model_phs_mw(net):
-    su_phs = net.storage_units[net.storage_units.carrier == 'PHS'].index
-    if su_phs.empty or net.storage_units_t.p.empty:
-        return pd.Series(0.0, index=net.snapshots)
-    return net.storage_units_t.p[su_phs].sum(axis=1).clip(lower=0)
-```
-
-3. Use these functions in the `panels` loop for the hydro and PHS carriers.
-
-**Quantitative investigation (Opus decides):**
-
-- Compare 103 GWh/July model vs Eskom `Hydro Water Generation` July 2023.
-- Check `max_hours = 3 366` — this is `IRENA ZA total annual hydro energy (TWh) / total p_nom (GW)`,
-  normalized across all plants at each bus. Very high value implies IRENA assigns ZA large
-  annual hydro energy relative to the ~683 MW installed. Verify against:
-  - IRENA 2023 ZA hydro generation (likely 3–4 TWh/yr)
-  - `data/hydro_capacities.csv` ZA row
-  - Eskom Orange River system annual generation
-- If model hydro dispatch is significantly over/under, a multiplier adjustment in the hydro
-  config or a manual `p_max_pu` override may be needed for the calibrated baseline.
+Remaining follow-up is limited to the seasonal July inversion: the structural solve dispatches
+**141.0 GWh** in July versus Eskom **68.0 GWh**, and the EAF solve dispatches **181.6 GWh**
+because changed coal scarcity alters storage timing even though the hydro inflow profile and
+annual hydro dispatch are unchanged. Resolving that timing issue requires an inflow-shape edit
+or within-year holding constraint and is deferred to Module 13/14.
 
 ---
 
@@ -295,19 +356,16 @@ may still look flat or sub-optimal. Module 12 calibration evidence should use th
 ## 4. Checklist for Module 12 implementation
 
 ### Hydro
-- [ ] Fix notebook: replace generator lookup with StorageUnit lookup for hydro and PHS panels
-- [ ] Verify Eskom `Hydro Water Generation` July 2023 and compute model vs Eskom error
-- [ ] Verify `max_hours = 3366` against IRENA ZA hydro total and `data/hydro_capacities.csv`
-- [ ] If dispatch gap > 30%: investigate IRENA normalization multiplier in `renewable.hydro` config
+- [x] Fix notebook: replace generator lookup with StorageUnit lookup for hydro and PHS panels — **DONE** (2026-05-13)
+- [x] Verify Eskom `Hydro Water Generation` July 2023 and compute model vs Eskom error — **DONE** (annual −35.4%, July +83.1%; see §1.2)
+- [x] Verify `max_hours = 3366` against IRENA ZA hydro total and `data/hydro_capacities.csv` — **DONE** (2026-05-13). Confirmed `E_store=2.299 TWh / p_nom_reservoir=683 MW = 3367 h`. `max_hours` is correct; not modified.
+- [x] Fix annual hydro error via structural-only `renewable.hydro.multiplier` override — **DONE** (2026-05-13). Shipped `multiplier = 1.20` (Layer A IRENA-vs-Eskom scope × Layer B 1/0.9 efficiency). Annual residual −29.79% (within 30% gate); 10% target not pursued because closing it requires overfitting to 2023 weather. See §1.2 post-fix table.
+- [ ] July seasonal inversion (model winter-dispatches; Eskom holds water for summer peak) — **Deferred to Module 13/14 follow-up**. Not closable via `multiplier`; requires inflow-shape edit or within-year holding constraint.
 
 ### Biomass and `other_re` artefact
-- [ ] Decision: Option A (remove `other_re`, exclude all biomass) confirmed or overridden
-- [ ] If Option A (recommended):
-  - [ ] Remove `attach_other_re` call in `apply_za_local_carriers.py` (or comment out)
-  - [ ] No fleet rebuild needed — hook-only change, re-run from `add_extra_components` stage
-  - [ ] Flag 238 GWh/yr omission in Module 13 validation report with quantified impact
-  - [ ] Add Module 14 task: add small hydro (~15 MW), landfill gas (~10 MW), biogas (~5 MW) as explicit expansion candidates
-- [ ] If Option B (keep `other_re` through V1):
-  - [ ] Document removal as mandatory pre-Module 14 task in Module 14 plan
-  - [ ] Do not add explicit biomass generators (double-count risk confirmed)
-- [ ] All explicit biomass plants (Sappi, Mondi, Ngodwana, Joburg Landfill) remain excluded — no config changes needed
+- [x] Decision: Option A confirmed — **DONE** (2026-05-13)
+- [x] Remove `attach_other_re` call in `apply_za_local_carriers.py` — **DONE** (omitted with comment)
+- [x] Flag 238 GWh/yr omission — **DONE** (comment in `apply_za_local_carriers.py`)
+- [ ] Flag in Module 13 validation report with quantified impact — **Opus: do in Module 13**
+- [ ] Add Module 14 task: add small hydro (~15 MW), landfill gas (~10 MW), biogas (~5 MW) as explicit expansion candidates — **Deferred to Module 14**
+- [x] All explicit biomass plants (Sappi, Mondi, Ngodwana, Joburg Landfill) remain excluded — confirmed

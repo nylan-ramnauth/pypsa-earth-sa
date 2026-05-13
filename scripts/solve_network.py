@@ -1113,6 +1113,19 @@ def extra_functionality(n, snapshots):
         logger.info("setting H2 color mix")
         set_h2_colors(n)
 
+    za_oc_cfg = snakemake.config.get("za", {}).get("operational_constraints", {})
+    za_oc_input = getattr(snakemake.input, "operational_constraints", None)
+    if za_oc_cfg.get("enable", False) and za_oc_input:
+        logger.info("setting ZA operational constraints")
+        from za_fleet.operational_constraints import apply as za_apply_operational_constraints
+
+        audit = za_apply_operational_constraints(n, snapshots, snakemake)
+        audit_out = getattr(snakemake.output, "za_op_constraints_audit", None)
+        if audit_out:
+            Path(audit_out).parent.mkdir(parents=True, exist_ok=True)
+            pd.DataFrame(audit).to_csv(audit_out, index=False)
+            logger.info("wrote ZA operational constraints audit to %s", audit_out)
+
     add_co2_sequestration_limit(n, snapshots)
 
 

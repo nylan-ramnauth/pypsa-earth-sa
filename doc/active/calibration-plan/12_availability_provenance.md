@@ -1,8 +1,9 @@
 # Module 12 — Availability Source Provenance
 
-**Status:** gate satisfied — `lc1_NoCO2-1H` structural baseline passes all 12
-acceptance gates (2026-05-12). EAF overlay implementation is unblocked and ready
-to proceed. Steps 1–6 below are the implementation spec; nothing has been coded yet.
+**Status:** implemented and solved (2026-05-12). `lc1_NoCO2-1H` structural
+baseline passed all 12 acceptance gates, then the coal-only station-weekly EAF
+overlay was applied to `lc1_NoCO2-1H-EAF`. The solved EAF network is optimal and
+the Module 12 validation notebook reports 12/12 PASS for `eaf_calibrated`.
 
 ## Primary source
 
@@ -34,7 +35,10 @@ to proceed. Steps 1–6 below are the implementation spec; nothing has been code
 - `data/za_audit/pypsa_rsa_availability_audit.csv` — discovery sweep that
   located the workbook in the pypsa-rsa source registry.
 
-## EAF mapping plan (next PR, not implemented yet)
+## EAF mapping implementation
+
+Implemented in `scripts/za_fleet/apply_coal_eaf.py` and wired through
+`apply_za_coal_eaf` / `solve_network_eaf` in `Snakefile`.
 
 1. Parse `plant_availability.xlsx:outage_profiles`. Filter `scenario == "BASE"`.
 2. For each (station, week): `avail = clip(1 - planned - unplanned, 0, 1)`.
@@ -46,8 +50,26 @@ to proceed. Steps 1–6 below are the implementation spec; nothing has been code
 5. Write hourly coal `p_max_pu` per generator. Stations without a weekly
    match fall back to fleet capacity-weighted mean availability; unmatched MW
    is logged in the audit CSV.
-6. Audit columns: `source_workbook`, `sheet`, `scenario`, `outage_types`,
-   `station_to_bus_mapping_rule`, `fallback_used`, `unmatched_mw`.
+6. Audit columns include `source_workbook`, `sheet`, `scenario`, `outage_types`,
+   `station_to_bus_mapping_rule`, `fallback_used`, `unmatched_mw`,
+   `coal_generators_overlaid`, `n_snapshots`, `mean_fleet_availability`, and
+   `non_coal_p_max_pu_changed`.
+
+## Generated artifacts
+
+- Prepared EAF network:
+  `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`
+- Pre-EAF backup:
+  `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H.pre_eaf.nc`
+- Solved EAF network:
+  `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`
+- Audit:
+  `data/za_audit/za_coal_eaf_audit.csv`
+
+Audit summary: `unmatched_mw = 160` (Kelvin only), `any_fallback_used = True`,
+`non_coal_p_max_pu_changed = False`, and `mean_fleet_availability = 0.635`.
+Only coal `generators_t.p_max_pu` columns differ between the `.pre_eaf.nc`
+backup and the prepared EAF network.
 
 ## Decisions
 

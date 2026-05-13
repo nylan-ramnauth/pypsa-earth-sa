@@ -1,3 +1,3 @@
 constraint,status,source,notes
 structural_baseline,defined,Module 12 plan,"No CO2 cap, no Sasol, no other_re, corrected PHS duration, no coal EAF."
-coal_eaf,pending,Must be logged before calibrated solve is accepted,Cleaned Eskom PCLF/UCLF+OCLF are system-wide; use documented carrier/station source before treating as coal EAF.
+coal_eaf,applied_or_external,Must be logged before calibrated solve is accepted,Cleaned Eskom PCLF/UCLF+OCLF are system-wide; use documented carrier/station source before treating as coal EAF.

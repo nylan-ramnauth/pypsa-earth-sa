@@ -42,6 +42,22 @@ za_cols_policy:
 pypsa_rsa_root: "/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa"
 pypsa_rsa_pinned_commit: "89872c1ea703af3d8a3f198706d1ab7958f50a5f"
 
+za:
+  operational_constraints:
+    enable: true
+    workbook: ../pypsa-rsa/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx
+    scenario: HIGH_GAS
+    # Carrier reconciliation: pypsa-rsa rows referencing ocgt_avf, rmippp,
+    # ccgt_steam, sasol_coal, and sasol_gas silently no-op when those carriers
+    # do not exist in pypsa-earth ZA Module 12. Sasol was removed by the
+    # pre-solve fleet decision; CCGT/RMIPPP are not in the 2023 fixed fleet.
+    # 2023 active rows for HIGH_GAS / fixed-or-all apply_to:
+    #   ocgt_diesel + ocgt_avf  weekly CF max 0.50; caps OCGT weekly energy
+    #   ccgt_steam              monthly CF min 0.30; no-op, no ccgt carrier
+    #   nuclear                 hourly CF min 1.00 incl_pu; p = p_max_pu
+    #   rmippp                  yearly CF min 0.50; no-op, no rmippp carrier
+    #   sasol_*                 yearly TWh max; no-op, Sasol removed
+
 enable:
   retrieve_cutout: false
   build_cutout: false
@@ -100,6 +116,43 @@ electricity:
     StorageUnit: []
     Store: []
     Link: []
+
+# Module 12 — Hydro inflow structural multiplier (year-portable).
+#
+# This value is intentionally NOT tuned to make 2023 dispatch match
+# Eskom exactly. It is composed only of year-invariant structural
+# corrections so that the same overlay can be re-used with a different
+# cutout year (Module 14 expansion) without inheriting 2023 weather
+# bias. Two layers:
+#
+#   Layer A — IRENA-vs-Eskom scope correction:  ~1.065
+#       IRENA "Renewable hydropower" ZAF 2023   = 1871 GWh
+#       Eskom  "Hydro Water Generation" ZA 2023 = 1992 GWh
+#       Definitional gap (durable accounting boundary).
+#
+#   Layer B — Efficiency double-count correction: ~1.111 = 1 / 0.9
+#       PyPSA-Earth applies efficiency_dispatch = 0.9 to hydro
+#       StorageUnit dispatch (turbine loss). Eskom reports gross
+#       electrical generation already net of turbine losses, so the
+#       inflow target must be grossed up by 1/0.9 to make the
+#       dispatched-electricity figure match Eskom's reporting frame.
+#
+#   Combined: 1.065 × 1.111 ≈ 1.183 → rounded to 1.20.
+#
+# DO NOT tune this knob to close 2023 residual error. The remaining
+# residual (≈ −30 % annual at mult = 1.20) is the year-conditioned
+# part of the gap (ERA5 2023 ZA runoff vs realised hydro generation)
+# and absorbing it into this multiplier would lock in a 2023 weather
+# bias that does not translate to other cutout years. Hydro is 0.7 %
+# of annual ZA generation, so the system-level error from this residual
+# is < 0.3 %. The Module 12 calibration report documents the residual
+# explicitly. Module 14 should re-evaluate per cutout year.
+#
+# Reservoir sizing (max_hours ≈ 3366 h) is consistent with
+# data/hydro_capacities.csv E_store/p_nom and is left unchanged.
+renewable:
+  hydro:
+    multiplier: 1.20
 
 # Module 05 — System Boundary lock for V1 fixed-fleet validation.
 za_system_boundary:

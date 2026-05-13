@@ -1277,6 +1277,124 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         script:
             "scripts/solve_network.py"
 
+    rule apply_za_coal_eaf:
+        # Module 12 — overlay station-level weekly coal availability from
+        # pypsa-rsa plant_availability.xlsx (BASE scenario) onto the prepared
+        # lc1_NoCO2-1H network. Coal carrier only; no other carrier mutated.
+        input:
+            network_in="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H.nc",
+            workbook=config["pypsa_rsa_root"]
+            + "/scenarios/Coal_Flexibilisation/sub_scenarios/plant_availability.xlsx",
+            custom_pp="data/custom_powerplants.csv",
+        output:
+            network_out="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H-EAF.nc",
+            backup="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H.pre_eaf.nc",
+            audit="data/za_audit/za_coal_eaf_audit.csv",
+        log:
+            "logs/" + RDIR + "apply_za_coal_eaf.log",
+        threads: 1
+        resources:
+            mem_mb=4000,
+        script:
+            "scripts/za_fleet/apply_coal_eaf.py"
+
+    rule solve_network_eaf:
+        # Mirror of solve_network with hard-pinned EAF wildcards. Required so
+        # the EAF .nc takes its input from apply_za_coal_eaf rather than from
+        # prepare_network, which would re-derive it without the overlay.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+        input:
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            audit="data/za_audit/za_coal_eaf_audit.csv",
+        output:
+            "results/" + RDIR + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF_python.log",
+        benchmark:
+            "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
+    rule solve_network_eaf_opc:
+        # Module 12 — solve the coal-EAF network with pypsa-rsa operational
+        # constraints overlaid inside solve_network.py extra_functionality.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+        input:
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
+            operational_constraints=os.path.abspath(
+                config.get("za", {})
+                .get("operational_constraints", {})
+                .get(
+                    "workbook",
+                    config.get("pypsa_rsa_root", "")
+                    + "/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx",
+                )
+            ),
+        output:
+            network="results/" + RDIR + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC.nc",
+            za_op_constraints_audit="data/za_audit/za_operational_constraints_audit_{clusters}_{opts}.csv",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC_python.log",
+        benchmark:
+            "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
+    rule materialize_za_op_constraints_audit:
+        # Stable Module 12 audit path for reports/notebooks.
+        input:
+            "data/za_audit/za_operational_constraints_audit_34_NoCO2-1H.csv",
+        output:
+            "data/za_audit/za_operational_constraints_audit.csv",
+        shell:
+            "cp {input} {output}"
+
+    # Resolve wildcard ambiguity: the hardcoded EAF filename also matches the
+    # wildcard patterns of prepare_network / solve_network.
+    ruleorder: apply_za_coal_eaf > prepare_network
+    ruleorder: solve_network_eaf > solve_network
+    ruleorder: solve_network_eaf_opc > solve_network_eaf
+    ruleorder: solve_network_eaf_opc > solve_network
+
 
 if config["monte_carlo"]["options"].get("add_to_snakefile", False) == True:
 

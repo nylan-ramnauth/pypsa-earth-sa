@@ -31,8 +31,12 @@ during Module 11 smoke analysis and the Fix A/B notebook (`module12_readiness_re
 
 Hydro and biomass carrier issues are documented separately in
 `doc/active/calibration-plan/pre_12_hydro_and_biomass.md` — read that document before
-starting the calibration sequence. The hydro issue requires a notebook fix; the biomass
-issue requires a config decision (default: exclude for V1, see §2.4 of that document).
+starting the calibration sequence.
+
+**Status (2026-05-13):**
+- Biomass/`other_re`: ✅ Option A implemented — `other_re` removed from `apply_za_local_carriers.py`.
+- Hydro notebook fix: ✅ Done — `dispatch_calibration_validation.ipynb` uses `storage_dispatch()`.
+- Hydro structural multiplier: ✅ Done — `renewable.hydro.multiplier = 1.20`; annual residual −29.79% at 1 398.4 GWh vs Eskom 1 991.8 GWh. July inversion is structural to ERA5 winter runoff + cyclic-SOC LP and deferred to Module 13/14.
 
 ---
 
@@ -161,19 +165,52 @@ the 2023 dispatch is over-optimistic (model over-produces, under-sheds) relative
    transmission expansion locked (`ll: c1`). Network at:
    `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc`.
 
-2. **EAF-calibrated solve — with aggregate carrier-level monthly EAF**
-   Apply monthly EAF from Eskom data as `p_max_pu` per carrier (coal, nuclear, OCGT, etc.).
-   Formula: `p_max_pu[t] = monthly_EAF[carrier][month(t)]`.
-   Source: Eskom 2023 monthly EAF by carrier or by station (aggregate to carrier if needed).
-   All before/after deltas are measured against the Module 12 structural baseline.
+2. **EAF-calibrated solve — station-level weekly coal EAF** ✅ DONE (2026-05-12)
+   Applied `pypsa-rsa` `plant_availability.xlsx:outage_profiles` BASE scenario
+   to coal generators only as hourly `generators_t.p_max_pu`. Split
+   `custom_powerplants.csv` rows (`X`, `X_2`) share the same station profile and
+   are capacity-weighted to bus level. Kelvin (160 MW) falls back to the matched
+   coal fleet mean. The EAF solve is optimal at:
+   `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`.
+   The notebook reports 12/12 PASS for `eaf_calibrated`; annual coal
+   over-production improves from +28.3 TWh to +17.8 TWh.
 
-3. **Diagnostic cross-check — pypsa-rsa station-level EAF**
-   Compare the aggregate-EAF solve against pypsa-rsa's `plant_availability.xlsx` station-level
-   EAF values. This is a diagnostic, not a mandatory calibration step.
+3. **Diagnostic cross-check — residual mix errors** ⚠️ OPC IMPLEMENTED; OCGT RESIDUAL REMAINS (2026-05-13)
 
-4. **Upgrade to station-level EAF** (only if step 2 fails Stage 3 validation gates)
-   If the aggregate carrier-level EAF cannot reproduce 2023 dispatch within tolerance, upgrade
-   to station-level `p_max_pu` per generator row using pypsa-rsa's `plant_availability.xlsx`.
+   One calibration blocker remains before Module 13:
+
+   **A — OCGT LP substitution artifact.**
+   When coal is constrained by EAF, OCGT dispatch jumps from 6.93 TWh to 17.37 TWh,
+   far exceeding Eskom 2023 OCGT actuals = **5.24 TWh** (Eskom OCGT 3.566 +
+   Dispatchable IPP OCGT 1.677, per `data/za_validation/eskom_2023_targets_by_carrier.csv`).
+   The LP is using OCGT as a cheap scarcity substitute instead of shedding load.
+
+   **Implemented overlay (2026-05-13):** ported
+   `pypsa-rsa/scripts/custom_constraints.py::apply_operational_constraints` into
+   `scripts/za_fleet/operational_constraints.py` and activated the HIGH_GAS
+   `operational_constraints.xlsx` row in the new solve target
+   `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC.nc`.
+   The audit confirms `ocgt_diesel + ocgt_avf` weekly CF max 50% and nuclear
+   hourly CF min 100% are applied; `ccgt_steam`, `rmippp`, and `sasol_*` no-op
+   because the carriers are absent from the Module 12 fixed fleet.
+
+   **Actual result:** OCGT falls from 17.37 TWh to **14.62 TWh**, and load
+   shedding rises from 0.04 TWh to **2.24 TWh**. This is an improvement but not
+   closure: the source 50% weekly CF row implies an annual OCGT-diesel ceiling
+   of `0.5 × 3.419 GW × 8760 h = 14.98 TWh`, so it cannot by itself force the
+   Eskom 5.24 TWh envelope. Do not replace this with bespoke code without a new
+   source-backed decision; Module 13 must either accept the documented residual
+   or add a source-row change to the operational-constraints workbook.
+
+   **B — Hydro dispatch gap. ✅ DONE (2026-05-13).**
+   Model annual hydro = **1 398.4 GWh** vs Eskom **1 991.8 GWh**; residual
+   **−29.79%** at `renewable.hydro.multiplier = 1.20` (Layer A IRENA-vs-Eskom
+   scope × Layer B 1/0.9 efficiency). July inversion is structural to ERA5
+   winter-peaked runoff + cyclic SOC and is deferred to Module 13/14.
+
+4. **Non-coal availability overlays** — out of scope for the coal EAF PR.
+   Nuclear, OCGT, hydro, and CSP availability overlays require separate
+   source-backed implementation plans.
 
 5. **Operational constraint additions** (fuel ramp rates, minimum up/down time) — optional,
    add only if step 2 fails and step 4 still fails. Document any additions in the log.
@@ -222,6 +259,10 @@ If the solver returns infeasible on any stage:
 6. Document the failure and resolution in `doc/za_implementation_log.md`.
 
 ## Optional Constraints, In Order
+
+The OCGT cap and all single-line CF/energy constraints below are now sourced
+from `operational_constraints.xlsx` via the ported applier. New entries should
+be added as workbook rows under the active scenario, not as bespoke code.
 
 ```text
 OCGT annual/weekly energy caps

@@ -989,3 +989,117 @@ This append-only log records implementation decisions, deviations, source inputs
   - `module12_validation_checks.csv` reports PASS for the structural baseline:
     no CO2 cap, no Sasol, no `other_re`, PHS max hours, hydro StorageUnits, all
     five no-extendable gates, and both CSP bus-complete Link/Store checks.
+
+## 2026-05-12 — Module 12 coal EAF overlay
+
+- **Scope:** coal-only station-level weekly EAF overlay. No marginal costs,
+  capacities, CO2 settings, CSP wiring, or transmission expansion settings were
+  changed. The accepted structural baseline
+  `elec_s_34_ec_lc1_NoCO2-1H.nc` was not rewritten.
+- **New script:** `scripts/za_fleet/apply_coal_eaf.py`.
+  - Reads `pypsa-rsa/scenarios/Coal_Flexibilisation/sub_scenarios/plant_availability.xlsx`
+    sheet `outage_profiles`, filters `scenario == "BASE"`, and computes
+    `availability = clip(1 - planned - unplanned, 0, 1)`.
+  - Maps `custom_powerplants.csv` Hard Coal rows to workbook stations by
+    stripping terminal numeric suffixes (`Arnot_2 -> Arnot`), then
+    capacity-weights station profiles to bus-level coal availability.
+  - Treats Kelvin (160 MW) as unmatched per the Module 12 mapping table and
+    applies the matched-fleet capacity-weighted fallback to `Midrand coal`.
+  - Broadcasts ISO weeks to hourly snapshots; week 53 reuses week 52.
+  - Writes `generators_t.p_max_pu` for coal generators only and asserts
+    non-coal `p_max_pu` columns are unchanged.
+- **Snakefile:** added `apply_za_coal_eaf` and `solve_network_eaf` in the
+  non-Monte-Carlo solve branch. `solve_network_eaf` uses constrained wildcards
+  for `clusters=34` and `opts=NoCO2-1H` because `solve_network.py` reads those
+  wildcards at runtime. Added rule ordering:
+  `apply_za_coal_eaf > prepare_network` and
+  `solve_network_eaf > solve_network`.
+- **Generated artifacts:**
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H.pre_eaf.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`
+  - `data/za_audit/za_coal_eaf_audit.csv`
+- **Verification completed:**
+  - `py_compile` passed for `scripts/za_fleet/apply_coal_eaf.py`.
+  - Snakemake dry-runs resolve the EAF prepared and solved targets to the new
+    rules. The real solve was run with `--allowed-rules solve_network_eaf` to
+    avoid rewriting stale-metadata structural baseline intermediates.
+  - EAF solve termination: optimal; objective `1.4276944139667538e10`.
+  - Audit: `non_coal_p_max_pu_changed = False`, `unmatched_mw = 160`,
+    `mean_fleet_availability = 0.635`.
+  - Prepared EAF vs `.pre_eaf.nc`: only six coal `generators_t.p_max_pu`
+    columns changed.
+  - Solved EAF network keeps coal marginal cost `40.561225`, nuclear marginal
+    cost `16.391057`, CSP Generator `p_nom` total `500 MW`, and all five
+    extendable flag classes at zero.
+  - `dispatch_calibration_validation.ipynb` executed in place. Cell
+    `module12-09` reports 12/12 PASS for both `structural` and
+    `eaf_calibrated`.
+  - Coal annual delta improves from `+28.253 TWh` to `+17.777 TWh`. This meets
+    the informational direction-of-change target, though residual OCGT and
+    PHS/hydro calibration gaps remain open.
+
+## 2026-05-13 — Module 12 operational-constraints overlay
+
+- **Scope:** ported the pypsa-rsa operational-constraints applier for the
+  single-year Module 12 solve path. No reserve-margin, CCGT steam auxiliary
+  feed, multi-investment, CO2, Sasol, or non-coal availability overlays were
+  introduced.
+- **Source:** `pypsa-rsa/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx`,
+  sheet `operational_constraints`, scenario `HIGH_GAS`, year column `2023`.
+- **Switch:** `za.operational_constraints.{enable, workbook, scenario}` in
+  `configs/za/za_2023_fixed_validation.yaml`. `solve_network.py` applies the
+  overlay only when the rule provides a named `operational_constraints` input,
+  so the structural and EAF-only solves remain unchanged even though the config
+  documents the active Module 12 setting.
+- **New script:** `scripts/za_fleet/operational_constraints.py`.
+  - Reads the configured workbook scenario and registers per-period Linopy
+    energy/CF constraints with `n.model.add_constraints`.
+  - Documents pypsa-rsa carrier reconciliation: `ocgt_avf`, `ccgt_steam`,
+    `rmippp`, `sasol_coal`, and `sasol_gas` intentionally no-op when absent
+    from the fixed ZA fleet.
+  - Writes `data/za_audit/za_operational_constraints_audit.csv` with applied
+    and skipped workbook rows.
+- **Snakefile:** added `solve_network_eaf_opc` for
+  `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC.nc`
+  plus a materialized audit target
+  `data/za_audit/za_operational_constraints_audit.csv`.
+- **Applied constraints in the 2023 fixed fleet:**
+  - `ocgt_diesel + ocgt_avf`: weekly CF max 50%, matched `ocgt_diesel`,
+    constraint `max-ocgt_diesel + ocgt_avf-week-all-2023`.
+  - `nuclear`: hourly CF min 100% with `incl_pu=True`, constraint
+    `min-nuclear-hour-all`.
+  - `ccgt_steam`, `rmippp`, `sasol_coal`, and `sasol_gas` were
+    `skipped_no_match` by design.
+- **Generated artifacts:**
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC.nc`
+  - `data/za_audit/za_operational_constraints_audit_34_NoCO2-1H.csv`
+  - `data/za_audit/za_operational_constraints_audit.csv`
+  - refreshed `data/za_validation/za_2023_dispatch_calibration_before_after.csv`,
+    capacity-factor, hourly-error, and module12 gate CSVs
+  - refreshed validation notebook and HTML report.
+- **Before/after:** the regenerated three-column
+  `data/za_validation/za_2023_dispatch_calibration_before_after.csv` reports
+  OCGT `6.934 -> 17.368 -> 14.623 TWh`, coal
+  `193.877 -> 183.373 -> 183.845 TWh`, and load shedding
+  `0.0001 -> 0.0406 -> 2.244 TWh` for structural / EAF / EAF+OPC.
+- **Report:** see
+  `4-work/reports/2026-05-12-module12-calibration-report.md`, section
+  `Operational-constraints overlay (2026-05-13)`.
+- **Residual:** the mechanism works and the OCGT weekly cap binds within solver
+  tolerance, but the workbook's 50% weekly CF cap allows about `14.98 TWh/year`
+  on the current `3.419 GW` OCGT-diesel fleet. EAF+OPC therefore remains above
+  the Eskom OCGT target (`14.623 TWh` vs `5.243 TWh`) and needs a
+  source-backed workbook row revision before Module 12 can claim OCGT closure.
+- **Verification completed:**
+  - `py_compile` passed for `scripts/za_fleet/operational_constraints.py` and
+    `scripts/solve_network.py`.
+  - Snakemake dry-run resolves the EAF+OPC target and audit target; the real
+    solve was run with `--allowed-rules solve_network_eaf_opc` to avoid
+    rewriting stale-metadata upstream intermediates.
+  - EAF+OPC solve termination: optimal; objective `1.5403718598672714e10`.
+  - Notebook execution in place completed and HTML export refreshed at
+    `doc/za_validation/figures/12_dispatch_calibration/dispatch_calibration_validation.html`.
+  - `module12_validation_checks.csv` reports PASS for all 12 structural gates
+    across structural, EAF, and EAF+OPC networks, plus PASS for the OPC OCGT
+    and nuclear audit gates.

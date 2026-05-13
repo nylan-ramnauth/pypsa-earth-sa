@@ -1,0 +1,19 @@
+metric,value,unit,note
+coal capacity,40696.0,MW,"6 generators, 6 buses"
+nuclear capacity,1854.0,MW,"1 generators, 1 buses"
+ocgt_diesel capacity,3419.0,MW,"5 generators, 5 buses"
+hydro capacity,683.02,MW,"0 generators, 5 buses"
+PHS capacity,2904.0,MW,"0 generators, 2 buses"
+onwind capacity,3372.92,MW,"34 generators, 34 buses"
+solar capacity,2287.81,MW,"34 generators, 34 buses"
+csp capacity,500.0,MW,"34 generators, 34 buses"
+load shedding capacity,40013.025,MW,"68 generators, 68 buses"
+total_buses,1606.0,count,base OSM network before 34-region simplification
+total_lines,2138.0,count,base OSM network before 34-region simplification
+total_transformers,315.0,count,base OSM network before 34-region simplification
+total_line_length_km,76680.097,km,base OSM network before 34-region simplification
+validation_regions,34.0,count,Eskom local-area supply-region clustering target
+fixed_validation_lines,82.0,count,"lines in solved fixed validation network, all non-extendable"
+custom_corridors_added,10.0,count,Module 09 back-fill interregional corridors
+rsa_existing_220kv_plus_lines,324.0,count,source audit GeoJSON features
+rsa_planned_tdp_lines,102.0,count,source audit GeoJSON features
