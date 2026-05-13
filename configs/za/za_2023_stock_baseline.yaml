@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: PyPSA-Earth and PyPSA-Eur Authors
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# Module 13b — Stock PyPSA-Earth South Africa 2023 baseline.
+# This run keeps the calibrated demand year, 34-region busmap, and fixed-grid
+# solve mode, but reverts fleet/cost/dispatch-calibration choices to stock
+# PyPSA-Earth defaults for a clean stock-vs-calibrated comparison.
+
+countries: ["ZA"]
+
+costs:
+  year: 2030
+  output_currency: EUR
+
+# Module 04 audit references retained because shared ZA audit rules reference
+# the RSA repo metadata even when they are not re-run for this stock baseline.
+pypsa_rsa_root: "/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa"
+pypsa_rsa_pinned_commit: "0831ce243f0badbba6f09b418c2b57774ea89a5f"
+
+enable:
+  retrieve_cutout: false
+  build_cutout: false
+  custom_busmap: true
+
+run:
+  name: "za_2023_stock_baseline"
+  shared_cutouts: true
+
+za_stock_baseline: true
+
+scenario:
+  simpl: [""]
+  clusters: [34]
+  ll: ["c1"]
+  opts: ["NoCO2-1H"]
+
+snapshots:
+  start: "2023-01-01"
+  end: "2024-01-01"
+  inclusive: "left"
+
+atlite:
+  default: cutout-2023-era5
+  cutouts:
+    cutout-2023-era5:
+      module: era5
+      dx: 0.3
+      dy: 0.3
+
+load_options:
+  ssp: "ssp2-2.6"
+  weather_year: 2023_custom
+  prediction_year: 2030
+  scale: 1
+
+electricity:
+  co2limit: null
+  custom_powerplants: false
+  estimate_renewable_capacities:
+    stats: "irena"
+    year: 2023
+    technology_mapping:
+      Offshore: [offwind-ac, offwind-dc]
+      Onshore: [onwind]
+      PV: [solar]
+  conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, biomass]
+  renewable_carriers: [solar, onwind, hydro, csp]
+  extendable_carriers:
+    Generator: []
+    StorageUnit: []
+    Store: []
+    Link: []
+
+# Stock PyPSA-Earth hydro profile: use the upstream default multiplier rather
+# than the calibrated 1.20 structural correction.
+renewable:
+  hydro:
+    multiplier: 1.1
+
+solving:
+  solver:
+    name: gurobi
+    options: gurobi-default
+  solver_options:
+    gurobi-default:
+      threads: 2
+      method: 2
+      crossover: 0
+      BarConvTol: 1.e-5
+      OptimalityTol: 1.e-6
+      FeasibilityTol: 1.e-6
+  options:
+    load_shedding: true
+    noisy_costs: false
+
+# Keep the same spatial model metadata as the calibrated validation run. The
+# stock baseline does not inject custom missing lines, but downstream audit and
+# clustering code can still read these values.
+za_grid_spatial:
+  spatial_level: 34
+  source_decision: "Stage 4b (pre-implementation-decisions.md Q2)"
+  pypsa_rsa_supply_regions_layer: 34
+  line_voltage_threshold_kv: 220
+  st_clair_coefficients: [53.736, -0.65]
+  s_max_pu: 0.7
+  n1_approx_single_lines: 0.7
+  sil_mw:
+    220: 122
+    275: 245
+    400: 602
+    765: 2280
+  thermal_mw:
+    220: 492
+    275: 921
+    400: 1788
+    765: 5512

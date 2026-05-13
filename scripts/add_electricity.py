@@ -1362,10 +1362,11 @@ if __name__ == "__main__":
         n, costs, ppl, snakemake.params.renewable["hydro"]["hydro_min_inflow_pu"]
     )
     attach_existing_batteries(n, costs, ppl)
-    apply_nuclear_p_max_pu(
-        n,
-        pd.read_csv(snakemake.input.nuclear_p_max_pu),
-    )
+    if not snakemake.config.get("za_stock_baseline", False):
+        apply_nuclear_p_max_pu(
+            n,
+            pd.read_csv(snakemake.input.nuclear_p_max_pu),
+        )
 
     update_p_nom_max(n)
     add_nice_carrier_names(n, snakemake.config)

@@ -28,6 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ACCEPTED_NETWORK = REPO_ROOT / "results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc"
 BASELINE_NETWORK = REPO_ROOT / "results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H.nc"
+STOCK_NETWORK = REPO_ROOT / "results/za_2023_stock_baseline/networks/elec_s_34_ec_lc1_NoCO2-1H-STOCK.nc"
 
 ESKOM_TARGETS_CSV = REPO_ROOT / "data/za_validation/eskom_2023_targets_by_carrier.csv"
 ESKOM_HOURLY_CSV = REPO_ROOT / "data/za_validation/eskom_2023_hourly_clean.csv"
@@ -155,6 +156,22 @@ CLASSIFICATION = {
     "load shedding": "operational (downstream)",
 }
 
+GENERATOR_CARRIER_ALIASES = {
+    # Stock PyPSA-Earth can represent ZA peaking/gas-liquid plants under
+    # upstream carrier names; calibrated ZA splits the same Eskom-comparison
+    # bucket into local ocgt_diesel / ocgt_gas carriers.
+    "ocgt_diesel": [
+        "ocgt_diesel",
+        "ocgt_gas",
+        "OCGT",
+        "ocgt",
+        "oil",
+        "Oil",
+        "CCGT",
+        "ccgt",
+    ],
+}
+
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -179,7 +196,7 @@ def carrier_dispatch_hourly(n: pypsa.Network) -> pd.DataFrame:
 
     for c in ["coal", "nuclear", "ocgt_diesel", "onwind", "solar", "csp",
               "load shedding"]:
-        idx = n.generators[n.generators.carrier == c].index
+        idx = generator_carrier_index(n, c)
         out[c] = n.generators_t.p[idx].sum(axis=1) if len(idx) else pd.Series(
             0.0, index=n.snapshots)
 
@@ -200,11 +217,16 @@ def carrier_dispatch_hourly(n: pypsa.Network) -> pd.DataFrame:
     return df
 
 
+def generator_carrier_index(n: pypsa.Network, carrier: str) -> pd.Index:
+    carriers = GENERATOR_CARRIER_ALIASES.get(carrier, [carrier])
+    return n.generators[n.generators.carrier.isin(carriers)].index
+
+
 def model_p_nom_by_carrier(n: pypsa.Network) -> dict:
     out = {}
     for c in ["coal", "nuclear", "ocgt_diesel", "onwind", "solar", "csp",
               "load shedding"]:
-        out[c] = float(n.generators[n.generators.carrier == c].p_nom.sum())
+        out[c] = float(n.generators.loc[generator_carrier_index(n, c), "p_nom"].sum())
     for c in ["PHS", "hydro", "battery"]:
         out[c] = float(n.storage_units[n.storage_units.carrier == c].p_nom.sum())
     return out
@@ -523,13 +545,13 @@ def build_uncalibrated_vs_calibrated(n_base: pypsa.Network, n_cap: pypsa.Network
         if carrier == "battery":
             idx = n.storage_units[n.storage_units.carrier == "battery"].index
             return float(n.storage_units_t.p[idx].clip(lower=0).sum().sum() / 1e3)
-        idx = n.generators[n.generators.carrier == carrier].index
+        idx = generator_carrier_index(n, carrier)
         return float(n.generators_t.p[idx].sum().sum() / 1e3)
 
     def pnom(n, carrier):
         if carrier in ("PHS", "hydro", "battery"):
             return float(n.storage_units[n.storage_units.carrier == carrier].p_nom.sum())
-        return float(n.generators[n.generators.carrier == carrier].p_nom.sum())
+        return float(n.generators.loc[generator_carrier_index(n, carrier), "p_nom"].sum())
 
     carriers = ["coal", "nuclear", "ocgt_diesel", "onwind", "solar", "csp",
                 "hydro", "PHS", "PHS_pumping", "battery", "load shedding"]
@@ -584,7 +606,11 @@ def build_uncalibrated_vs_calibrated(n_base: pypsa.Network, n_cap: pypsa.Network
     # Total dispatch hourly RMSE vs Eskom (sum of dispatch carriers vs Eskom Dispatchable Generation column)
     def total_disp_mw(n):
         gens = ["coal", "nuclear", "ocgt_diesel", "onwind", "solar", "csp"]
-        total = sum(n.generators_t.p[n.generators[n.generators.carrier == c].index].sum(axis=1) for c in gens)
+        total = pd.Series(0.0, index=n.snapshots)
+        for c in gens:
+            idx = generator_carrier_index(n, c)
+            if len(idx):
+                total = total + n.generators_t.p[idx].sum(axis=1)
         for c in ["PHS", "hydro", "battery"]:
             idx = n.storage_units[n.storage_units.carrier == c].index
             total = total + n.storage_units_t.p[idx].clip(lower=0).sum(axis=1)
@@ -640,12 +666,12 @@ def build_uncalibrated_vs_calibrated(n_base: pypsa.Network, n_cap: pypsa.Network
 
     # Annual EAF by carrier (coal only — EAF overlay applies to coal)
     def realized_eaf(n, carrier):
-        idx = n.generators[n.generators.carrier == carrier].index
+        idx = generator_carrier_index(n, carrier)
         if not len(idx):
             return np.nan
         gen = n.generators_t.p[idx].sum(axis=1).sum()
         pnom_tot = n.generators.loc[idx, "p_nom"].sum()
-        return float(gen / (pnom_tot * len(n.snapshots)))
+        return float(gen / (pnom_tot * len(n.snapshots))) if pnom_tot else np.nan
 
     for c in ["coal", "nuclear", "ocgt_diesel"]:
         rows.append({
@@ -657,6 +683,19 @@ def build_uncalibrated_vs_calibrated(n_base: pypsa.Network, n_cap: pypsa.Network
         })
 
     return pd.DataFrame(rows)
+
+
+def build_stock_vs_calibrated(
+    n_stock: pypsa.Network,
+    n_cap: pypsa.Network,
+    eskom_h: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compare stock PyPSA-Earth ZA against the accepted calibrated CAP solve."""
+    df = build_uncalibrated_vs_calibrated(n_stock, n_cap, eskom_h)
+    df = df.rename(columns={"uncalibrated_value": "stock_value"})
+    stock_values = pd.to_numeric(df["stock_value"], errors="coerce")
+    df.loc[stock_values.fillna(0.0).abs() < 1e-6, "delta_pct"] = ""
+    return df
 
 
 def build_plant_identity(n_cap: pypsa.Network) -> pd.DataFrame:
@@ -904,6 +943,15 @@ def main():
         "za_2023_validation_plant_identity.csv": build_plant_identity(n_cap),
         "za_2023_validation_cost_dual_frame.csv": build_cost_dual_frame(n_cap),
     }
+
+    if STOCK_NETWORK.exists():
+        print(f"Loading stock baseline network: {STOCK_NETWORK.name}")
+        n_stock = pypsa.Network(str(STOCK_NETWORK))
+        artifacts["za_2023_stock_vs_calibrated.csv"] = build_stock_vs_calibrated(
+            n_stock, n_cap, eskom_h
+        )
+    else:
+        print(f"WARNING: {STOCK_NETWORK} not found — skipping stock comparison.")
 
     manifest = []
     for name, df in artifacts.items():

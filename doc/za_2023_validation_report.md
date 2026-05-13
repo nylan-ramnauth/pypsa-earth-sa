@@ -170,6 +170,70 @@ OCGT to the source-backed CAP. PHS worsens under EAF+OPC+CAP — this is
 documented in [[za_model_limitations#1 PHS Dispatch]] as a structural LP
 limitation, not a calibration regression.
 
+## 6b. Stock baseline vs calibrated (Module 13b)
+
+Two complementary before/after comparisons bracket the full calibration scope.
+Section 6 compares the Module 10 structural baseline (full ZA fleet, ZAR costs,
+Eskom demand, custom busmap, and transmission calibration) against the accepted
+Module 12 CAP solve, isolating the dispatch-calibration contribution
+(EAF+OPC+CAP). Section 6b compares a stock PyPSA-Earth baseline (PPM fleet, EUR
+costs, same demand and 34-region busmap, no dispatch calibration) against the
+accepted Module 12 CAP solve, showing the total contribution of Modules 01–12.
+
+### Stock baseline definition
+
+| Component | Stock baseline | Calibrated (Module 12) |
+|---|---|---|
+| PPM fleet | Yes — `custom_powerplants: false` | No — `custom_powerplants.csv` |
+| Cost currency | EUR upstream defaults | ZAR locked; grid-connection cost disabled |
+| Renewable capacity source | IRENA-scaled upstream default | Eskom/REIPPPP reconciled fleet |
+| Thermal carriers | Upstream `oil` / `CCGT` / `OCGT` names; reported in OCGT bucket | Local `ocgt_diesel` / `ocgt_gas` |
+| Nuclear availability overlay | No; `p_max_pu = 1.0` | Yes; 2023 Koeberg availability |
+| Coal EAF availability overlay | No | Yes |
+| OCGT weekly OPC cap + annual CAP | No | Yes |
+| Custom ZA transmission lines | No | Yes |
+| CSP topology fix | No; accepted stock limitation | Yes |
+| PHS storage hours | 6 h default | 6 h same |
+| Hydro multiplier | 1.1 default | 1.20 structural correction |
+| Eskom 2023 demand + regional allocation | Yes — identical | Yes — identical |
+| 34-region busmap | Yes — identical | Yes — identical |
+| ERA5 2023 cutout | Yes — identical | Yes — identical |
+
+### Key deltas (stock → calibrated)
+
+Source: [[../data/za_validation/za_2023_stock_vs_calibrated.csv]].
+
+> Values are from the completed stock baseline solve. `n/a` denotes percentage
+> deltas with a zero stock denominator; large deviations from Eskom 2023 in the
+> stock solve are expected and are not gate failures.
+
+| Metric | Stock | Calibrated | Δ% |
+|---|---:|---:|---:|
+| Coal GWh | 185,237 | 184,406 | -0.45 |
+| Nuclear GWh | 16,994 | 8,673 | -48.97 |
+| OCGT GWh | 0 | 5,500 | n/a |
+| Onwind GWh | 7,775 | 7,312 | -5.95 |
+| Solar GWh | 11,387 | 3,557 | -68.76 |
+| CSP GWh | 0 | 806 | n/a |
+| Hydro GWh | 729 | 1,398 | +91.74 |
+| PHS gen GWh | 0 | 147 | n/a |
+| Load shedding GWh | 0 | 10,748 | n/a |
+| Annual demand TWh | 222.351 | 222.351 | 0.00 |
+| Hourly RMSE total dispatch (MW) | 2,814 | 1,792 | -36.33 |
+| Monthly dispatch R² | 0.452 | 0.568 | +25.8 |
+
+### Accepted limitations
+
+The stock baseline carries 3,385 MW of upstream `oil`/`CCGT` capacity in the
+OCGT comparison bucket but dispatches 0 GWh because the uncalibrated LP can meet
+load with nuclear, coal, and IRENA-scaled VRE. CSP may dispatch incorrectly or
+at zero because the CSP topology fix is intentionally not applied. PHS uses the
+6 h default storage duration, and hydro uses the 1.1 default multiplier. These
+are part of the stock PyPSA-Earth definition, not defects to correct inside
+Module 13b.
+
+See also: [[za_model_limitations]], [[active/calibration-plan/model_data_sources]].
+
 ## 7. Cost reporting (dual frame)
 
 Numerical evidence: [[../data/za_validation/za_2023_validation_cost_dual_frame.csv]].

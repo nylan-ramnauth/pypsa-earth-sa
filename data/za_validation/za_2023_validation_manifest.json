@@ -58,5 +58,11 @@
     "rows": 12,
     "sha256": "104727d7197fc36046b100bc83fbaa23bd86b2d2d2f1a8af11aecc501d1718fa",
     "path": "data/za_validation/za_2023_validation_cost_dual_frame.csv"
+  },
+  {
+    "artifact": "za_2023_stock_vs_calibrated.csv",
+    "rows": 28,
+    "sha256": "d9de619cf9ae7426d783aa46315e3c2939c499b9da734ed8dc76a6d5fb0b1c50",
+    "path": "data/za_validation/za_2023_stock_vs_calibrated.csv"
   }
 ]

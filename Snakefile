@@ -64,6 +64,8 @@ SDIR = config["summary_dir"].strip("/") + f"/{SECDIR}"
 RESDIR = config["results_dir"].strip("/") + f"/{SECDIR}"
 
 load_data_paths = get_load_paths_gegis("data", config)
+if config.get("za_stock_baseline", False):
+    load_data_paths = [ancient(path) for path in load_data_paths]
 ATLITE_NPROCESSES = config["atlite"].get("nprocesses", 4)
 
 
@@ -909,7 +911,11 @@ rule build_powerplants:
     input:
         base_network="networks/" + RDIR + "base.nc",
         pm_config="configs/powerplantmatching_config.yaml",
-        custom_powerplants="data/custom_powerplants.csv",
+        custom_powerplants=(
+            "resources/" + RDIR + "stock_inputs/custom_powerplants.csv"
+            if config.get("za_stock_baseline", False)
+            else "data/custom_powerplants.csv"
+        ),
         osm_powerplants="resources/" + RDIR + "osm/clean/all_clean_generators.csv",
         #gadm_shapes="resources/" + RDIR + "shapes/MAR2.geojson",
         #using this line instead of the following will test updated gadm shapes for MA.
@@ -1050,7 +1056,11 @@ rule cluster_network:
         gadm_shapes="resources/" + RDIR + "shapes/gadm_shapes.geojson",
         # busmap=ancient('resources/" + RDIR + "bus_regions/busmap_elec_s{simpl}.csv'),
         custom_busmap=(
-            "data/custom_busmap_elec_s{simpl}_{clusters}.csv"
+            (
+                "resources/" + RDIR + "stock_inputs/custom_busmap_elec_s{simpl}_{clusters}.csv"
+                if config.get("za_stock_baseline", False)
+                else "data/custom_busmap_elec_s{simpl}_{clusters}.csv"
+            )
             if config["enable"].get("custom_busmap", False)
             else []
         ),
@@ -1149,6 +1159,8 @@ def _za_custom_lines_marker(wildcards):
     # Force apply_za_custom_lines to run before add_extra_components consumes
     # elec_s_34.nc for the za_2023_fixed_validation run. Other wildcards have
     # no marker (returns empty list -> no dependency).
+    if config.get("za_stock_baseline", False):
+        return []
     if wildcards.simpl == "" and wildcards.clusters == "34":
         return ["networks/" + RDIR + "elec_s_34.pre_custom.nc"]
     return []
@@ -1156,6 +1168,8 @@ def _za_custom_lines_marker(wildcards):
 
 def _za_local_carriers_marker(wildcards):
     # Force apply_za_local_carriers to run before add_extra_components.
+    if config.get("za_stock_baseline", False):
+        return []
     if wildcards.simpl == "" and wildcards.clusters == "34":
         return ["networks/" + RDIR + "elec_s_34.pre_local.nc"]
     return []
@@ -1164,6 +1178,8 @@ def _za_local_carriers_marker(wildcards):
 def _za_csp_fix_marker(wildcards):
     # Module 12 — force za_fix_csp_links_stores to run before prepare_network
     # consumes elec_s_34_ec.nc for the za_2023_fixed_validation run.
+    if config.get("za_stock_baseline", False):
+        return []
     if wildcards.simpl == "" and wildcards.clusters == "34":
         return ["networks/" + RDIR + "elec_s_34_ec.pre_csp.nc"]
     return []
@@ -1442,6 +1458,110 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
             "data/za_audit/za_operational_constraints_audit_cap.csv",
         shell:
             "cp {input} {output}"
+
+    if config.get("za_stock_baseline", False):
+
+        CALIB_RDIR = "za_2023_fixed_validation/"
+
+        rule share_za_base_network:
+            """Seed stock-baseline raw topology inputs from the calibrated ZA run.
+
+            This avoids another OSM/geography/cost-data retrieval pass while still
+            allowing the stock run to rebuild PPM powerplants, EUR cost data,
+            renewable profiles, add_electricity, clustering, and the solve.
+            """
+            input:
+                base="networks/" + CALIB_RDIR + "base.nc",
+                raw_costs="resources/" + CALIB_RDIR + f"costs_{config['costs']['year']}.csv",
+                natura="resources/" + CALIB_RDIR + "natura.tiff",
+                country_shapes="resources/" + CALIB_RDIR + "shapes/country_shapes.geojson",
+                offshore_shapes="resources/" + CALIB_RDIR + "shapes/offshore_shapes.geojson",
+                africa_shape="resources/" + CALIB_RDIR + "shapes/africa_shape.geojson",
+                gadm_shapes="resources/" + CALIB_RDIR + "shapes/gadm_shapes.geojson",
+                subregion_shapes="resources/" + CALIB_RDIR + "shapes/subregion_shapes.geojson",
+                subregion_offshore="resources/" + CALIB_RDIR + "shapes/subregion_offshore.geojson",
+                osm_clean_generators="resources/" + CALIB_RDIR + "osm/clean/all_clean_generators.geojson",
+                osm_clean_generators_csv="resources/" + CALIB_RDIR + "osm/clean/all_clean_generators.csv",
+                osm_clean_lines="resources/" + CALIB_RDIR + "osm/clean/all_clean_lines.geojson",
+                osm_clean_substations="resources/" + CALIB_RDIR + "osm/clean/all_clean_substations.geojson",
+            output:
+                base="networks/" + RDIR + "base.nc",
+                raw_costs="resources/" + RDIR + f"costs_{config['costs']['year']}.csv",
+                natura="resources/" + RDIR + "natura.tiff",
+                country_shapes="resources/" + RDIR + "shapes/country_shapes.geojson",
+                offshore_shapes="resources/" + RDIR + "shapes/offshore_shapes.geojson",
+                africa_shape="resources/" + RDIR + "shapes/africa_shape.geojson",
+                gadm_shapes="resources/" + RDIR + "shapes/gadm_shapes.geojson",
+                subregion_shapes="resources/" + RDIR + "shapes/subregion_shapes.geojson",
+                subregion_offshore="resources/" + RDIR + "shapes/subregion_offshore.geojson",
+                osm_clean_generators="resources/" + RDIR + "osm/clean/all_clean_generators.geojson",
+                osm_clean_generators_csv="resources/" + RDIR + "osm/clean/all_clean_generators.csv",
+                osm_clean_lines="resources/" + RDIR + "osm/clean/all_clean_lines.geojson",
+                osm_clean_substations="resources/" + RDIR + "osm/clean/all_clean_substations.geojson",
+                custom_powerplants="resources/" + RDIR + "stock_inputs/custom_powerplants.csv",
+                custom_busmap="resources/" + RDIR + "stock_inputs/custom_busmap_elec_s_34.csv",
+            run:
+                import shutil
+
+                for src, dst in zip(input, output):
+                    dst_path = Path(dst)
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dst_path)
+                for src, dst in [
+                    ("data/custom_powerplants.csv", output.custom_powerplants),
+                    ("data/custom_busmap_elec_s_34.csv", output.custom_busmap),
+                ]:
+                    dst_path = Path(dst)
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dst_path)
+
+        rule solve_network_stock_baseline:
+            """Stock PyPSA-Earth ZA baseline: PPM fleet, EUR costs, no dispatch calibration."""
+            params:
+                solving=config["solving"],
+                augmented_line_connection=config["augmented_line_connection"],
+                policy_config=config["policy_config"],
+            input:
+                network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}.nc",
+                agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            output:
+                "results/" + RDIR + "networks/elec_s_{clusters}_ec_lc1_{opts}-STOCK.nc",
+            wildcard_constraints:
+                clusters="34",
+                opts="NoCO2-1H",
+            log:
+                solver=os.path.normpath(
+                    "logs/"
+                    + RDIR
+                    + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-STOCK_solver.log"
+                ),
+                python="logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-STOCK_python.log",
+            benchmark:
+                "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-STOCK"
+            threads: 20
+            resources:
+                mem=memory,
+            shadow:
+                "copy-minimal" if os.name == "nt" else "shallow"
+            script:
+                "scripts/solve_network.py"
+
+        ruleorder: share_za_base_network > base_network
+        ruleorder: share_za_base_network > build_shapes
+        ruleorder: share_za_base_network > clean_osm_data
+        ruleorder: share_za_base_network > build_osm_network
+        ruleorder: solve_network_stock_baseline > solve_network
+
+        if config["enable"].get("retrieve_cost_data", True):
+            ruleorder: share_za_base_network > retrieve_cost_data
+            ruleorder: process_cost_data > retrieve_cost_data
+
+        if config["enable"].get("build_natura_raster", False):
+            ruleorder: share_za_base_network > build_natura_raster
+        else:
+            ruleorder: share_za_base_network > copy_defaultnatura_tiff
 
     # Resolve wildcard ambiguity: the hardcoded EAF filename also matches the
     # wildcard patterns of prepare_network / solve_network.

@@ -307,3 +307,18 @@ PyPSA-Earth HEAD at Module 13 completion: `git rev-parse HEAD` in the
 `6-codebases/repos/pypsa-earth` worktree at the time the report was published.
 PyPSA-RSA HEAD: `89872c1ea703af3d8a3f198706d1ab7958f50a5f`.
 
+## Module 13b — Stock Baseline Solve
+
+**Date:** 2026-05-13. Completed stock solve:
+`results/za_2023_stock_baseline/networks/elec_s_34_ec_lc1_NoCO2-1H-STOCK.nc`.
+
+| artifact_path | hash (sha256) | source | owner | extraction_date | unresolved_warnings |
+|---|---|---|---|---|---|
+| `configs/za/za_2023_stock_baseline.yaml` | `a19db84a3db81215875cf09fca65ba2adf5d8d29bbc094eb3c035bbbca6e8979` | author (Module 13b); stock PPM/EUR/no-dispatch-calibration settings with IRENA RE scaling and upstream thermal carriers | nylan-ramnauth, codex | 2026-05-13 | none |
+| `scripts/add_electricity.py` | `698d6de7487bbebc647721829c6cd403974604310cd595bacdd02fa8fad082e7` | author (Module 13b fix); skips `data/nuclear_p_max_pu.csv` overlay for `za_stock_baseline` runs | nylan-ramnauth, codex | 2026-05-13 | none |
+| `scripts/za_validation/build_module13_validation.py` | `677b7d9af565d5d4a104eeaffd1804803f716b9ff62f4952e8ce6cd20b13506e` | author (Module 13b extension to Module 13 validation builder) | nylan-ramnauth, codex | 2026-05-13 | none |
+| `results/za_2023_stock_baseline/networks/elec_s_34_ec_lc1_NoCO2-1H-STOCK.nc` | `7c4cd5279fcbdb9bb21066696177a27248286052afda142cdf9dc29ce7bd2a1a` | PyPSA-Earth stock solve: PPM fleet, EUR costs, IRENA-scaled RE, upstream thermal carriers, Eskom 2023 demand, 34-region busmap | Module 13b | 2026-05-13 | expected to deviate substantially from Eskom 2023; not an acceptance failure |
+| `data/za_validation/za_2023_stock_vs_calibrated.csv` | `d9de619cf9ae7426d783aa46315e3c2939c499b9da734ed8dc76a6d5fb0b1c50` | `scripts/za_validation/build_module13_validation.py`; produced conditionally when STOCK network exists | Module 13b | 2026-05-13 | zero-denominator percentage deltas reported as `n/a` in narrative table |
+| `data/za_validation/za_2023_validation_manifest.json` | `26fb4dc1ea85498d01f59ec0bea81397cced9cb93e9b3a30df44811219ce2214` | `scripts/za_validation/build_module13_validation.py`; manifest includes the conditional Module 13b stock CSV | Module 13b | 2026-05-13 | none |
+| `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb` | `939ac7e435b117cfe39ca652eef8a8ebe8657c988c7aba1bce2af9c5e83ad1ce` | notebook extended and re-executed with STOCK as fifth scenario in existing Module 12 diagnostics | nylan-ramnauth, codex | 2026-05-13 | none |
+| `doc/za_2023_validation_report.md` | `0ed60e307af4aa8ccc6e0d13b62176812e7cb27be332a6b080cfdd2c476f10f6` | §6b inserted between §6 and §7 and populated from `za_2023_stock_vs_calibrated.csv` | nylan-ramnauth, codex | 2026-05-13 | none |

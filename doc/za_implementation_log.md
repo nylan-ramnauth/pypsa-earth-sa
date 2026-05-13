@@ -1230,3 +1230,54 @@ This append-only log records implementation decisions, deviations, source inputs
   - `doc/active/calibration-plan/model_data_sources.graph.png`
 - **Open follow-ups:**
   - None.
+
+## Module 13b — Stock Baseline Comparison — 2026-05-13
+
+**Status:** Implemented and executed.
+
+**What changed:**
+- Created `configs/za/za_2023_stock_baseline.yaml` for the stock PPM/EUR/no-dispatch-calibration run.
+- Gated `_za_custom_lines_marker`, `_za_local_carriers_marker`, and `_za_csp_fix_marker` on `za_stock_baseline`.
+- Added `share_za_base_network` to seed raw topology/geography/cost inputs from `za_2023_fixed_validation` without copying calibrated fleet/cost/profile network layers.
+- Added `solve_network_stock_baseline` with output `results/za_2023_stock_baseline/networks/elec_s_34_ec_lc1_NoCO2-1H-STOCK.nc`.
+- Added conditional stock-vs-calibrated CSV generation to `scripts/za_validation/build_module13_validation.py`.
+- Added STOCK as a fifth scenario in `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb`.
+- Added §6b to `doc/za_2023_validation_report.md`.
+- Corrected the stock baseline after review: skipped the ZA nuclear `p_max_pu=0.534` overlay, restored IRENA renewable scaling, and included upstream `oil`/`CCGT` thermal carriers in the OCGT comparison bucket.
+
+**Inputs consumed:**
+- `networks/za_2023_fixed_validation/base.nc` (copied into stock run directory)
+- `resources/za_2023_fixed_validation/shapes/`
+- `resources/za_2023_fixed_validation/osm/clean/`
+- `resources/za_2023_fixed_validation/natura.tiff`
+- `resources/za_2023_fixed_validation/costs_2030.csv`
+- `data/custom_powerplants.csv` (copied as run-scoped inert input for stock PPM path)
+- `data/custom_busmap_elec_s_34.csv` (copied as run-scoped custom busmap input)
+- PyPSA-Earth PPM fleet via `custom_powerplants: false`
+- IRENA renewable capacity statistics via `estimate_renewable_capacities.stats: "irena"`
+- Upstream thermal carriers `oil`, `CCGT`, `OCGT`, `coal`, `nuclear`, and `biomass`
+- Eskom 2023 custom demand profile via `weather_year: 2023_custom`
+
+**Outputs produced:**
+- `configs/za/za_2023_stock_baseline.yaml`
+- `results/za_2023_stock_baseline/networks/elec_s_34_ec_lc1_NoCO2-1H-STOCK.nc`
+- `data/za_validation/za_2023_stock_vs_calibrated.csv`
+- `data/za_validation/za_2023_validation_manifest.json` with the conditional stock CSV entry
+- §6b in `doc/za_2023_validation_report.md`, populated with stock-vs-calibrated values
+- Re-executed STOCK-aware dispatch validation notebook diagnostics
+
+**Gate outcomes:**
+- Stock solve completes: PASS. Corrected Gurobi solve terminated optimal; objective `5.815692954606774e9`; output network size 49 MB.
+- PPM fleet used: PASS. Stock solved network has zero exact generator-name overlap with `data/custom_powerplants.csv`; generator carriers are stock PPM-style `CCGT`, `biomass`, `coal`, `nuclear`, `oil`, `onwind`, `solar`, `csp`, `ror`, and `load shedding`.
+- Nuclear availability de-calibrated: PASS. Stock nuclear has static `p_max_pu = 1.0` and no dynamic nuclear `generators_t.p_max_pu` column.
+- IRENA RE scaling restored: PASS. Stock solar capacity is `7,394.62 MW`; onwind remains `3,539.00 MW` because PPM already exceeds the IRENA target.
+- OCGT comparison bucket populated: PASS. Upstream `oil` + `CCGT` capacity totals `3,385.04 MW` and is reported as `ocgt_diesel` in the stock-vs-calibrated CSV.
+- Demand identity within 1% of CAP: PASS. Stock and CAP annual demand are both `222.351112` TWh; delta `0.000000%`.
+- Comparison CSV produced: PASS. `data/za_validation/za_2023_stock_vs_calibrated.csv` has 28 data rows.
+- §6b added and populated: PASS.
+- Dispatch calibration notebook re-executed: PASS. Notebook contains STOCK diagnostics and executed outputs.
+- Implementation log updated: PASS.
+- Module 13 report frozen sections: PASS by scoped edit. Only §6b was changed during solve execution; §1–§6 and §7–§12 were not edited.
+
+**Deviations from Opus plan:**
+- Did not copy `elec_s.nc` from the calibrated run. That intermediate can carry calibrated fleet/cost state, so Module 13b instead reuses only raw topology/geography inputs and rebuilds stock-specific PPM fleet, EUR costs, renewable profiles, and prepared network layers.
