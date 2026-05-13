@@ -1379,6 +1379,52 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         script:
             "scripts/solve_network.py"
 
+    rule solve_network_eaf_opc_cap:
+        # Module 12 solve 4 — same EAF+OPC path after adding the source-backed
+        # annual OCGT output-energy cap to the pypsa-rsa workbook. This writes a
+        # distinct network and audit so solve 3 remains preserved.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+        input:
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
+            operational_constraints=os.path.abspath(
+                config.get("za", {})
+                .get("operational_constraints", {})
+                .get(
+                    "workbook",
+                    config.get("pypsa_rsa_root", "")
+                    + "/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx",
+                )
+            ),
+        output:
+            network="results/" + RDIR + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP.nc",
+            za_op_constraints_audit="data/za_audit/za_operational_constraints_audit_{clusters}_{opts}_EAF_OPC_CAP.csv",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP_python.log",
+        benchmark:
+            "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
     rule materialize_za_op_constraints_audit:
         # Stable Module 12 audit path for reports/notebooks.
         input:
@@ -1388,10 +1434,22 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         shell:
             "cp {input} {output}"
 
+    rule materialize_za_op_constraints_audit_cap:
+        # Stable solve-4 audit path without overwriting the solve-3 audit.
+        input:
+            "data/za_audit/za_operational_constraints_audit_34_NoCO2-1H_EAF_OPC_CAP.csv",
+        output:
+            "data/za_audit/za_operational_constraints_audit_cap.csv",
+        shell:
+            "cp {input} {output}"
+
     # Resolve wildcard ambiguity: the hardcoded EAF filename also matches the
     # wildcard patterns of prepare_network / solve_network.
     ruleorder: apply_za_coal_eaf > prepare_network
     ruleorder: solve_network_eaf > solve_network
+    ruleorder: solve_network_eaf_opc_cap > solve_network_eaf_opc
+    ruleorder: solve_network_eaf_opc_cap > solve_network_eaf
+    ruleorder: solve_network_eaf_opc_cap > solve_network
     ruleorder: solve_network_eaf_opc > solve_network_eaf
     ruleorder: solve_network_eaf_opc > solve_network
 

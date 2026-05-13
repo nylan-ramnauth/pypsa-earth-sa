@@ -1,0 +1,5 @@
+solve,aggregation,r_ocgt,p_ocgt,r_load_shedding,p_load_shedding,r_combined_scarcity,p_combined_scarcity,rho_combined_scarcity,p_spearman_combined,n_periods,interpretation
+structural,W,0.476,0.0003,0.165,0.2387,0.698,0.0,0.665,0.0,53,moderate_temporal_alignment
+eaf_calibrated,W,0.473,0.0003,0.3,0.0293,0.728,0.0,0.769,0.0,53,moderate_temporal_alignment
+eaf_opc,W,0.322,0.0188,0.731,0.0,0.675,0.0,0.751,0.0,53,moderate_temporal_alignment
+eaf_opc_cap,W,0.416,0.0019,0.567,0.0,0.729,0.0,0.77,0.0,53,moderate_temporal_alignment

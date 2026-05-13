@@ -333,3 +333,37 @@ Three additional fixes apply before the solve is acceptable:
 - CSP Link `p_nom > 0` and CSP Store `e_nom > 0` at every bus with positive
   CSP Generator `p_nom`. Zero-capacity CSP buses are allowed.
 - PHS pumping reported as positive consumption on both model and Eskom sides.
+
+## Reconciliation Note — Solve 4 OCGT Annual Cap (2026-05-13)
+
+The OCGT blocker in §3.A was tested with a fourth solve,
+`lc1_NoCO2-1H-EAF-OPC-CAP`, after adding one source-workbook row to
+`../pypsa-rsa/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx`
+under `HIGH_GAS`:
+
+| scenario | bus | tech_fuel | type | period | incl_pu | limit | apply_to | units | 2023 |
+|---|---|---|---|---|---:|---|---|---|---:|
+| HIGH_GAS | global | ocgt_diesel | output_energy | year | False | max | all | TWh | 5.5 |
+
+The workbook formulas were converted to explicit values so pandas can read the
+2023 columns without relying on Excel cached formula results. The source row is
+committed in pypsa-rsa at `0831ce243f0badbba6f09b418c2b57774ea89a5f`, and this
+config now pins that commit.
+
+Solve 4 results:
+
+| Metric | Result | Gate |
+|---|---:|---|
+| OCGT diesel annual dispatch | 5.500 TWh | PASS, <= 5.5 TWh |
+| Load shedding | 10.748 TWh | PASS, <= Eskom 16.755 TWh |
+| Annual carrier subtotal error | -1.31% | **FAIL**, threshold <= 0.5% |
+| Weekly combined scarcity Pearson r | 0.729 | moderate temporal alignment |
+| Monthly combined scarcity Pearson r | 0.854 | strong temporal alignment |
+
+Conclusion: the OCGT LP-substitution artifact is fixed, but Module 12 remains
+open because the annual subtotal gate still fails. The remaining blocker shifts
+to portable non-OCGT calibration: PHS under-dispatch, VRE annual levels, and the
+residual coal/load-shedding split. See
+[[6-codebases/repos/pypsa-earth/doc/active/calibration-plan/module13_ocgt_investigation_report|Module 13 OCGT investigation report]]
+and the appended Solve 4 section in
+[[4-work/reports/2026-05-12-module12-calibration-report|Module 12 calibration report]].

@@ -1103,3 +1103,44 @@ This append-only log records implementation decisions, deviations, source inputs
   - `module12_validation_checks.csv` reports PASS for all 12 structural gates
     across structural, EAF, and EAF+OPC networks, plus PASS for the OPC OCGT
     and nuclear audit gates.
+
+## Module 12 Solve 4 OCGT Annual Cap — 2026-05-13 13:45
+
+- **Status:** partial — OCGT cap implemented and validated; Module 12 remains
+  open because the annual carrier subtotal gate fails.
+- **Decisions taken:** added a fourth solve label,
+  `lc1_NoCO2-1H-EAF-OPC-CAP`, rather than overwriting the existing EAF+OPC
+  solve. The annual cap is expressed only as a pypsa-rsa workbook row, not as
+  bespoke Python constraint logic.
+- **Deviations from plan:** the first CAP solve revealed that saving the
+  workbook through openpyxl removed cached Excel formula values, causing pandas
+  to read the 2023 columns as missing and skip all operational-constraint rows.
+  The workbook formula cells in `operational_constraints.xlsx` were converted
+  to explicit values, then the CAP solve was rerun successfully.
+- **Source inputs used:** pypsa-rsa
+  `scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx`
+  at commit `0831ce243f0badbba6f09b418c2b57774ea89a5f`; existing EAF network
+  `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`;
+  config `configs/za/za_2023_fixed_validation.yaml`.
+- **Output artifacts produced:**
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`
+  - `data/za_audit/za_operational_constraints_audit_34_NoCO2-1H_EAF_OPC_CAP.csv`
+  - `data/za_audit/za_operational_constraints_audit_cap.csv`
+  - `data/za_validation/za_2023_dispatch_pearson.csv`
+  - `data/za_validation/za_2023_dispatch_pearson_monthly.csv`
+  - refreshed `data/za_validation/za_2023_dispatch_calibration_before_after.csv`,
+    capacity-factor and hourly-error CSVs
+  - refreshed `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb`
+    and `doc/za_validation/figures/12_dispatch_calibration/dispatch_calibration_validation.html`
+- **Results:** CAP solve optimal; objective `2.0461536315e10`. OCGT falls to
+  `5.500 TWh` and load shedding rises to `10.748 TWh`. The CAP audit applies
+  three rows: OCGT weekly CF max, nuclear hourly minimum, and
+  `max-ocgt_diesel-year-all-2023`. Solve 3
+  `...EAF-OPC.nc` mtime remains `2026-05-13 02:26:13`.
+- **Validation:** structural gates PASS for `eaf_opc_cap`; weekly combined
+  scarcity Pearson `r=0.729` and Spearman `rho=0.770`; monthly combined
+  scarcity Pearson `r=0.854` and Spearman `rho=0.804`.
+- **Open follow-ups:** Module 12 is still open. Annual carrier subtotal error
+  is `-1.31%`, above the `<=0.5%` gate. The minimum next action is portable
+  non-OCGT calibration: PHS dispatch, VRE annual level calibration, and the
+  residual coal/load-shedding split.

@@ -1,0 +1,25 @@
+scenario,bus,tech_fuel,type,period,limit,apply_to,units,value_2023,matched_carriers,n_generators,constraint_name,status
+HIGH_GAS,global,ocgt_diesel + ocgt_avf,capacity_factor,week,max,all,%,0.5,ocgt_diesel,5,max-ocgt_diesel + ocgt_avf-week-all-2023,applied
+HIGH_GAS,global,ocgt_gas + ocgt_gas_h2_40 + ocgt_gas_h2_45 + ocgt_gas_h2_50+ ocgt_gas_h2_55+ ocgt_gas_h2_60,primary_energy,year,min,extendable,PJ,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas + ocgt_gas_h2_45 + ocgt_gas_h2_50+ ocgt_gas_h2_55+ ocgt_gas_h2_60,primary_energy,year,min,extendable,PJ,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas + ocgt_gas_h2_50+ ocgt_gas_h2_55+ ocgt_gas_h2_60,primary_energy,year,min,extendable,PJ,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas + ocgt_gas_h2_55+ ocgt_gas_h2_60,primary_energy,year,min,extendable,PJ,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas + ocgt_gas_h2_60,primary_energy,year,min,extendable,PJ,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas,primary_energy,year,min,extendable,PJ,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas,capacity_factor,month,min,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_40,capacity_factor,month,min,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_40,capacity_factor,week,max,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_45,capacity_factor,month,min,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_45,capacity_factor,week,max,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_50,capacity_factor,month,min,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_50,capacity_factor,week,max,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_55,capacity_factor,month,min,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_55,capacity_factor,week,max,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_60,capacity_factor,month,min,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ocgt_gas_h2_60,capacity_factor,week,max,extendable,%,,,0,,skipped_nan
+HIGH_GAS,global,ccgt_steam,capacity_factor,month,min,all,%,0.3,,0,,skipped_no_match
+HIGH_GAS,global,nuclear,capacity_factor,hour,min,all,%,1.0,nuclear,1,min-nuclear-hour-all,applied
+HIGH_GAS,global,rmippp,capacity_factor,year,min,fixed,%,0.5,,0,,skipped_no_match
+HIGH_GAS,global,sasol_coal,output_energy,year,max,fixed,TWh,5.5,,0,,skipped_no_match
+HIGH_GAS,global,sasol_gas,output_energy,year,max,fixed,TWh,2.8,,0,,skipped_no_match
+HIGH_GAS,global,ocgt_diesel,output_energy,year,max,all,TWh,5.5,ocgt_diesel,5,max-ocgt_diesel-year-all-2023,applied

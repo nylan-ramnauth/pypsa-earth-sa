@@ -40,7 +40,7 @@ za_cols_policy:
 
 # Module 04 — Source Data Audits: PyPSA-RSA reference repo.
 pypsa_rsa_root: "/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa"
-pypsa_rsa_pinned_commit: "89872c1ea703af3d8a3f198706d1ab7958f50a5f"
+pypsa_rsa_pinned_commit: "0831ce243f0badbba6f09b418c2b57774ea89a5f"
 
 za:
   operational_constraints:
