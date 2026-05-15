@@ -132,7 +132,7 @@ consumed by the ZA scripts and do not exist in `config.default.yaml`.
 | `pypsa_rsa_pinned_commit` | Module 04 | Git pin of PyPSA-RSA: `0831ce243f0badbba6f09b418c2b57774ea89a5f` |
 | `za.operational_constraints` | Module 12 | Toggles the OPC variant, names the workbook (`pypsa-rsa/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx`) and scenario (`HIGH_GAS`) |
 | `za_system_boundary` | Module 05 | Locks V1 scope: national SA 2023 electricity, RSA Contracted Demand, MLR+ILS+IOS load-shedding target, exogenous IE, embedded PV excluded, CSP 500 MW / 1.375 TWh anchors |
-| `za_local_carriers` | Module 05 | Adds `ocgt_diesel`, `ocgt_gas` carriers (component metadata, colour, validation target) — injected by `apply_za_local_carriers` |
+| `za_local_carriers` | Module 05 | Adds `ocgt_diesel`, `ocgt_gas` carriers (component metadata, colour, validation target) — injected by `apply_za_local_carriers`. **Note:** `ocgt_gas` is defined with a cost row but has zero capacity in the 2023 fleet — all Natural Gas rows were removed with Sasol (Module 12). The carrier is present in the network's Carrier table but has no attached generators. |
 | `za_known_omissions` | Module 05 | Documents Eskom "Other RE" (238 GWh in 2023) as deferred aggregate |
 | `za_grid_spatial` | Module 09 | Spatial level lock (34), supply-region layer (34), 220 kV line floor, St Clair coefficients `[53.736, -0.65]`, `s_max_pu: 0.7`, n-1 factor `0.7`, per-voltage SIL and thermal MW tables |
 
@@ -171,7 +171,7 @@ both reversible and auditable.
 | `apply_za_custom_lines` | `scripts/apply_za_custom_lines.py` | `Line` rows added (bus0, bus1, v_nom, length, num_parallel, s_nom, x, r, b, type) for 10 unmatched 275/400 kV corridors | `elec_s_34.pre_custom.nc` | `za_custom_lines_audit.csv` | 09b | ~12 GW of inter-regional transmission capacity absent; constrained corridors flag inter-regional infeasibility under stress |
 | `apply_za_local_carriers` | `scripts/apply_za_local_carriers.py` (uses `scripts/za_costs/local_rows.py`) | `Carrier` rows added (`ocgt_diesel`, `ocgt_gas` with colour, nice_name, co2_emissions); `Generator.marginal_cost` patched on coal & nuclear from ZAR-denominated rows; OCGT generators attached from custom_powerplants rows tagged with these carriers | `elec_s_34.pre_local.nc` | `za_local_carriers_audit.csv` | 11/12 | Solve crashes at `add_carrier`: OCGT generators reference carriers with no `Carrier` row. Even if the crash is patched, coal/nuclear marginal costs revert to upstream EUR defaults — dispatch order may invert |
 | `za_fix_csp_links_stores` | `scripts/za_fleet/fix_csp_links_stores.py` (invoked via module hook in Module 12) | `Link` (thermal-out) rewired to feed `Store` input; broken `ElectrochemicalPHES` topology removed; CSP `StorageUnit` rows replaced with `Store` + `Link` pattern | (in-memory mutation during solve preprocessing) | `za_csp_links_stores_audit.csv` | 12 | CSP dispatch is structurally invalid — TES energy balance does not close; CSP generation drifts to zero or infinity depending on solver path |
-| `apply_za_coal_eaf` | `scripts/za_fleet/apply_coal_eaf.py` | `generators_t.p_max_pu` for coal carrier reduced by station-weekly outage profile from PyPSA-RSA `plant_availability.xlsx:outage_profiles` (HIGH_GAS scenario, per Module 12 lock) | `elec_s_34_ec_lc1_NoCO2-1H.pre_eaf.nc` | `za_coal_eaf_audit.csv` | 12 | EAF variant (and all downstream EAF+OPC, EAF+OPC+CAP) cannot be produced; baseline NoCO2-1H solve still runs but coal is at flat 100 % availability year-round |
+| `apply_za_coal_eaf` | `scripts/za_fleet/apply_coal_eaf.py` | `generators_t.p_max_pu` for coal carrier reduced by station-weekly outage profile from PyPSA-RSA `plant_availability.xlsx:outage_profiles` (**BASE scenario** — not HIGH_GAS; HIGH_GAS is used only by the OPC/CAP workbook `operational_constraints.xlsx`) | `elec_s_34_ec_lc1_NoCO2-1H.pre_eaf.nc` | `za_coal_eaf_audit.csv` | 12 | EAF variant (and all downstream EAF+OPC, EAF+OPC+CAP) cannot be produced; baseline NoCO2-1H solve still runs but coal is at flat 100 % availability year-round |
 
 ### 2.3 Solve and materialisation rules
 
@@ -180,7 +180,7 @@ both reversible and auditable.
 | `solve_network` | Baseline solve (NoCO2-1H) | `elec_s_34_ec_lc1_NoCO2-1H.nc` (post all builders + apply_za_custom_lines + apply_za_local_carriers + za_fix_csp_links_stores) | `elec_s_34_ec_lc1_NoCO2-1H.nc` (solved) | 12 |
 | `solve_network_eaf` | EAF variant solve | Output of `apply_za_coal_eaf` | `elec_s_34_ec_lc1_NoCO2-1H-EAF.nc` | 12 |
 | `solve_network_eaf_opc` | EAF+OPC variant solve; applies operational-constraints workbook (`HIGH_GAS` scenario) as linopy constraints at solve time | Output of `apply_za_coal_eaf` + `operational_constraints.xlsx` | `elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC.nc`, `za_operational_constraints_audit_34_NoCO2-1H.csv` | 12 |
-| `solve_network_eaf_opc_cap` | EAF+OPC+CAP — adds an annual energy cap on combined OCGT (`ocgt_diesel`+`ocgt_gas`) as a linopy constraint inline in the solve script | Output of `apply_za_coal_eaf` + `operational_constraints.xlsx` + cap value (held in solve script) | `elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`, `za_operational_constraints_audit_34_NoCO2-1H_EAF_OPC_CAP.csv` | 12 |
+| `solve_network_eaf_opc_cap` | EAF+OPC+CAP — adds an annual energy cap on combined OCGT (`ocgt_diesel`+`ocgt_gas`) as a linopy constraint read from the OPC workbook | Output of `apply_za_coal_eaf` + `operational_constraints.xlsx` + cap row (HIGH_GAS / global / ocgt_diesel / output_energy / year / max / 5.5 TWh, added 2026-05-13 to pypsa-rsa) | `elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`, `za_operational_constraints_audit_34_NoCO2-1H_EAF_OPC_CAP.csv` | 12 |
 | `materialize_za_op_constraints_audit` | Copies OPC solve diagnostic CSV to `data/za_audit/za_operational_constraints_audit.csv` for persistence | OPC solve output CSV | `data/za_audit/za_operational_constraints_audit.csv` | 12 |
 | `materialize_za_op_constraints_audit_cap` | Same for the CAP variant | CAP solve output CSV | `data/za_audit/za_operational_constraints_audit_cap.csv` | 12 |
 
@@ -208,7 +208,7 @@ they are not duplicated here.
 
 | Path | Content | Source | Produced by | Consumed by | Module |
 |---|---|---|---|---|---|
-| `data/custom_powerplants.csv` | Reconciled 2023 fleet: 27 Eskom coal units, Koeberg nuclear, 4 PHS stations (Drakensberg, Ingula, Palmiet, Steenbras), 6 CSP plants, REIPPPP wind/solar, OCGT diesel/gas, Hex battery | Module 08 reconciliation of PyPSA-RSA fixed-tech + REIPPPP CSVs + Eskom anchors | `build_za_fleet_reconciliation` | `add_electricity` (stock rule, switched via `electricity.custom_powerplants: replace`) | 08 |
+| `data/custom_powerplants.csv` | Reconciled 2023 fleet (135 data rows post-Sasol-removal): 27 Eskom coal units, Koeberg nuclear, 4 PHS stations (Drakensberg, Ingula, Palmiet, Steenbras), 6 CSP plants, REIPPPP wind/solar, OCGT diesel/gas, Hex battery. **Known silent-drop:** 3 Bioenergy rows (Joburg Landfill 7.56 MW, Ngodwana 25 MW, Sappi 144 MW = 176.56 MW) are present in the CSV but the `biomass` carrier is excluded from both `conventional_carriers` and `renewable_carriers` in the config, so `add_electricity` silently drops them. Deferred to Module 14. | Module 08 reconciliation of PyPSA-RSA fixed-tech + REIPPPP CSVs + Eskom anchors | `build_za_fleet_reconciliation` | `add_electricity` (stock rule, switched via `electricity.custom_powerplants: replace`) | 08 |
 | `data/custom_busmap_elec_s_34.csv` | Simplified-OSM bus → 1-of-34 Eskom supply region mapping; 803 buses → 34 regions, 0 orphans | Module 09 spatial join of OSM buses against `za_rsa_supply_regions.geojson` | `build_za_grid_spatial` | `cluster_network` (stock rule, switched via `enable.custom_busmap: true`) | 09 |
 
 ### 3.2 Eskom validation timeseries (`data/za_validation/`)
@@ -220,7 +220,7 @@ they are not duplicated here.
 | `eskom_2023_parser_report.csv` | Parser diagnostics (10,263 comma-decimal repairs, residual-demand identity check) | Module 02 | 02 |
 | `za_2023_demand_profile.csv` | Regional hourly demand, 8,760 × 34 | Module 06 disaggregation of national demand via `za_2023_load_allocation_weights.csv` | 06 |
 | `za_2023_import_export_timeseries.csv` | Hourly import/export (Mozambique, Namibia, Eswatini, Zimbabwe interconnectors) | Eskom columns `International Imports` + `International Exports` | 06 |
-| `za_2023_other_re_timeseries.csv` | Hourly "Other RE" exogenous generator profile (annual ≈ 238 GWh) | Eskom column `Other RE` | 06 |
+| `za_2023_other_re_timeseries.csv` | Hourly "Other RE" exogenous generator profile (annual ≈ 238 GWh) | Eskom column `Other RE` | 06 | **Note:** `other_re` was intentionally removed from `apply_za_local_carriers.py` in Module 12 (2026-05-12) — incompatible with LP expansion and represents an undifferentiated aggregate (small hydro/landfill gas/biogas). The timeseries CSV is produced but the generator is not attached in the V1 network. Module 06 spec has not been updated to reflect this. Deferred to Module 14. |
 
 ### 3.3 Audit CSVs (`data/za_audit/`)
 
@@ -246,7 +246,7 @@ they are not duplicated here.
 
 **Module 08 — fleet**
 
-`za_powerplant_reconciliation.csv`, `za_named_plant_inventory.csv`, `za_eskom_2023_capacity_anchors.csv`, `za_phs_storage_hours.csv` (Drakensberg 24 h, Ingula 21 h), `za_powerplants_normalization_diff.csv` (PowerplantMatching pre/post-normalisation delta)
+`za_powerplant_reconciliation.csv`, `za_named_plant_inventory.csv`, `za_eskom_2023_capacity_anchors.csv`, `za_phs_storage_hours.csv` (Drakensberg 24 h, Ingula 20.69 h per `custom_powerplants.csv`: 27,400 MWh / 1,324 MW), `za_powerplants_normalization_diff.csv` (PowerplantMatching pre/post-normalisation delta)
 
 **Module 09 — grid**
 
@@ -291,10 +291,15 @@ they are not duplicated here.
 | Path (in PyPSA-RSA, pinned commit `0831ce24…`) | Sheet | Used by |
 |---|---|---|
 | `scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx` | `operational_constraints` | `solve_network_eaf_opc`, `solve_network_eaf_opc_cap` (linopy constraints, `HIGH_GAS` scenario) |
-| `plant_availability.xlsx` | `outage_profiles` | `apply_za_coal_eaf` (HIGH_GAS scenario) |
+| `plant_availability.xlsx` | `outage_profiles` | `apply_za_coal_eaf` (**BASE scenario** — filtered to `scenario == 'BASE'`; the HIGH_GAS scenario is used only by `operational_constraints.xlsx`) |
 
-The OCGT annual cap value used by `solve_network_eaf_opc_cap` is inlined in the
-solve script (it is not a standalone CSV).
+The OCGT annual cap value used by `solve_network_eaf_opc_cap` is **not** inlined
+in the solve script. It is a row in `operational_constraints.xlsx` (HIGH_GAS
+scenario, scope `global`, carrier `ocgt_diesel`, constraint type
+`output_energy / year / max`, value `5,500,000 MWh = 5.5 TWh`). This row was
+added to the pypsa-rsa workbook on 2026-05-13 and is present at pinned commit
+`0831ce24…`. To change the cap, edit that workbook row and re-run
+`solve_network_eaf_opc_cap`.
 
 ### 3.7 ZA-specific scripts package (`scripts/`)
 
@@ -324,9 +329,9 @@ Each step shows only what changes versus the previous step.
 | Step | Config keys changed | Inputs added or activated | Snakemake rules added | Practical dispatch effect |
 |---|---|---|---|---|
 | **NoCO2-1H** (baseline; built on top of stock PyPSA-Earth + Modules 01–11 + `apply_za_custom_lines` + `apply_za_local_carriers` + `za_fix_csp_links_stores`) | `scenario.opts: ["NoCO2-1H"]`; `electricity.co2limit: null` (vs default 7.75e7) | None beyond Module 11 pre-solve state | `solve_network` (stock, but consumes the Module-11-prepared network) | Coal at flat 100 % availability all year; no operational constraints; OCGT carriers exist but no cap; CSP topology fixed |
-| **+EAF** (NoCO2-1H-EAF) | (no config change; rule chain selects variant) | `pypsa-rsa/.../plant_availability.xlsx:outage_profiles` (HIGH_GAS scenario) | `apply_za_coal_eaf`, `solve_network_eaf` | Coal `generators_t.p_max_pu` reduced station-by-station, week-by-week, by planned+unplanned outage. Coal annual energy drops; OCGT and load-shedding rise to fill the gap |
+| **+EAF** (NoCO2-1H-EAF) | (no config change; rule chain selects variant) | `pypsa-rsa/.../plant_availability.xlsx:outage_profiles` (**BASE scenario** — `scenario == 'BASE'`; distinct from the HIGH_GAS scenario used by `operational_constraints.xlsx`) | `apply_za_coal_eaf`, `solve_network_eaf` | Coal `generators_t.p_max_pu` reduced station-by-station, week-by-week, by planned+unplanned outage. Coal annual energy drops; OCGT and load-shedding rise to fill the gap |
 | **+EAF+OPC** (NoCO2-1H-EAF-OPC) | `za.operational_constraints.enable: true`; `scenario: "HIGH_GAS"` | `pypsa-rsa/.../operational_constraints.xlsx:operational_constraints` (HIGH_GAS) | `solve_network_eaf_opc`, `materialize_za_op_constraints_audit` | Active constraints in HIGH_GAS 2023: weekly OCGT (diesel+AVF) CF ≤ 0.50, nuclear must-run at `p = p_max_pu`. Other workbook rows (`ccgt_steam`, `rmippp`, `sasol_*`) silently no-op (carriers absent from 2023 fixed fleet). OCGT bounded weekly; load-shedding sharpens at peak weeks |
-| **+EAF+OPC+CAP** (NoCO2-1H-EAF-OPC-CAP; **accepted Module 13 solve**) | (no config change; cap value lives in the solve script) | (none beyond OPC) | `solve_network_eaf_opc_cap`, `materialize_za_op_constraints_audit_cap` | Annual energy of combined OCGT (`ocgt_diesel`+`ocgt_gas`) bounded by an inline linopy constraint at ZA 2023 physical fuel-supply level. OCGT is fully utilised against the cap; residual scarcity absorbed by load-shedding (driving the defensible scarcity-timing correlation r ≈ 0.73 weekly, ≈ 0.85 monthly with Eskom realised LS) |
+| **+EAF+OPC+CAP** (NoCO2-1H-EAF-OPC-CAP; **accepted Module 13 solve**) | (no config change; cap value is a workbook row in `operational_constraints.xlsx`, added 2026-05-13) | (none beyond OPC) | `solve_network_eaf_opc_cap`, `materialize_za_op_constraints_audit_cap` | Annual energy of combined OCGT (`ocgt_diesel`+`ocgt_gas`) bounded by an inline linopy constraint at ZA 2023 physical fuel-supply level. OCGT is fully utilised against the cap; residual scarcity absorbed by load-shedding (driving the defensible scarcity-timing correlation r ≈ 0.73 weekly, ≈ 0.85 monthly with Eskom realised LS) |
 
 ---
 
@@ -344,7 +349,7 @@ the `pre_*.nc` backup network), **full re-run** (rebuild from raw inputs).
 | 3 | Custom transmission lines | `apply_za_custom_lines` rule | (no injection) | 10 corridors injected | 09b | ~12 GW of inter-regional transfer capacity absent; constrained corridors flag infeasibility at peak; load-shedding rises in regions cut off from coal supply | rule bypass (restore `elec_s_34.pre_custom.nc`) |
 | 4 | OCGT local carriers | `apply_za_local_carriers` rule + `za_local_carriers` config block | (carriers absent) | `ocgt_diesel`, `ocgt_gas` carriers added | 11/12 | Solve crashes at `add_carrier`: OCGT generators reference non-existent carriers | config change (drop OCGT from `custom_powerplants.csv`) or rule bypass with patched custom_powerplants |
 | 5 | ZAR-denominated coal & nuclear marginal costs | `costs.output_currency` + `za_local_carrier_cost_rows.csv` rows for coal/nuclear | stock EUR defaults | ZAR rows patched into network | 07 | Coal/nuclear marginal costs revert to upstream EUR defaults (×0.05 ZAR/EUR equivalent); coal becomes cheaper than nuclear and dispatch order may invert | config change |
-| 6 | Coal EAF overlay | `apply_za_coal_eaf` rule | (no overlay) | HIGH_GAS station-weekly outage applied | 12 | Coal at flat 100 % `p_max_pu` year-round; coal over-dispatch grows from ~+11 % to ~+25 % vs Eskom 2023; LS drops; only the baseline NoCO2-1H variant is producible | rule bypass (restore `pre_eaf.nc`); only affects EAF and downstream variants |
+| 6 | Coal EAF overlay | `apply_za_coal_eaf` rule | (no overlay) | BASE scenario station-weekly outage applied (from `plant_availability.xlsx`; HIGH_GAS is a separate workbook used only for OPC) | 12 | Coal at flat 100 % `p_max_pu` year-round; coal over-dispatch grows from ~+11 % to ~+25 % vs Eskom 2023; LS drops; only the baseline NoCO2-1H variant is producible | rule bypass (restore `pre_eaf.nc`); only affects EAF and downstream variants |
 | 7 | Operational constraints (OPC) | `za.operational_constraints.enable` + `solve_network_eaf_opc` rule | (no constraints) | weekly OCGT CF ≤ 0.50, nuclear must-run | 12 | OCGT runs unconstrained on a weekly basis; nuclear free to ramp; OPC variant collapses into EAF | config change (`enable: false`) |
 | 8 | OCGT annual cap | `solve_network_eaf_opc_cap` rule (cap value inline) | (no cap) | Annual OCGT energy ≤ 2023 physical fuel supply | 12 | OCGT runs against weekly OPC limit but no annual ceiling; OCGT annual energy exceeds physical fuel supply; LS underestimated; CAP variant collapses into OPC | rule bypass |
 | 9 | CSP topology fix | `za_fix_csp_links_stores` invocation in Module 12 | (broken `ElectrochemicalPHES`) | `Store`+`Link` pattern wired to thermal-out | 12 | CSP TES energy balance fails to close; CSP dispatch invalid in solve (drifts to zero or solver-dependent garbage) | rule bypass not safe; would require full network rebuild |
@@ -368,6 +373,12 @@ the `pre_*.nc` backup network), **full re-run** (rebuild from raw inputs).
 ---
 
 ## Section 6 — Dependency DAG
+
+> **Note (2026-05-15):** The companion graph files (`model_data_sources.graph.svg`,
+> `.png`, `.pdf`) were generated from an earlier version of this document and
+> may not reflect corrections applied during Module 13c (notably: EAF BASE vs
+> HIGH_GAS label, OCGT cap workbook source). A graph rebuild is needed before
+> Module 14 handoff. The mermaid source below is the authoritative version.
 
 The DAG below shows the flow from raw external data through the calibration
 modules to the four solved network variants. Apply / mutation rules are shown
@@ -449,7 +460,7 @@ flowchart TD
   ECLC --> SOLVE0["solve_network<br/>(NoCO2-1H)"]
   SOLVE0 --> SOLVED0["elec_s_34_ec_lc1_NoCO2-1H.nc<br/>(solved baseline)"]
 
-  RSA --> PLANTAVAIL["plant_availability.xlsx:outage_profiles<br/>(HIGH_GAS)"]
+  RSA --> PLANTAVAIL["plant_availability.xlsx:outage_profiles<br/>(BASE scenario)"]
   ECLC --> APEAF["apply_za_coal_eaf<br/>(mutate coal generators_t.p_max_pu;<br/>.pre_eaf.nc backup)"]
   PLANTAVAIL --> APEAF
   APEAF --> SOLVEEAF["solve_network_eaf"]
@@ -495,7 +506,7 @@ alternative — why rejected.
 - **Dual CoLE frame (CSIR R116,570/MWh policy + ≈100 EUR/MWh solver safety valve)** — policy frame and solver penalty differ by ≈57×; Module 12 requires both for defensible reporting; collapsing to one frame either makes the solve infeasible (policy) or under-prices scarcity (safety valve only).
 - **Gurobi 12.0.3 with threads=2, BarConvTol=1.e-5** — empirically converges on the hourly 34-bus model; HiGHS rejected because solve time grows to multi-hour and convergence is fragile on hourly resolution.
 - **`NoCO2-1H` opt (no dispatch-level CO₂ cap)** — ZA is outside the EU ETS; the default 77.5 Mt/y European cap, sized for European fleets, would either collapse ZA coal dispatch or make the model infeasible; policy CO₂ scenarios are deferred to expansion runs.
-- **EAF from PyPSA-RSA HIGH_GAS scenario, not BASE/IRP23/AMBITIONS** — HIGH_GAS is the scenario whose 2023 fixed assumptions best match Eskom 2023 realised availability; verified in Module 12 calibration assessment.
+- **EAF from PyPSA-RSA `plant_availability.xlsx` BASE scenario** — `apply_za_coal_eaf` filters `outage_profiles` to `scenario == 'BASE'`; verified in `za_coal_eaf_audit.csv`. The OPC workbook (`operational_constraints.xlsx`) uses HIGH_GAS — these are two different workbooks with different scenario semantics.
 - **Operational constraints applied as linopy constraints, not network attributes** — composability with the CAP variant requires both layers to be addable in solve preprocessing; encoding as attributes would force per-variant network rebuilds.
 - **OCGT annual cap (CAP variant) over unconstrained OCGT** — Module 13 evidence shows OPC alone allows OCGT annual energy to exceed physical 2023 fuel supply; cap is the minimum constraint needed to bound the model to realisable dispatch.
 - **CSP rebuilt as `Store`+`Link` (removed broken `ElectrochemicalPHES`)** — original PyPSA-Earth topology fails to close TES energy balance; SAM-tower-with-TES topology is the smallest correct fix (Module 12).
@@ -518,9 +529,10 @@ alternative — why rejected.
   the Snakefile*, which can differ from the module that produced the rule's
   inputs (e.g. `apply_za_local_carriers` is owned by Module 11 but consumes
   Module 07 cost rows).
-- The **OCGT annual cap value** for the CAP variant is held in
-  `solve_network_eaf_opc_cap`'s script rather than a CSV; if the cap is
-  re-tuned, update the script and re-run that single rule.
+- The **OCGT annual cap value** for the CAP variant is a row in
+  `operational_constraints.xlsx` (HIGH_GAS / global / ocgt_diesel /
+  output_energy / year / max / 5.5 TWh), added 2026-05-13. To re-tune, edit
+  that workbook row in the pypsa-rsa repo and re-run `solve_network_eaf_opc_cap`.
 - The four-variant chain is selected via Snakefile **rule order**, not via
   `scenario.opts`. `scenario.opts: ["NoCO2-1H"]` is the seed; later variants
   emerge from the rule chain on the EAF-mutated network.
