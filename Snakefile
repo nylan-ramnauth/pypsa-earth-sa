@@ -6,6 +6,7 @@ import sys
 import os
 import warnings
 import pathlib
+import pandas as pd
 
 sys.path.append("./scripts")
 
@@ -67,6 +68,196 @@ load_data_paths = get_load_paths_gegis("data", config)
 if config.get("za_stock_baseline", False):
     load_data_paths = [ancient(path) for path in load_data_paths]
 ATLITE_NPROCESSES = config["atlite"].get("nprocesses", 4)
+
+
+def _za_opc_workbook(config):
+    cfg = config.get("za_operational_constraints", {})
+    legacy_cfg = config.get("za", {}).get("operational_constraints", {})
+    explicit = cfg.get("workbook") or legacy_cfg.get("workbook")
+    if explicit:
+        return os.path.abspath(explicit)
+
+    packaged = Path(
+        "data/za_reference/pypsa_rsa_benchmark_2023/sub_scenarios/operational_constraints.xlsx"
+    )
+    if packaged.exists():
+        return os.path.abspath(packaged)
+
+    return os.path.abspath(
+        config.get("pypsa_rsa_root", "")
+        + "/scenarios/Benchmark_2023/sub_scenarios/operational_constraints.xlsx"
+    )
+
+
+def _za_opc_model_year(config):
+    cfg = config.get("za_operational_constraints", {})
+    legacy_cfg = config.get("za", {}).get("operational_constraints", {})
+    return int(cfg.get("model_year", legacy_cfg.get("model_year", 2023)))
+
+
+def _za_scarcity_cap_model_year(config):
+    cfg = config.get("za_scarcity_cap", {})
+    return int(cfg.get("model_year", 2023))
+
+
+def _za_normalise_opc_scenario(scenario):
+    return str(scenario).replace("-", "_")
+
+
+def _za_sasol_enabled(config):
+    cfg = config.get("za_2023_fleet_calibration", {}) or {}
+    sasol_cfg = cfg.get("sasol", {}) or {}
+    return bool(sasol_cfg.get("enable", False))
+
+
+def _za_require_sasol_enabled_for_cap(config):
+    if not _za_sasol_enabled(config):
+        raise ValueError(
+            "Sasol CAP targets require za_2023_fleet_calibration.sasol.enable: "
+            "true so the active input network contains sasol_coal/sasol_gas "
+            "generators. Enable Sasol in the config before running the "
+            "OFFICIAL-FLEET-SASOL CAP target."
+        )
+
+
+def _za_explicit_annual_cap_config(config):
+    cfg = config.get("za_scarcity_cap", {}) or {}
+    caps = cfg.get("annual_generation_caps_twh", {}) or {}
+    if not isinstance(caps, dict):
+        raise ValueError("za_scarcity_cap.annual_generation_caps_twh must be a mapping")
+    return {str(carrier): float(value) for carrier, value in caps.items()}
+
+
+def _za_selected_opc_sasol_caps(config, opc_scenario=None):
+    """Return Sasol annual caps delegated from the selected OPC scenario/year."""
+    cfg = config.get("za_operational_constraints", {}) or {}
+    legacy_cfg = config.get("za", {}).get("operational_constraints", {}) or {}
+    scenario = _za_normalise_opc_scenario(
+        opc_scenario or cfg.get("scenario", legacy_cfg.get("scenario", "NO_MIN_GAS"))
+    )
+    model_year = _za_opc_model_year(config)
+    workbook = _za_opc_workbook(config)
+    if not os.path.exists(workbook):
+        warnings.warn(
+            f"ZA OPC workbook not found at {workbook}; using explicit Sasol cap config"
+        )
+        return {}
+
+    frame = pd.read_excel(workbook, sheet_name="operational_constraints")
+    renamed = {}
+    for column in frame.columns:
+        try:
+            as_float = float(column)
+        except (TypeError, ValueError):
+            continue
+        if as_float.is_integer():
+            renamed[column] = int(as_float)
+    frame = frame.rename(columns=renamed)
+    if model_year not in frame.columns:
+        return {}
+
+    unit_to_twh = {
+        "TWh": 1.0,
+        "GWh": 1e-3,
+        "MWh": 1e-6,
+        "PJ": 1.0 / 3.6,
+        "TJ": 1e-3 / 3.6,
+        "GJ": 1e-6 / 3.6,
+    }
+    mask = (
+        frame["scenario"].astype(str).eq(scenario)
+        & frame["tech_fuel"].astype(str).isin(["sasol_coal", "sasol_gas"])
+        & frame["capacity_factor"].astype(str).eq("output_energy")
+        & frame["period"].astype(str).eq("year")
+        & frame["limit"].astype(str).eq("max")
+    )
+    caps = {}
+    for _, row in frame.loc[mask].iterrows():
+        value = row[model_year]
+        if pd.isna(value):
+            continue
+        units = str(row["units"])
+        if units not in unit_to_twh:
+            raise ValueError(
+                f"Unsupported Sasol annual cap unit {units!r} in {workbook}"
+            )
+        caps[str(row["tech_fuel"])] = float(value) * unit_to_twh[units]
+    return caps
+
+
+def _za_annual_cap_bundle(
+    config,
+    ocgt_override_twh=None,
+    include_sasol=None,
+    opc_scenario=None,
+    ocgt_source=None,
+):
+    """Build annual CAP params from explicit config, OPC Sasol rows, and OCGT override."""
+    caps = _za_explicit_annual_cap_config(config)
+    sources = {carrier: "explicit_cap_config" for carrier in caps}
+    if include_sasol is None:
+        include_sasol = _za_sasol_enabled(config)
+    if include_sasol:
+        _za_require_sasol_enabled_for_cap(config)
+        for carrier, value in _za_selected_opc_sasol_caps(
+            config, opc_scenario=opc_scenario
+        ).items():
+            caps[carrier] = value
+            sources[carrier] = "selected_opc_scenario_delegated_to_cap"
+    else:
+        caps = {
+            carrier: value
+            for carrier, value in caps.items()
+            if carrier not in {"sasol_coal", "sasol_gas"}
+        }
+        sources = {
+            carrier: source
+            for carrier, source in sources.items()
+            if carrier not in {"sasol_coal", "sasol_gas"}
+        }
+    if ocgt_override_twh is not None:
+        caps["ocgt_diesel"] = float(ocgt_override_twh)
+        sources["ocgt_diesel"] = ocgt_source or "labelled_ocgt_override"
+    return {"caps": caps, "sources": sources}
+
+
+def _za_annual_cap_dict(config, **kwargs):
+    return _za_annual_cap_bundle(config, **kwargs)["caps"]
+
+
+def _za_annual_cap_sources(config, **kwargs):
+    return _za_annual_cap_bundle(config, **kwargs)["sources"]
+
+
+_ZA_OPC_WORKBOOK = _za_opc_workbook(config)
+_ZA_OPC_MODEL_YEAR = _za_opc_model_year(config)
+_ZA_SCARCITY_CAP_MODEL_YEAR = _za_scarcity_cap_model_year(config)
+_ZA_CAP_OCGT_ESKOM2023 = _za_annual_cap_dict(
+    config,
+    ocgt_override_twh=5.243,
+    include_sasol=False,
+    ocgt_source="Eskom observed 2023 OCGT generation target",
+)
+_ZA_CAP_OCGT_ESKOM2023_SOURCES = _za_annual_cap_sources(
+    config,
+    ocgt_override_twh=5.243,
+    include_sasol=False,
+    ocgt_source="Eskom observed 2023 OCGT generation target",
+)
+_ZA_CAP_OCGT_RSA_HIGH_GAS_5P5 = _za_annual_cap_dict(
+    config,
+    ocgt_override_twh=5.5,
+    include_sasol=False,
+    opc_scenario="LOW_GAS",
+    ocgt_source="pypsa-rsa HIGH_GAS 2023 ocgt_diesel annual cap row",
+)
+_ZA_CAP_OCGT_RSA_HIGH_GAS_5P5_SOURCES = _za_annual_cap_sources(
+    config,
+    ocgt_override_twh=5.5,
+    include_sasol=False,
+    opc_scenario="LOW_GAS",
+    ocgt_source="pypsa-rsa HIGH_GAS 2023 ocgt_diesel annual cap row",
+)
 
 
 wildcard_constraints:
@@ -239,9 +430,26 @@ rule build_za_fleet_reconciliation:
         "scripts/build_za_fleet_reconciliation.py"
 
 
+rule materialize_za_2023_fleet:
+    input:
+        config="configs/za/za_2023_fixed_validation.yaml",
+        custom_powerplants="data/custom_powerplants.csv",
+    output:
+        selected_custom_powerplants="data/za_validation/custom_powerplants_selected_2023.csv",
+        audit="data/za_audit/za_2023_fleet_mode_audit.csv",
+        backup_manifest="data/za_audit/custom_powerplants_backup_manifest.csv",
+    log:
+        "logs/" + RDIR + "materialize_za_2023_fleet.log",
+    benchmark:
+        "benchmarks/" + RDIR + "materialize_za_2023_fleet"
+    script:
+        "scripts/materialize_za_2023_fleet.py"
+
+
 rule build_za_grid_spatial:
     input:
         config="configs/za/za_2023_fixed_validation.yaml",
+        fleet_mode_audit="data/za_audit/za_2023_fleet_mode_audit.csv",
         base_network="networks/" + RDIR + "base.nc",
         elec_s="networks/" + RDIR + "elec_s.nc",
         country_shapes="resources/" + RDIR + "shapes/country_shapes.geojson",
@@ -304,6 +512,7 @@ rule apply_za_local_carriers:
     input:
         network_in="networks/" + RDIR + "elec_s_34.nc",
         custom_lines_marker="networks/" + RDIR + "elec_s_34.pre_custom.nc",
+        fleet_mode_audit="data/za_audit/za_2023_fleet_mode_audit.csv",
         carrier_rows="data/za_audit/za_local_carrier_cost_rows.csv",
         custom_pp="data/custom_powerplants.csv",
     output:
@@ -910,6 +1119,11 @@ rule build_powerplants:
         powerplants_filter=config["electricity"]["powerplants_filter"],
     input:
         base_network="networks/" + RDIR + "base.nc",
+        fleet_mode_audit=(
+            []
+            if config.get("za_stock_baseline", False)
+            else "data/za_audit/za_2023_fleet_mode_audit.csv"
+        ),
         pm_config="configs/powerplantmatching_config.yaml",
         custom_powerplants=(
             "resources/" + RDIR + "stock_inputs/custom_powerplants.csv"
@@ -1293,15 +1507,73 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         script:
             "scripts/solve_network.py"
 
+    _za_coal_disagg_cfg = config.get("za_coal_disaggregation", {})
+    _za_coal_disagg = bool(_za_coal_disagg_cfg.get("enable", False))
+    _za_coal_uc = bool(_za_coal_disagg_cfg.get("uc", {}).get("enable", False))
+    if _za_coal_uc and not _za_coal_disagg:
+        raise ValueError("za_coal_disaggregation.uc.enable requires za_coal_disaggregation.enable")
+
+    rule build_za_coal_plants:
+        input:
+            config="configs/za/za_2023_fixed_validation.yaml",
+            fleet_mode_audit="data/za_audit/za_2023_fleet_mode_audit.csv",
+            custom_powerplants="data/custom_powerplants.csv",
+            fixed_technologies=config["pypsa_rsa_root"]
+            + "/scenarios/Benchmark_2023/sub_scenarios/fixed_technologies.xlsx",
+            fuel_prices=config["pypsa_rsa_root"]
+            + "/scenarios/Benchmark_2023/sub_scenarios/fuel_prices.xlsx",
+            plant_availability=config["pypsa_rsa_root"]
+            + "/scenarios/Benchmark_2023/sub_scenarios/plant_availability.xlsx",
+        output:
+            plants=_za_coal_disagg_cfg.get(
+                "plants_csv", "data/za_validation/za_coal_plants_2023.csv"
+            ),
+            eaf=_za_coal_disagg_cfg.get(
+                "eaf_hourly_csv", "data/za_validation/za_coal_eaf_hourly_2023.csv"
+            ),
+            buses=_za_coal_disagg_cfg.get(
+                "bus_assignment_csv", "data/za_validation/za_coal_bus_assignment.csv"
+            ),
+        params:
+            rsa_scenarios=config["pypsa_rsa_root"]
+            + "/scenarios/Benchmark_2023/sub_scenarios",
+        log:
+            "logs/" + RDIR + "build_za_coal_plants.log",
+        benchmark:
+            "benchmarks/" + RDIR + "build_za_coal_plants"
+        script:
+            "scripts/build_za_coal_plants.py"
+
     rule apply_za_coal_eaf:
-        # Module 12 — overlay station-level weekly coal availability from
-        # pypsa-rsa plant_availability.xlsx (BASE scenario) onto the prepared
-        # lc1_NoCO2-1H network. Coal carrier only; no other carrier mutated.
+        # Module 12/13g — either overlay bus-weighted coal EAF on the
+        # aggregated coal carrier, or replace it with 15 named Eskom coal
+        # stations when za_coal_disaggregation.enable is true.
         input:
             network_in="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H.nc",
             workbook=config["pypsa_rsa_root"]
             + "/scenarios/Coal_Flexibilisation/sub_scenarios/plant_availability.xlsx",
             custom_pp="data/custom_powerplants.csv",
+            plants_csv=(
+                _za_coal_disagg_cfg.get(
+                    "plants_csv", "data/za_validation/za_coal_plants_2023.csv"
+                )
+                if _za_coal_disagg
+                else []
+            ),
+            eaf_csv=(
+                _za_coal_disagg_cfg.get(
+                    "eaf_hourly_csv", "data/za_validation/za_coal_eaf_hourly_2023.csv"
+                )
+                if _za_coal_disagg
+                else []
+            ),
+            buses_csv=(
+                _za_coal_disagg_cfg.get(
+                    "bus_assignment_csv", "data/za_validation/za_coal_bus_assignment.csv"
+                )
+                if _za_coal_disagg
+                else []
+            ),
         output:
             network_out="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H-EAF.nc",
             backup="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H.pre_eaf.nc",
@@ -1312,7 +1584,11 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         resources:
             mem_mb=4000,
         script:
-            "scripts/za_fleet/apply_coal_eaf.py"
+            (
+                "scripts/za_fleet/build_za_coal_plants_network.py"
+                if _za_coal_disagg
+                else "scripts/za_fleet/apply_coal_eaf.py"
+            )
 
     rule solve_network_eaf:
         # Mirror of solve_network with hard-pinned EAF wildcards. Required so
@@ -1351,28 +1627,72 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
             "scripts/solve_network.py"
 
     rule solve_network_eaf_opc:
-        # Module 12 — solve the coal-EAF network with pypsa-rsa operational
-        # constraints overlaid inside solve_network.py extra_functionality.
+        # Module 13i — solve the accepted EAF-UC network with one explicit
+        # pypsa-rsa Benchmark_2023 operational-limits scenario overlaid. The
+        # wildcard overrides only za_operational_constraints.scenario for these
+        # three labelled comparison outputs; config remains canonical for
+        # config-driven OPC solves.
         params:
             solving=config["solving"],
             augmented_line_connection=config["augmented_line_connection"],
             policy_config=config["policy_config"],
+            za_operational_constraints_enable=True,
+            za_operational_constraints_scenario=lambda wildcards: wildcards.opc_scenario.replace("-", "_"),
+            za_operational_constraints_model_year=_ZA_OPC_MODEL_YEAR,
         input:
             network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
             agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
             eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
-            operational_constraints=os.path.abspath(
-                config.get("za", {})
-                .get("operational_constraints", {})
-                .get(
-                    "workbook",
-                    config.get("pypsa_rsa_root", "")
-                    + "/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx",
-                )
-            ),
+            operational_constraints=_ZA_OPC_WORKBOOK,
         output:
-            network="results/" + RDIR + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC.nc",
-            za_op_constraints_audit="data/za_audit/za_operational_constraints_audit_{clusters}_{opts}.csv",
+            network="results/"
+            + RDIR
+            + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}.nc",
+            za_op_constraints_audit="data/za_validation/za_opc_audit_{clusters}_{opts}_{opc_scenario}.csv",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+            opc_scenario="NO-MIN-GAS|LOW-GAS|HIGH-GAS",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}_python.log",
+        benchmark:
+            "benchmarks/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
+    rule solve_network_eaf_cap:
+        # Module 13j — direct annual OCGT scarcity-cap diagnostic without OPC.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+            za_scarcity_cap_enable=True,
+            za_scarcity_cap_model_year=_ZA_SCARCITY_CAP_MODEL_YEAR,
+            za_scarcity_cap_annual_generation_caps_twh=_ZA_CAP_OCGT_ESKOM2023,
+            za_scarcity_cap_annual_generation_cap_sources=_ZA_CAP_OCGT_ESKOM2023_SOURCES,
+        input:
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
+        output:
+            network="results/"
+            + RDIR
+            + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-CAP-OCGT-ESKOM2023.nc",
+            za_scarcity_cap_audit="data/za_validation/za_scarcity_cap_audit_{clusters}_{opts}_CAP-OCGT-ESKOM2023.csv",
         wildcard_constraints:
             clusters="34",
             opts="NoCO2-1H",
@@ -1380,13 +1700,15 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
             solver=os.path.normpath(
                 "logs/"
                 + RDIR
-                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC_solver.log"
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-CAP-OCGT-ESKOM2023_solver.log"
             ),
             python="logs/"
             + RDIR
-            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC_python.log",
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-CAP-OCGT-ESKOM2023_python.log",
         benchmark:
-            "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC"
+            "benchmarks/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-CAP-OCGT-ESKOM2023"
         threads: 20
         resources:
             mem=memory,
@@ -1396,43 +1718,59 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
             "scripts/solve_network.py"
 
     rule solve_network_eaf_opc_cap:
-        # Module 12 solve 4 — same EAF+OPC path after adding the source-backed
-        # annual OCGT output-energy cap to the pypsa-rsa workbook. This writes a
-        # distinct network and audit so solve 3 remains preserved.
+        # Module 13j — source-selected OPC baseline/sensitivity plus one
+        # explicit annual OCGT cap from Eskom observed 2023 generation.
         params:
             solving=config["solving"],
             augmented_line_connection=config["augmented_line_connection"],
             policy_config=config["policy_config"],
+            za_operational_constraints_enable=True,
+            za_operational_constraints_scenario=lambda wildcards: wildcards.opc_scenario.replace("-", "_"),
+            za_operational_constraints_model_year=_ZA_OPC_MODEL_YEAR,
+            za_scarcity_cap_enable=True,
+            za_scarcity_cap_model_year=_ZA_SCARCITY_CAP_MODEL_YEAR,
+            za_scarcity_cap_annual_generation_caps_twh=lambda wildcards: _za_annual_cap_dict(
+                config,
+                ocgt_override_twh=5.243,
+                include_sasol=False,
+                opc_scenario=wildcards.opc_scenario,
+                ocgt_source="Eskom observed 2023 OCGT generation target",
+            ),
+            za_scarcity_cap_annual_generation_cap_sources=lambda wildcards: _za_annual_cap_sources(
+                config,
+                ocgt_override_twh=5.243,
+                include_sasol=False,
+                opc_scenario=wildcards.opc_scenario,
+                ocgt_source="Eskom observed 2023 OCGT generation target",
+            ),
         input:
             network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
             agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
             eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
-            operational_constraints=os.path.abspath(
-                config.get("za", {})
-                .get("operational_constraints", {})
-                .get(
-                    "workbook",
-                    config.get("pypsa_rsa_root", "")
-                    + "/scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx",
-                )
-            ),
+            operational_constraints=_ZA_OPC_WORKBOOK,
         output:
-            network="results/" + RDIR + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP.nc",
-            za_op_constraints_audit="data/za_audit/za_operational_constraints_audit_{clusters}_{opts}_EAF_OPC_CAP.csv",
+            network="results/"
+            + RDIR
+            + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}-CAP-OCGT-ESKOM2023.nc",
+            za_op_constraints_audit="data/za_validation/za_opc_audit_{clusters}_{opts}_{opc_scenario}_CAP-OCGT-ESKOM2023.csv",
+            za_scarcity_cap_audit="data/za_validation/za_scarcity_cap_audit_{clusters}_{opts}_OPC-{opc_scenario}_CAP-OCGT-ESKOM2023.csv",
         wildcard_constraints:
             clusters="34",
             opts="NoCO2-1H",
+            opc_scenario="NO-MIN-GAS|LOW-GAS",
         log:
             solver=os.path.normpath(
                 "logs/"
                 + RDIR
-                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP_solver.log"
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}-CAP-OCGT-ESKOM2023_solver.log"
             ),
             python="logs/"
             + RDIR
-            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP_python.log",
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}-CAP-OCGT-ESKOM2023_python.log",
         benchmark:
-            "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-OPC-CAP"
+            "benchmarks/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-{opc_scenario}-CAP-OCGT-ESKOM2023"
         threads: 20
         resources:
             mem=memory,
@@ -1441,21 +1779,153 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         script:
             "scripts/solve_network.py"
 
-    rule materialize_za_op_constraints_audit:
-        # Stable Module 12 audit path for reports/notebooks.
+    rule solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated:
+        # Module 13m CAP wiring smoke target: official fleet, optional Sasol
+        # assets, selected OPC rows, and explicit Eskom-2023 OCGT CAP override.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+            za_operational_constraints_enable=True,
+            za_operational_constraints_scenario=lambda wildcards: wildcards.opc_scenario.replace("-", "_"),
+            za_operational_constraints_model_year=_ZA_OPC_MODEL_YEAR,
+            za_scarcity_cap_enable=True,
+            za_scarcity_cap_model_year=_ZA_SCARCITY_CAP_MODEL_YEAR,
+            za_scarcity_cap_annual_generation_caps_twh=lambda wildcards: _za_annual_cap_dict(
+                config,
+                ocgt_override_twh=5.243,
+                include_sasol=True,
+                opc_scenario=wildcards.opc_scenario,
+                ocgt_source="Eskom observed 2023 OCGT generation target",
+            ),
+            za_scarcity_cap_annual_generation_cap_sources=lambda wildcards: _za_annual_cap_sources(
+                config,
+                ocgt_override_twh=5.243,
+                include_sasol=True,
+                opc_scenario=wildcards.opc_scenario,
+                ocgt_source="Eskom observed 2023 OCGT generation target",
+            ),
         input:
-            "data/za_audit/za_operational_constraints_audit_34_NoCO2-1H.csv",
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
+            operational_constraints=_ZA_OPC_WORKBOOK,
+        output:
+            network="results/"
+            + RDIR
+            + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OFFICIAL-FLEET-SASOL-OPC-{opc_scenario}-CAP-OCGT-SASOL-OPC-DELEGATED.nc",
+            za_op_constraints_audit="data/za_validation/za_opc_audit_{clusters}_{opts}_OFFICIAL-FLEET-SASOL_{opc_scenario}_CAP-OCGT-SASOL-OPC-DELEGATED.csv",
+            za_scarcity_cap_audit="data/za_validation/za_scarcity_cap_audit_{clusters}_{opts}_OFFICIAL-FLEET-SASOL_OPC-{opc_scenario}_CAP-OCGT-SASOL-OPC-DELEGATED.csv",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+            opc_scenario="NO-MIN-GAS|LOW-GAS",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OFFICIAL-FLEET-SASOL-OPC-{opc_scenario}-CAP-OCGT-SASOL-OPC-DELEGATED_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OFFICIAL-FLEET-SASOL-OPC-{opc_scenario}-CAP-OCGT-SASOL-OPC-DELEGATED_python.log",
+        benchmark:
+            "benchmarks/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OFFICIAL-FLEET-SASOL-OPC-{opc_scenario}-CAP-OCGT-SASOL-OPC-DELEGATED"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
+    rule solve_network_eaf_opc_low_gas_cap_rsa_high_gas_5p5:
+        # Optional Module 13j sensitivity reproducing the RSA HIGH_GAS annual
+        # ocgt_diesel cap magnitude through the explicit CAP helper.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+            za_operational_constraints_enable=True,
+            za_operational_constraints_scenario="LOW_GAS",
+            za_operational_constraints_model_year=_ZA_OPC_MODEL_YEAR,
+            za_scarcity_cap_enable=True,
+            za_scarcity_cap_model_year=_ZA_SCARCITY_CAP_MODEL_YEAR,
+            za_scarcity_cap_annual_generation_caps_twh=_ZA_CAP_OCGT_RSA_HIGH_GAS_5P5,
+            za_scarcity_cap_annual_generation_cap_sources=_ZA_CAP_OCGT_RSA_HIGH_GAS_5P5_SOURCES,
+        input:
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
+            operational_constraints=_ZA_OPC_WORKBOOK,
+        output:
+            network="results/"
+            + RDIR
+            + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-LOW-GAS-CAP-OCGT-RSA-HIGH-GAS-5P5.nc",
+            za_op_constraints_audit="data/za_validation/za_opc_audit_{clusters}_{opts}_LOW-GAS_CAP-OCGT-RSA-HIGH-GAS-5P5.csv",
+            za_scarcity_cap_audit="data/za_validation/za_scarcity_cap_audit_{clusters}_{opts}_OPC-LOW-GAS_CAP-OCGT-RSA-HIGH-GAS-5P5.csv",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-LOW-GAS-CAP-OCGT-RSA-HIGH-GAS-5P5_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-LOW-GAS-CAP-OCGT-RSA-HIGH-GAS-5P5_python.log",
+        benchmark:
+            "benchmarks/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-UC-OPC-LOW-GAS-CAP-OCGT-RSA-HIGH-GAS-5P5"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
+    rule materialize_za_opc_audit_scenario:
+        # Human-readable per-scenario audit path without solve wildcards.
+        input:
+            "data/za_validation/za_opc_audit_34_NoCO2-1H_{opc_scenario}.csv",
+        output:
+            "data/za_validation/za_opc_audit_{opc_scenario}.csv",
+        wildcard_constraints:
+            opc_scenario="NO-MIN-GAS|LOW-GAS|HIGH-GAS",
+        shell:
+            "cp {input} {output}"
+
+    rule materialize_za_opc_audit:
+        # Stable Module 13i baseline audit path for reports/notebooks.
+        input:
+            "data/za_validation/za_opc_audit_NO-MIN-GAS.csv",
+        output:
+            "data/za_validation/za_opc_audit.csv",
+        shell:
+            "cp {input} {output}"
+
+    rule materialize_za_op_constraints_audit:
+        # Backward-compatible audit path; new reports should use
+        # data/za_validation/za_opc_audit.csv.
+        input:
+            "data/za_validation/za_opc_audit_NO-MIN-GAS.csv",
         output:
             "data/za_audit/za_operational_constraints_audit.csv",
         shell:
             "cp {input} {output}"
 
-    rule materialize_za_op_constraints_audit_cap:
-        # Stable solve-4 audit path without overwriting the solve-3 audit.
+    rule materialize_za_scarcity_cap_audit:
+        # Stable Module 13j audit path for the key LOW_GAS + Eskom OCGT cap diagnostic.
         input:
-            "data/za_audit/za_operational_constraints_audit_34_NoCO2-1H_EAF_OPC_CAP.csv",
+            "data/za_validation/za_scarcity_cap_audit_34_NoCO2-1H_OPC-LOW-GAS_CAP-OCGT-ESKOM2023.csv",
         output:
-            "data/za_audit/za_operational_constraints_audit_cap.csv",
+            "data/za_validation/za_scarcity_cap_audit.csv",
         shell:
             "cp {input} {output}"
 
@@ -1567,11 +2037,21 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
     # wildcard patterns of prepare_network / solve_network.
     ruleorder: apply_za_coal_eaf > prepare_network
     ruleorder: solve_network_eaf > solve_network
+    ruleorder: solve_network_eaf_cap > solve_network_eaf
+    ruleorder: solve_network_eaf_cap > solve_network
+    ruleorder: solve_network_eaf_opc > solve_network_eaf
+    ruleorder: solve_network_eaf_opc > solve_network
     ruleorder: solve_network_eaf_opc_cap > solve_network_eaf_opc
     ruleorder: solve_network_eaf_opc_cap > solve_network_eaf
     ruleorder: solve_network_eaf_opc_cap > solve_network
-    ruleorder: solve_network_eaf_opc > solve_network_eaf
-    ruleorder: solve_network_eaf_opc > solve_network
+    ruleorder: solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated > solve_network_eaf_opc_cap
+    ruleorder: solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated > solve_network_eaf_opc
+    ruleorder: solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated > solve_network_eaf
+    ruleorder: solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated > solve_network
+    ruleorder: solve_network_eaf_opc_low_gas_cap_rsa_high_gas_5p5 > solve_network_eaf_opc_cap
+    ruleorder: solve_network_eaf_opc_low_gas_cap_rsa_high_gas_5p5 > solve_network_eaf_opc
+    ruleorder: solve_network_eaf_opc_low_gas_cap_rsa_high_gas_5p5 > solve_network_eaf
+    ruleorder: solve_network_eaf_opc_low_gas_cap_rsa_high_gas_5p5 > solve_network
 
 
 if config["monte_carlo"]["options"].get("add_to_snakefile", False) == True:

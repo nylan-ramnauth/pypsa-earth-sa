@@ -1281,3 +1281,135 @@ This append-only log records implementation decisions, deviations, source inputs
 
 **Deviations from Opus plan:**
 - Did not copy `elec_s.nc` from the calibrated run. That intermediate can carry calibrated fleet/cost state, so Module 13b instead reuses only raw topology/geography inputs and rebuilds stock-specific PPM fleet, EUR costs, renewable profiles, and prepared network layers.
+
+## Module 13h Coal Linearised UC — 2026-05-15 19:03
+
+- **Status:** complete — accepted as a UC candidate because coal Pearson improves over the 13g.2 control.
+- **Decisions taken:** used the preferred ramp invariant from the handoff review: `za_coal_plants_2023.csv` stores RSA-ready coal ramp rates after the `1.5` multiplier, and `build_za_coal_plants_network.py` only applies mean-availability scaling. Added a stale-CSV gate so config `availability_mode`, `outage_profiles_scenario`, and projected-EAF `annual_availability_scenario` must match the CSV metadata before network mutation.
+- **Deviations from plan:** no final Module 13 notebook/HTML/report exports were refreshed. The no-UC control was not rerun in this session because the accepted 13g.2 control metrics were already recorded and rerunning it through the canonical path would overwrite the 13h candidate outputs; comparison uses the accepted 13g.2 values from the handoff.
+- **Source inputs used:** `doc/active/calibration-plan/13h_coal_uc.md`; pypsa-rsa `scenarios/Benchmark_2023/sub_scenarios/fixed_technologies.xlsx`, `fuel_prices.xlsx`, and `plant_availability.xlsx`; `data/custom_powerplants.csv`; base network `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H.nc`; config `configs/za/za_2023_fixed_validation.yaml`.
+- **Output artifacts produced:**
+  - `scripts/build_za_coal_plants.py`
+  - `scripts/za_fleet/build_za_coal_plants_network.py`
+  - `scripts/solve_network.py`
+  - `configs/za/za_2023_fixed_validation.yaml`
+  - `data/za_validation/za_coal_plants_2023.csv`
+  - `data/za_validation/za_coal_eaf_hourly_2023.csv`
+  - `data/za_validation/za_coal_bus_assignment.csv`
+  - `data/za_audit/za_coal_eaf_audit.csv`
+  - `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`
+  - solver/python logs under `logs/za_2023_fixed_validation/solve_network/elec_s_34_ec_lc1_NoCO2-1H-EAF_*`
+- **Gate outcomes:** rebuilt CSVs have 15 stations, 16 generator rows, 41.419 GW coal, `availability_mode = rsa_eaf_projected`, `outage_profiles_scenario = BASE`, `annual_availability_scenario = EAF_48`, Arnot annual mean 0.480, Arnot January mean 0.448, Arnot July mean 0.524, and weighted fleet mean 0.481. UC network has all coal rows committable, no non-coal committable rows, static coal `p_min_pu = 0`, hourly coal `generators_t.p_min_pu` shape 8760 x 16, median `p_min_pu / p_max_pu = 0.7`, and no `p_min_pu > p_max_pu` hours.
+- **Solve result:** `solve_network_eaf` completed with status `ok` and termination `optimal`; objective `2.1578704396e10`. Solver log is LP/barrier only: 8,926,344 rows, 3,963,871 columns, 17,848,039 nonzeros; no MIP, branch-and-bound, integer-variable, or MIP-gap output. The solve path logged `linearized_unit_commitment=True` and removed `Generator-com-up-time`, `Generator-com-down-time`, and `Generator-com-status-min_up_time_must_stay_up`.
+- **Dispatch metrics:** coal 171.962 TWh, OCGT 27.441 TWh, load shedding 6.051 TWh, coal Pearson r vs Eskom Thermal Generation 0.598. This passes the acceptance gate relative to 13g.2 raw-base no-UC r = 0.329 and is directionally above the RSA reference r ≈ 0.585.
+- **Open follow-ups:** decide whether 13h replaces the prior EAF-OPC-CAP reporting baseline, then refresh `za_2023_validation_*` CSVs, the dispatch calibration notebook/HTML, and `doc/za_2023_validation_report.md` in a separate reporting step.
+
+## Module 13i OPC Audit and Configurable Implementation — 2026-05-16 00:08
+
+- **Status:** complete — accepted with limitation. `EAF-UC-OPC-NO-MIN-GAS` is the workbook-grounded 2023 baseline because `S_2023BM` selects `NO_MIN_GAS`; it preserves the Module 13h coal result but does not fix the OCGT/load-shedding composition mismatch because only the nuclear OPC row matches the current Earth carrier set.
+- **Decisions taken:** replaced the legacy ZA OPC config with explicit root-level `za_operational_constraints.enable/scenario/model_year`, defaulting to `enable: false`, `scenario: NO_MIN_GAS`, `model_year: 2023`. Exposed Snakemake scenarios `NO-MIN-GAS`, `LOW-GAS`, and `HIGH-GAS` as separately labelled solves, and kept OPC independent from Module 13j CAP.
+- **Implementation changes:** rewrote `scripts/za_fleet/operational_constraints.py` to filter workbook rows by scenario and model year, fail on missing scenario/year rows, apply all supported Generator capacity-factor and energy/power limits, leave marginal costs unchanged, and write per-generator audit rows. Updated `scripts/solve_network.py` to enable OPC from the new config or rule params, and updated the dispatch calibration notebook to compare the three explicit OPC cases.
+- **Codebase provenance:** pypsa-earth branch `main`, pre-change HEAD observed as `c9ef7a70`; changes are uncommitted in the working tree.
+- **Source inputs used:** `doc/active/calibration-plan/13i_opc_audit_and_config.md`; pypsa-rsa `scenarios/Benchmark_2023/scenarios_to_run.xlsx`; pypsa-rsa `scenarios/Benchmark_2023/sub_scenarios/operational_constraints.xlsx`; Module 13h EAF-UC network `networks/za_2023_fixed_validation/elec_s_34_ec_lc1_NoCO2-1H-EAF.nc`; config `configs/za/za_2023_fixed_validation.yaml`.
+- **Output artifacts produced:**
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-NO-MIN-GAS.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-HIGH-GAS.nc`
+  - `data/za_validation/za_opc_audit_34_NoCO2-1H_NO-MIN-GAS.csv`
+  - `data/za_validation/za_opc_audit_34_NoCO2-1H_LOW-GAS.csv`
+  - `data/za_validation/za_opc_audit_34_NoCO2-1H_HIGH-GAS.csv`
+  - `data/za_validation/za_opc_audit_NO-MIN-GAS.csv`, `data/za_validation/za_opc_audit_LOW-GAS.csv`, `data/za_validation/za_opc_audit_HIGH-GAS.csv`, and stable baseline `data/za_validation/za_opc_audit.csv`
+- **Gate outcomes:** all three OPC solves terminated optimal as LP/barrier solves with no MIP, branch-and-bound, or MIP-gap output. Coal UC remains active with 16 committable coal rows and 0 committable non-coal rows; `linearized_unit_commitment=True` is used; total load remains 225.875 TWh. Audit rows record the selected scenario, model year, source workbook row, matching generators, unchanged marginal costs, and skipped rows.
+- **Dispatch metrics:** superseded by the Module 13i boundary correction below. The initial `HIGH_GAS` solve incorrectly applied the workbook annual OCGT cap inside Module 13i.
+- **Audit interpretation:** superseded by the Module 13i boundary correction below. The initial `HIGH_GAS` audit incorrectly treated the annual 5.5 TWh `ocgt_diesel` cap as an applied Module 13i constraint.
+- **Validation:** `python -m py_compile scripts/za_fleet/operational_constraints.py scripts/solve_network.py` passed. Targeted Snakemake dry-run for the three `solve_network_eaf_opc` outputs passed; a broader dry-run reached remote input checking and was blocked by sandbox network restrictions. `dispatch_calibration_validation.ipynb` was rerun in place with the `python3` kernel and now contains the three OPC cases separately.
+- **Open follow-ups:** keep `EAF-UC-OPC-NO-MIN-GAS` as the defensible workbook-grounded baseline and treat `LOW_GAS`/`HIGH_GAS` as sensitivities. Proceed to Module 13j only as a diagnostic/counterfactual scarcity-composition investigation; do not silently replace the baseline with an OCGT cap.
+
+## Module 13i Boundary Correction — 2026-05-16 00:36
+
+- **Status:** complete — corrected Module 13i to remain OPC-only. The earlier `HIGH_GAS` result that bound OCGT at 5.500 TWh is superseded.
+- **Boundary decision:** Module 13i no longer applies `output_energy` / `year` / `max` rows from the operational-constraints workbook. Those rows are audit-only with reason `skipped_delegated_to_module_13j`. Module 13j owns explicit annual per-carrier generation caps, including the Eskom 2023 OCGT target `ocgt_diesel: 5.243`.
+- **Implementation changes:** added an audit-only delegated branch in `scripts/za_fleet/operational_constraints.py` before missing-generator handling, so matching OCGT annual cap rows and missing Sasol annual cap rows are distinguishable from true missing-carrier rows. Updated config comments and Snakefile rule comments to state that `za_operational_constraints.scenario` is canonical for config-driven solves, while the three labelled comparison outputs override that field from their wildcard.
+- **Rerun outputs:** force-reran `EAF-UC-OPC-NO-MIN-GAS`, `EAF-UC-OPC-LOW-GAS`, and `EAF-UC-OPC-HIGH-GAS`; materialized `data/za_validation/za_opc_audit_{NO-MIN-GAS,LOW-GAS,HIGH-GAS}.csv`, stable `data/za_validation/za_opc_audit.csv`, and backward-compatible `data/za_audit/za_operational_constraints_audit.csv`.
+- **Corrected dispatch metrics:** `NO_MIN_GAS`: coal 171.962 TWh, OCGT 27.441 TWh, load shedding 6.051 TWh, OCGT+load shedding 33.492 TWh, coal hourly/weekly Pearson r 0.598/0.957, July coal MAE 1,339 MW, July bias +1,183 MW. `LOW_GAS`: coal 172.670 TWh, OCGT 14.934 TWh, load shedding 17.499 TWh, OCGT+load shedding 32.433 TWh, coal hourly/weekly Pearson r 0.616/0.956. `HIGH_GAS`: coal 172.670 TWh, OCGT 14.934 TWh, load shedding 17.499 TWh, OCGT+load shedding 32.433 TWh, coal hourly/weekly Pearson r 0.616/0.956.
+- **Corrected audit interpretation:** `NO_MIN_GAS` applies only the nuclear hourly min-CF row; its annual Sasol output-energy max rows are delegated to Module 13j. `LOW_GAS` applies nuclear plus five `ocgt_diesel` generators under the weekly max-CF row; its annual Sasol output-energy max rows are delegated. `HIGH_GAS` applies nuclear plus the same weekly OCGT max-CF row as `LOW_GAS`; its `ocgt_diesel <= 5.5 TWh/year` row is audited for the five OCGT generators with `skipped_delegated_to_module_13j` and does not create a model constraint.
+- **Validation:** `python -m py_compile scripts/za_fleet/operational_constraints.py scripts/solve_network.py` passed. Corrected `HIGH_GAS` solved optimal as an LP/barrier model with 8,935,156 rows, matching the corrected `LOW_GAS` model size and objective `2.82858400e10`; no `max-ocgt_diesel-year` constraint appears in the HIGH_GAS logs. Coal UC behavior was not changed: 16 coal rows remain committable, 0 non-coal rows are committable, and `linearized_unit_commitment=True` remains logged.
+
+## Module 13j Scarcity-Cap Diagnostic Wiring — 2026-05-16 01:36
+
+- **Status:** implemented and dry-run verified; diagnostic solves are not yet executed or accepted.
+- **Boundary decision preserved:** `za_scarcity_cap.enable` defaults to `false`, so the workbook-grounded 2023 baseline remains `EAF-UC-OPC-NO-MIN-GAS` without a hidden annual OCGT cap. Any annual OCGT cap is labelled diagnostic/counterfactual for `S_2023BM` unless the project later promotes it by explicit decision.
+- **Implementation changes:** added `scripts/za_fleet/scarcity_cap.py` to register snapshot-weighted annual `Generator-p` caps by configured carrier and to build a post-solve audit with actual annual dispatch. Updated `scripts/solve_network.py` so CAP is independently toggleable from OPC and writes `za_scarcity_cap_audit` after a successful solve. Added root config block `za_scarcity_cap` with `ocgt_diesel: 5.243` TWh as the disabled-by-default 2023 diagnostic target.
+- **Snakemake targets added:**
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-CAP-OCGT-ESKOM2023.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-NO-MIN-GAS-CAP-OCGT-ESKOM2023.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-CAP-OCGT-ESKOM2023.nc`
+  - optional sensitivity `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-CAP-OCGT-RSA-HIGH-GAS-5P5.nc`
+  - stable key-diagnostic audit materializer `data/za_validation/za_scarcity_cap_audit.csv`, sourced from `LOW_GAS + CAP-OCGT-ESKOM2023`.
+- **Codebase provenance:** pypsa-earth branch `main`, pre-change HEAD observed as `c9ef7a70`; changes are uncommitted in the working tree.
+- **Validation:** `python -m py_compile scripts/solve_network.py scripts/za_fleet/scarcity_cap.py` passed. `git diff --check` passed for the touched implementation files. A tiny PyPSA/Linopy smoke test confirmed the helper adds `ZA-scarcity-cap-ocgt_diesel-2023` and computes post-solve audit dispatch. Escalated Snakemake dry-run resolved all four new network targets and the stable audit materializer through the expected rules.
+- **Not executed:** full CAP solves were not run in this implementation step. The dry-run DAG shows the local workspace would rebuild upstream data/network stages because config inputs changed and some external bundle/profile outputs are missing; executing those solves should be a deliberate validation run.
+- **Open follow-ups:** run the three required diagnostic solves, compare against `NO_MIN_GAS` and `LOW_GAS`, inspect solver logs for LP-only behavior, and classify the CAP result as accepted diagnostic, rejected diagnostic, implementation bug, or structural limitation.
+
+## Module 13j Diagnostic Cap Solves and Notebook Integration — 2026-05-16 02:04
+
+- **Status:** complete — CAP is mechanically valid but classified as a diagnostic limitation, not a final calibration fix. The default `za_scarcity_cap.enable: false` remains unchanged, so `EAF-UC-OPC-NO-MIN-GAS` remains the source-selected 2023 parity baseline.
+- **Executed targets:**
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-NO-MIN-GAS-CAP-OCGT-ESKOM2023.nc`
+  - `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-CAP-OCGT-ESKOM2023.nc`
+- **Audit outputs produced:**
+  - `data/za_validation/za_opc_audit_34_NoCO2-1H_NO-MIN-GAS_CAP-OCGT-ESKOM2023.csv`
+  - `data/za_validation/za_opc_audit_34_NoCO2-1H_LOW-GAS_CAP-OCGT-ESKOM2023.csv`
+  - `data/za_validation/za_scarcity_cap_audit_34_NoCO2-1H_OPC-NO-MIN-GAS_CAP-OCGT-ESKOM2023.csv`
+  - `data/za_validation/za_scarcity_cap_audit_34_NoCO2-1H_OPC-LOW-GAS_CAP-OCGT-ESKOM2023.csv`
+- **Notebook/reporting outputs refreshed:** added both CAP diagnostics to `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.ipynb`, reran it with the `python3` kernel, and exported refreshed HTML to `notebooks/za_validation/12_dispatch_calibration/dispatch_calibration_validation.html` and `doc/za_validation/figures/12_dispatch_calibration/dispatch_calibration_validation.html`.
+- **Solve results:** both CAP solves terminated optimal. `NO_MIN_GAS + CAP` objective was `3.42407572e10`; `LOW_GAS + CAP` objective was `3.42407583e10`. Solver logs are LP/barrier only: `NO_MIN_GAS + CAP` solved 8,935,105 rows / 3,963,871 columns / 17,900,599 nonzeros in 33 barrier iterations; `LOW_GAS + CAP` solved 8,935,157 rows / 3,963,871 columns / 17,944,399 nonzeros in 28 barrier iterations. No MIP, branch-and-bound, integer-variable, or MIP-gap output was found.
+- **CAP audit result:** both CAP solves bind exactly at `5.243000 TWh` across the five `ocgt_diesel` generators (`East London`, `Gqeberha`, `Outeniqua`, `Peninsula`, `Pinetown`). The capped resource set is auditable and has zero material slack against the Eskom observed 2023 OCGT target.
+- **Dispatch metrics:**
+
+| Solve | Coal TWh | OCGT TWh | Load shedding TWh | OCGT + load shedding TWh | Wind TWh | Solar PV TWh | CSP TWh | Coal hourly r |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Eskom reference | 165.627 | 5.243 | 16.755 | 21.998 | 11.613 | 5.015 | 1.375 |  |
+| `EAF-UC-OPC-NO-MIN-GAS` | 171.962 | 27.441 | 6.051 | 33.492 | 7.312 | 3.625 | 0.806 | 0.598 |
+| `EAF-UC-OPC-NO-MIN-GAS-CAP-OCGT-ESKOM2023` | 172.723 | 5.243 | 27.137 | 32.380 | 7.312 | 3.625 | 0.806 | 0.615 |
+| `EAF-UC-OPC-LOW-GAS` | 172.670 | 14.934 | 17.499 | 32.433 | 7.312 | 3.625 | 0.806 | 0.616 |
+| `EAF-UC-OPC-LOW-GAS-CAP-OCGT-ESKOM2023` | 172.723 | 5.243 | 27.137 | 32.380 | 7.312 | 3.625 | 0.806 | 0.615 |
+
+- **Gate outcomes:** total load remains `225.874862 TWh`; coal UC remains active with 16/16 coal rows committable and 0 non-coal rows committable; `linearized_unit_commitment=True` is logged; CAP audit tables are populated; notebook execution finished with zero error outputs.
+- **Interpretation:** the CAP implementation works, but the cap primarily converts OCGT over-generation into excess load shedding because the current Earth setup is still short on non-scarcity generation, especially VRE. `LOW_GAS` remains the better scarcity-composition sensitivity for matching Eskom load-shedding magnitude; the CAP cases are useful counterfactual diagnostics and should not silently replace the `NO_MIN_GAS` baseline.
+
+## Module 13m Official Fleet/Sasol Wiring — 2026-05-16 04:20
+
+- **Status:** partial — implementation and dry-run wiring complete; full solve classification pending.
+- **Decisions taken:** `calibrated_2023` is initially an alias for `eskom_nominal_2023`; Kelvin is excluded by default; Sasol remains disabled by default and is available only as non-UC diagnostic generation.
+- **Deviations from plan:** required full-year official-fleet and Sasol diagnostic solves were not run in this session. Snakemake dry-runs show the current workspace would rebuild upstream bundle/profile/network stages before the solve because config inputs changed and some large upstream resources are missing.
+- **Source inputs used:** `doc/active/calibration-plan/13m_official_2023_fleet_reconciliation_and_sasol.md`; `configs/za/za_2023_fixed_validation.yaml`; `data/custom_powerplants.csv`; pypsa-rsa `scenarios/Benchmark_2023/sub_scenarios/{fixed_technologies.xlsx,fuel_prices.xlsx,plant_availability.xlsx}`; Eskom Integrated Report 2023 nominal coal capacity values recorded in the handoff.
+- **Output artifacts produced:**
+  - `scripts/materialize_za_2023_fleet.py`
+  - `scripts/za_fleet/fleet_calibration.py`
+  - `scripts/build_za_coal_plants.py`
+  - `scripts/za_fleet/build_za_coal_plants_network.py`
+  - `scripts/apply_za_local_carriers.py`
+  - `scripts/za_costs/local_rows.py`
+  - `scripts/za_fleet/scarcity_cap.py`
+  - `data/custom_powerplants.csv`
+  - `data/za_audit/custom_powerplants_backup_manifest.csv`
+  - `data/za_audit/za_2023_fleet_mode_audit.csv`
+  - `data/za_validation/custom_powerplants_selected_2023.csv`
+  - `data/za_validation/za_coal_plants_2023.csv`
+  - `data/za_validation/za_coal_eaf_hourly_2023.csv`
+  - `data/za_validation/za_coal_bus_assignment.csv`
+- **Gate outcomes:** pre-13m `custom_powerplants.csv` backup exists at `data/za_audit/backups/custom_powerplants_pre_13m_20260516_041640.csv`; manifest source and backup SHA256 both equal `605f217b5b193af8efc656ad2de6714c546abf41ea9d47fb7904ade6f17d582f`; materialized `custom_powerplants.csv` has 132 rows and 39.099 GW coal; regenerated coal CSVs have 14 stations, 15 generator rows, 39.099 GW, `availability_mode = rsa_eaf_projected`, `outage_profiles_scenario = BASE`, and `annual_availability_scenario = EAF_48`.
+- **Validation:** `python -m py_compile` passed for touched Python files. Direct materializer and coal CSV regeneration passed. In-memory Sasol smoke test attached 1,152.64 MW across `sasol_coal`/`sasol_gas` with zero committable rows. Escalated Snakemake dry-runs resolved `materialize_za_2023_fleet`, `build_za_coal_plants`, `build_powerplants`, and the `EAF-UC-OPC-NO-MIN-GAS` solve path.
+- **Open follow-ups:** run the official-fleet `NO_MIN_GAS` solve, optional Sasol `NO_MIN_GAS` diagnostic, and selected `LOW_GAS` sensitivity; then refresh dispatch reporting and classify each result.
+
+## Module 13m Sasol CAP Wiring Patch — 2026-05-16 04:35
+
+- **Status:** complete for pre-solve wiring; full labelled Sasol CAP solve not run.
+- **Implementation changes:** CAP solve rules now build annual cap dictionaries through Snakefile helpers rather than hardcoding only `{"ocgt_diesel": 5.243}`. The helper starts from `za_scarcity_cap.annual_generation_caps_twh`, optionally derives Sasol annual caps from the selected OPC scenario/year, and then applies labelled OCGT overrides for the OCGT cap diagnostics.
+- **Sasol cap derivation:** for `NO_MIN_GAS`/2023 the selected OPC workbook rows derive `sasol_coal: 5.5` TWh and `sasol_gas: 2.8` TWh. These audit through `scripts/za_fleet/scarcity_cap.py` as `selected_opc_scenario_delegated_to_cap`; explicit fallback config remains `explicit_cap_config`.
+- **Labelled dry-run target:** `solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated` backs `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OFFICIAL-FLEET-SASOL-OPC-{NO-MIN-GAS,LOW-GAS}-CAP-OCGT-SASOL-OPC-DELEGATED.nc`.
+- **Exact cap dict verified for `NO-MIN-GAS`:** `{"ocgt_diesel": 5.243, "sasol_coal": 5.5, "sasol_gas": 2.8}`.
+- **Validation:** `python -m py_compile scripts/za_fleet/scarcity_cap.py` passed. In-memory `resolved_config` smoke confirmed all three carriers and the source map reach `scripts/za_fleet/scarcity_cap.py`. Escalated Snakemake dry-runs resolved the existing OCGT-only CAP/OPC target and the new labelled target through `solve_network_eaf_opc_cap_ocgt_sasol_opc_delegated`.
+- **Boundary preserved:** `za_scarcity_cap.enable` remains `false` by default, and the default no-Sasol CAP targets still pass only the OCGT diagnostic cap unless `za_2023_fleet_calibration.sasol.enable` or the labelled Sasol CAP target includes Sasol.

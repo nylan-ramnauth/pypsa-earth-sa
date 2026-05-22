@@ -37,6 +37,8 @@ current module pass.
 | [`12_dispatch_calibration_and_availability.md`](12_dispatch_calibration_and_availability.md) | Solve fixed dispatch, produce interim calibration reports, add availability/outage constraints only as needed |
 | [`12_availability_provenance.md`](12_availability_provenance.md) | Companion to Module 12: source provenance for the coal-only station-weekly EAF overlay applied on top of the structural baseline |
 | [`13_validation_reporting_and_acceptance.md`](13_validation_reporting_and_acceptance.md) | Produce final validation reports, tolerance checks, acceptance artifacts, provenance docs |
+| [`13m_official_2023_fleet_reconciliation_and_sasol.md`](13m_official_2023_fleet_reconciliation_and_sasol.md) | Make 2023 coal fleet basis configurable, back up current `custom_powerplants.csv`, and test optional Sasol/conventional IPP inclusion |
+| [`13n_calibration_demand_adjustment.md`](13n_calibration_demand_adjustment.md) | Replace RSA Contracted Demand with calibrated demand excluding unmodelled sources for 2023 dispatch calibration |
 | [`14_expansion_and_reliability_handoff.md`](14_expansion_and_reliability_handoff.md) | Convert validated 2023 baseline into expansion-ready inputs without changing reliability solver contracts |
 
 ## Model Data Sources

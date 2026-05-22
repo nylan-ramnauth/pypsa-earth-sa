@@ -108,6 +108,200 @@ sys.settrace
 logger = create_logger(__name__)
 
 
+def isolated_buses_below_load_threshold(n, threshold):
+    """Return AC buses in isolated sub-networks below the drop threshold."""
+    n.determine_network_topology()
+
+    p_by_node = n.loads_t.p_set.mean().reindex(n.buses.index, fill_value=0.0)
+    p_by_sub = p_by_node.groupby(p_by_node.index.map(n.buses.sub_network)).sum()
+    small_subs = p_by_sub[p_by_sub < threshold].index
+
+    off_buses = n.buses[
+        (n.buses.carrier == "AC") & n.buses.sub_network.isin(small_subs)
+    ]
+    i_islands = off_buses.index
+
+    # Match drop_isolated_networks: keep one bus for a country represented only
+    # by isolated nodes, otherwise country-wide models could be deleted.
+    for c in off_buses["country"].unique():
+        isc_offbus = off_buses["country"] == c
+        n_bus_off = isc_offbus.sum()
+        n_bus = (n.buses["country"] == c).sum()
+        if n_bus_off == n_bus:
+            i_islands = i_islands[i_islands != off_buses[isc_offbus].index[0]]
+
+    return i_islands, off_buses.loc[off_buses.index.intersection(i_islands)]
+
+
+def _write_isolated_load_transfer_audit(rows, audit_path):
+    columns = [
+        "source_bus",
+        "target_bus",
+        "source_country",
+        "target_country",
+        "source_region",
+        "target_region",
+        "source_sub_network",
+        "annual_mwh",
+        "n_loads",
+        "distance_km",
+        "same_region_candidates",
+        "fallback",
+        "status",
+    ]
+    out = pd.DataFrame(rows, columns=columns)
+    audit_path = os.fspath(audit_path)
+    os.makedirs(os.path.dirname(audit_path), exist_ok=True)
+    out.to_csv(audit_path, index=False)
+
+
+def _bus_supply_regions(n, regions, network_crs):
+    buses = n.buses[["x", "y", "country"]].copy()
+    buses["_bus_id"] = buses.index
+    bus_points = gpd.GeoDataFrame(
+        buses,
+        geometry=gpd.points_from_xy(buses.x, buses.y),
+        crs=network_crs,
+    )
+    regions_geo = regions[["region_id", "geometry"]].to_crs(network_crs)
+
+    joined = gpd.sjoin(bus_points, regions_geo, how="left", predicate="within")
+    joined = joined.drop_duplicates(subset="_bus_id", keep="first")
+    region_by_bus = joined.set_index("_bus_id")["region_id"]
+
+    unassigned = region_by_bus[region_by_bus.isna()].index
+    if len(unassigned):
+        projected_regions = regions[["region_id", "geometry"]].to_crs("EPSG:32735")
+        centroids = gpd.GeoDataFrame(
+            {"region_id": projected_regions["region_id"].values},
+            geometry=projected_regions.geometry.centroid,
+            crs="EPSG:32735",
+        )
+        nearest = gpd.sjoin_nearest(
+            bus_points.loc[unassigned].to_crs("EPSG:32735"),
+            centroids,
+            how="left",
+        ).drop_duplicates(subset="_bus_id", keep="first")
+        nearest_map = dict(zip(nearest["_bus_id"], nearest["region_id"]))
+        region_by_bus.loc[unassigned] = region_by_bus.loc[unassigned].index.map(
+            nearest_map
+        )
+
+    return region_by_bus
+
+
+def transfer_isolated_loads_to_backbone(n, threshold, config, audit_path):
+    """Move load from soon-to-be-dropped isolated AC buses to kept backbone buses.
+
+    This ZA calibration hook preserves contracted demand without fetching isolated
+    topology into the network. It only rewrites Load.bus before the normal
+    drop_isolated_networks step removes the island buses.
+    """
+    i_islands, off_buses = isolated_buses_below_load_threshold(n, threshold)
+
+    if len(i_islands) == 0:
+        _write_isolated_load_transfer_audit([], audit_path)
+        logger.info("No isolated load transfer needed; no droppable islands found.")
+        return n
+
+    cfg = config.get("za", {}).get("isolated_load_transfer", {})
+    regions_path = cfg.get("regions")
+    network_crs = config.get("crs", {}).get("geo_crs", "EPSG:4326")
+    if regions_path:
+        regions = gpd.read_file(regions_path).to_crs(network_crs)
+        if "region_id" not in regions.columns:
+            if "LocalArea" not in regions.columns:
+                raise ValueError(
+                    "ZA isolated-load transfer regions must include region_id "
+                    "or LocalArea"
+                )
+            regions["region_id"] = regions["LocalArea"].astype(str).str.strip()
+    else:
+        from pathlib import Path
+        from za_grid_spatial.supply_regions import load_34_layer
+
+        pypsa_rsa_root = Path(config["pypsa_rsa_root"]).expanduser().resolve()
+        regions = load_34_layer(pypsa_rsa_root)
+
+    region_by_bus = _bus_supply_regions(n, regions, network_crs=network_crs)
+
+    ac_buses = n.buses[n.buses.carrier == "AC"].copy()
+    candidates = ac_buses.loc[~ac_buses.index.isin(i_islands)].copy()
+    if candidates.empty:
+        raise ValueError("ZA isolated-load transfer found no kept AC buses to receive load")
+
+    points_m = gpd.GeoDataFrame(
+        ac_buses[["x", "y"]],
+        geometry=gpd.points_from_xy(ac_buses.x, ac_buses.y),
+        crs=network_crs,
+    ).to_crs("EPSG:32735")
+
+    rows = []
+    total_mwh = 0.0
+
+    for source_bus in i_islands:
+        source_region = region_by_bus.get(source_bus, pd.NA)
+        source_country = n.buses.at[source_bus, "country"]
+
+        same_region = candidates.loc[
+            region_by_bus.reindex(candidates.index).eq(source_region).fillna(False)
+        ]
+        target_pool = same_region
+        fallback = False
+
+        if target_pool.empty:
+            same_country = candidates.loc[candidates["country"].eq(source_country)]
+            target_pool = same_country if not same_country.empty else candidates
+            fallback = True
+
+        distances = points_m.loc[target_pool.index].distance(
+            points_m.loc[source_bus].geometry
+        )
+        target_bus = distances.idxmin()
+
+        source_loads = n.loads.index[n.loads.bus == source_bus]
+        if len(source_loads) and not n.loads_t.p_set.empty:
+            annual_mwh = float(n.loads_t.p_set[source_loads].sum().sum())
+        elif len(source_loads):
+            annual_mwh = float(n.loads.loc[source_loads, "p_set"].sum() * len(n.snapshots))
+        else:
+            annual_mwh = 0.0
+
+        if len(source_loads):
+            n.loads.loc[source_loads, "bus"] = target_bus
+            total_mwh += annual_mwh
+            status = "transferred"
+        else:
+            status = "no_load"
+
+        rows.append(
+            {
+                "source_bus": source_bus,
+                "target_bus": target_bus,
+                "source_country": source_country,
+                "target_country": n.buses.at[target_bus, "country"],
+                "source_region": source_region,
+                "target_region": region_by_bus.get(target_bus, pd.NA),
+                "source_sub_network": n.buses.at[source_bus, "sub_network"],
+                "annual_mwh": annual_mwh,
+                "n_loads": int(len(source_loads)),
+                "distance_km": float(distances.loc[target_bus] / 1000.0),
+                "same_region_candidates": int(len(same_region)),
+                "fallback": bool(fallback),
+                "status": status,
+            }
+        )
+
+    _write_isolated_load_transfer_audit(rows, audit_path)
+    logger.info(
+        "Transferred %.4f TWh from %d isolated buses before dropping islands; audit: %s",
+        total_mwh / 1e6,
+        len(i_islands),
+        audit_path,
+    )
+    return n
+
+
 def simplify_network_to_base_voltage(n, linetype, base_voltage):
     """
     Fix all lines to a voltage level of base voltage level and remove all
@@ -758,35 +952,15 @@ def drop_isolated_networks(n, threshold):
     -------
     modified network
     """
-    n.determine_network_topology()
-
     # keep original values of the overall load and generation in the network
     # to track changes due to drop of buses
     generators_mean_origin = n.generators.p_nom.mean()
     load_mean_origin = n.loads_t.p_set.mean().mean()
 
-    # duplicated sub-networks mean that there is at least one interconnection between buses
-    p_by_node = n.loads_t.p_set.mean().reindex(n.buses.index, fill_value=0.0)
-    p_by_sub = p_by_node.groupby(p_by_node.index.map(n.buses.sub_network)).sum()
-
-    small_subs = p_by_sub[p_by_sub < threshold].index
-
-    off_buses = n.buses[
-        (n.buses.carrier == "AC") & n.buses.sub_network.isin(small_subs)
-    ]
-
-    i_islands = off_buses.index
+    i_islands, off_buses = isolated_buses_below_load_threshold(n, threshold)
 
     if off_buses.empty:
         return n
-
-    # skip a isolated bus for countries represented by only isolated nodes
-    for c in off_buses["country"].unique():
-        isc_offbus = off_buses["country"] == c
-        n_bus_off = isc_offbus.sum()
-        n_bus = (n.buses["country"] == c).sum()
-        if n_bus_off == n_bus:
-            i_islands = i_islands[i_islands != off_buses[isc_offbus].index[0]]
 
     i_loads_drop = n.loads[n.loads.bus.isin(i_islands)].index
     i_generators_drop = n.generators[n.generators.bus.isin(i_islands)].index
@@ -1204,6 +1378,22 @@ if __name__ == "__main__":
     p_threshold_drop_isolated = cluster_config.get("p_threshold_drop_isolated", False)
     p_threshold_merge_isolated = cluster_config.get("p_threshold_merge_isolated", False)
     s_threshold_fetch_isolated = cluster_config.get("s_threshold_fetch_isolated", False)
+    za_transfer_cfg = snakemake.config.get("za", {}).get("isolated_load_transfer", {})
+
+    if za_transfer_cfg.get("enable", False):
+        if not p_threshold_drop_isolated:
+            raise ValueError(
+                "za.isolated_load_transfer requires "
+                "cluster_options.simplify_network.p_threshold_drop_isolated"
+            )
+        n = transfer_isolated_loads_to_backbone(
+            n,
+            threshold=p_threshold_drop_isolated,
+            config=snakemake.config,
+            audit_path=za_transfer_cfg.get(
+                "audit", "data/za_audit/za_isolated_load_transfer.csv"
+            ),
+        )
 
     if p_threshold_drop_isolated:
         n = drop_isolated_networks(n, threshold=p_threshold_drop_isolated)

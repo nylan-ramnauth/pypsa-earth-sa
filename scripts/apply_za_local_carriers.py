@@ -10,22 +10,29 @@ listed under `electricity.conventional_carriers` (here: coal, nuclear) so
 OCGT plants in `data/custom_powerplants.csv` arrive un-attached. This hook
 closes that gap.
 
-Adds Carrier rows for: ocgt_diesel and ocgt_gas. Attaches Oil-fueltype OCGTs as
-`ocgt_diesel` at their `bus` columns. Sasol rows are removed upstream during
-Module 12 fleet reconciliation, and `other_re` is intentionally omitted as a
-known 238 GWh/yr accounting gap pending explicit small-hydro/landfill/biogas
-rows in the expansion handoff.
+Adds Carrier rows for: ocgt_diesel and ocgt_gas, plus sasol_coal/sasol_gas
+only when Module 13m's `za_2023_fleet_calibration.sasol.enable` is true.
+Attaches Oil-fueltype OCGTs as `ocgt_diesel` at their `bus` columns. Optional
+Sasol is attached as non-UC diagnostic generation after add_electricity so it
+is not silently folded into Eskom coal UC.
 
 Upstream Carrier rows are not mutated. Network mutation is in-place; a backup
 `.pre_local.nc` is written first.
 """
 import logging
 import shutil
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pypsa
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "scripts"))
+
+from za_fleet.fleet_calibration import SASOL_ASSETS, resolved_config
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("apply_za_local_carriers")
@@ -95,9 +102,18 @@ def patch_standard_carrier_costs(n: pypsa.Network, costs: pd.DataFrame, audit_ro
             })
 
 
-def add_local_carriers(n: pypsa.Network, costs: pd.DataFrame, audit_rows: list) -> None:
+def add_local_carriers(
+    n: pypsa.Network,
+    costs: pd.DataFrame,
+    audit_rows: list,
+    *,
+    include_sasol: bool,
+) -> None:
     upstream_carriers = set(n.carriers.index)
-    for carrier in ["ocgt_diesel", "ocgt_gas"]:
+    carriers = ["ocgt_diesel", "ocgt_gas"]
+    if include_sasol:
+        carriers += ["sasol_coal", "sasol_gas"]
+    for carrier in carriers:
         if carrier in upstream_carriers:
             raise SystemExit(f"Upstream Carrier '{carrier}' unexpectedly present; aborting to avoid mutation.")
         if carrier not in costs.index:
@@ -140,7 +156,8 @@ def attach_oil_and_gas(n: pypsa.Network, custom_pp: pd.DataFrame, costs: pd.Data
     #   Fueltype == "Oil"          -> ocgt_diesel  (Ankerlig/Gourikwa/Acacia/PortRex/Avon/Dedisa)
     #   Fueltype == "Natural Gas"  -> ocgt_gas     (Sasol is removed upstream)
     is_oil = custom_pp["Fueltype"] == "Oil"
-    is_ng = custom_pp["Fueltype"] == "Natural Gas"
+    is_sasol_name = custom_pp["Name"].astype(str).str.contains("sasol", case=False, na=False)
+    is_ng = (custom_pp["Fueltype"] == "Natural Gas") & ~is_sasol_name
 
     plants_by_carrier = {
         "ocgt_diesel": custom_pp[is_oil],
@@ -175,6 +192,67 @@ def attach_oil_and_gas(n: pypsa.Network, custom_pp: pd.DataFrame, costs: pd.Data
                 "co2_emissions": float(costs.loc[carrier, "co2_emissions"]),
                 "mean_p_max_pu": 1.0,
             })
+
+
+def _nearest_bus(n: pypsa.Network, lon: float, lat: float) -> str:
+    if not {"x", "y"}.issubset(n.buses.columns):
+        raise SystemExit("Network buses need x/y coordinates for Sasol bus assignment")
+    coords = n.buses[["x", "y"]].apply(pd.to_numeric, errors="coerce").dropna()
+    if coords.empty:
+        raise SystemExit("No finite network bus coordinates for Sasol bus assignment")
+    distance = (coords["x"] - float(lon)) ** 2 + (coords["y"] - float(lat)) ** 2
+    return str(distance.idxmin())
+
+
+def attach_sasol_assets(
+    n: pypsa.Network,
+    costs: pd.DataFrame,
+    audit_rows: list,
+    *,
+    include_sasol: bool,
+) -> None:
+    if not include_sasol:
+        audit_rows.append({
+            "action": "skip_sasol_disabled",
+            "carrier": "sasol_coal+sasol_gas",
+            "name": "",
+            "bus": "",
+            "p_nom": np.nan,
+            "p_nom_extendable": False,
+            "marginal_cost": np.nan,
+            "co2_emissions": np.nan,
+            "mean_p_max_pu": np.nan,
+        })
+        return
+
+    for asset in SASOL_ASSETS:
+        carrier = asset["carrier"]
+        if carrier not in costs.index:
+            raise SystemExit(f"Carrier '{carrier}' missing from cost CSV.")
+        bus = _nearest_bus(n, lon=float(asset["lon"]), lat=float(asset["lat"]))
+        name = f"{asset['station_or_asset']} {carrier}"
+        if name in n.generators.index:
+            raise SystemExit(f"Generator '{name}' already exists; refusing to overwrite")
+        kw = _generator_kwargs(
+            costs.loc[carrier],
+            bus=bus,
+            carrier=carrier,
+            p_nom=float(asset["p_nom_mw"]),
+        )
+        kw["committable"] = False
+        n.add("Generator", name, **kw)
+        logger.info("Attached optional Sasol asset %s at %s p_nom=%.2f MW", name, bus, asset["p_nom_mw"])
+        audit_rows.append({
+            "action": "add_sasol_generator",
+            "carrier": carrier,
+            "name": name,
+            "bus": bus,
+            "p_nom": float(asset["p_nom_mw"]),
+            "p_nom_extendable": False,
+            "marginal_cost": kw.get("marginal_cost", np.nan),
+            "co2_emissions": float(costs.loc[carrier, "co2_emissions"]),
+            "mean_p_max_pu": 1.0,
+        })
 
 
 def retag_csp_from_solar(n: pypsa.Network, custom_pp: pd.DataFrame, audit_rows: list) -> None:
@@ -235,6 +313,7 @@ def main(
     custom_pp_path: Path,
     backup_out: Path,
     audit_out: Path,
+    config: dict | None = None,
 ) -> None:
     backup_out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(network_in, backup_out)
@@ -243,14 +322,17 @@ def main(
     n = pypsa.Network(str(network_in))
     costs = _load_carrier_costs(carrier_costs_path)
     custom_pp = pd.read_csv(custom_pp_path)
+    fleet_cfg = resolved_config(config or {})
+    include_sasol = bool(fleet_cfg["sasol_enabled"])
 
     audit_rows: list = []
     patch_standard_carrier_costs(n, costs, audit_rows)
     # Capture carrier baseline AFTER intentional coal/nuclear patches so the
     # assertion only catches unintended mutations by subsequent steps.
     upstream_carriers = n.carriers.copy()
-    add_local_carriers(n, costs, audit_rows)
+    add_local_carriers(n, costs, audit_rows, include_sasol=include_sasol)
     attach_oil_and_gas(n, custom_pp, costs, audit_rows)
+    attach_sasol_assets(n, costs, audit_rows, include_sasol=include_sasol)
     retag_csp_from_solar(n, custom_pp, audit_rows)
 
     assert_no_upstream_carrier_mutation(upstream_carriers, n.carriers.loc[upstream_carriers.index])
@@ -278,6 +360,7 @@ if __name__ == "__main__":
             custom_pp_path=Path(snakemake.input.custom_pp),
             backup_out=Path(snakemake.output.backup),
             audit_out=Path(snakemake.output.audit),
+            config=dict(snakemake.config),
         )
     else:
         import argparse
@@ -295,4 +378,5 @@ if __name__ == "__main__":
             custom_pp_path=Path(args.custom_pp),
             backup_out=Path(args.backup),
             audit_out=Path(args.audit),
+            config=None,
         )

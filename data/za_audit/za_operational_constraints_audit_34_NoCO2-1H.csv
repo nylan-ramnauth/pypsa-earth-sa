@@ -22,3 +22,4 @@ HIGH_GAS,global,nuclear,capacity_factor,hour,min,all,%,1.0,nuclear,1,min-nuclear
 HIGH_GAS,global,rmippp,capacity_factor,year,min,fixed,%,0.5,,0,,skipped_no_match
 HIGH_GAS,global,sasol_coal,output_energy,year,max,fixed,TWh,5.5,,0,,skipped_no_match
 HIGH_GAS,global,sasol_gas,output_energy,year,max,fixed,TWh,2.8,,0,,skipped_no_match
+HIGH_GAS,global,ocgt_diesel,output_energy,year,max,all,TWh,5.5,ocgt_diesel,5,,skipped_by_rule_uncapped_opc

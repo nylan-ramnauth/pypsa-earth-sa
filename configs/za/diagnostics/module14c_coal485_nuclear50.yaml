@@ -1,0 +1,41 @@
+# Temporary Module 14c diagnostic overlay.
+#
+# This file is intentionally separate from configs/za/za_2023_fixed_validation.yaml
+# so that 2023-only calibration checks can be removed without leaving small
+# historical fixes in the clean validation overlay. Coal 48.5% is expected to
+# come from za_coal_disaggregation.annual_availability_target_override and the
+# regenerated EAF source network, not from a solve-time patch.
+
+module14b_diagnostic:
+  label: Module 14c coal485+nuclear50
+  log_slug: module14c-coal485-nuclear50
+
+  source_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET.nc
+  backup_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-PRE-14.nc
+  output_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-MODULE14C-COAL485-NUCLEAR50.nc
+
+  # Module 14 accepted VRE profile corrections. CSP is deliberately not scaled
+  # in this diagnostic so the coal/nuclear effects remain isolated.
+  vre_scale:
+    onwind: 1.58
+    solar: 1.40
+    ror: 1.425
+
+  # LOW_GAS OPC includes a nuclear hourly minimum equal to 100% of nuclear
+  # p_max_pu. The 2023 outage target must therefore adjust the static nuclear
+  # availability before the annual cap is registered; otherwise the annual cap
+  # conflicts with the inherited hourly minimum.
+  nuclear_availability:
+    enable: true
+    carrier: nuclear
+    target_p_max_pu: 0.5
+
+  # Reuses scripts/za_fleet/scarcity_cap.py. Nuclear is capped by annual output,
+  # not by reducing physical p_nom, because Koeberg capacity still existed.
+  annual_generation_caps_twh:
+    ocgt_diesel: 5.243
+    nuclear: 8.127
+
+  annual_generation_cap_sources:
+    ocgt_diesel: Eskom observed 2023 OCGT generation target
+    nuclear: Eskom observed 2023 nuclear generation target; Koeberg Unit 1 outage calibration

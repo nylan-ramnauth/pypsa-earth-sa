@@ -1113,9 +1113,18 @@ def extra_functionality(n, snapshots):
         logger.info("setting H2 color mix")
         set_h2_colors(n)
 
-    za_oc_cfg = snakemake.config.get("za", {}).get("operational_constraints", {})
+    za_oc_cfg = snakemake.config.get("za_operational_constraints", {})
+    legacy_za_oc_cfg = snakemake.config.get("za", {}).get("operational_constraints", {})
+    za_oc_param_enable = getattr(
+        snakemake.params, "za_operational_constraints_enable", False
+    )
     za_oc_input = getattr(snakemake.input, "operational_constraints", None)
-    if za_oc_cfg.get("enable", False) and za_oc_input:
+    za_oc_enabled = (
+        za_oc_cfg.get("enable", False)
+        or za_oc_param_enable
+        or legacy_za_oc_cfg.get("enable", False)
+    )
+    if za_oc_enabled and za_oc_input:
         logger.info("setting ZA operational constraints")
         from za_fleet.operational_constraints import apply as za_apply_operational_constraints
 
@@ -1125,6 +1134,32 @@ def extra_functionality(n, snapshots):
             Path(audit_out).parent.mkdir(parents=True, exist_ok=True)
             pd.DataFrame(audit).to_csv(audit_out, index=False)
             logger.info("wrote ZA operational constraints audit to %s", audit_out)
+
+    za_cap_cfg = snakemake.config.get("za_scarcity_cap", {})
+    za_cap_param_enable = getattr(snakemake.params, "za_scarcity_cap_enable", False)
+    za_cap_enabled = za_cap_cfg.get("enable", False) or za_cap_param_enable
+    if za_cap_enabled:
+        logger.info("setting ZA scarcity caps")
+        from za_fleet.scarcity_cap import apply as za_apply_scarcity_cap
+
+        za_apply_scarcity_cap(n, snapshots, snakemake)
+
+    za_coal_uc = config.get("za_coal_disaggregation", {}).get("uc", {})
+    if za_coal_uc.get("enable", False) and not za_coal_uc.get(
+        "apply_min_up_down_time", False
+    ):
+        drop = [
+            "Generator-com-up-time",
+            "Generator-com-down-time",
+            "Generator-com-status-min_up_time_must_stay_up",
+            "Generator-com-status-min_down_time_must_stay_up",
+        ]
+        existing = [c for c in drop if c in n.model.constraints]
+        if existing:
+            logger.info(
+                "removing ZA coal UC min-up/min-down constraints: %s", existing
+            )
+            n.model.remove_constraints(existing)
 
     add_co2_sequestration_limit(n, snapshots)
 
@@ -1147,6 +1182,10 @@ def solve_network(n, config, solving, **kwargs):
     # add to network for extra_functionality
     n.config = config
     n.opts = opts
+    has_committable = bool(n.generators["committable"].fillna(False).any())
+    if has_committable:
+        kwargs["linearized_unit_commitment"] = True
+        logger.info("Enabled PyPSA linearized unit commitment for committable generators")
 
     if skip_iterations:
         status, condition = n.optimize(**kwargs)
@@ -1231,6 +1270,20 @@ if __name__ == "__main__":
         solving=snakemake.params.solving,
         log_fn=snakemake.log.solver,
     )
+    za_cap_cfg = snakemake.config.get("za_scarcity_cap", {})
+    za_cap_param_enable = getattr(snakemake.params, "za_scarcity_cap_enable", False)
+    za_cap_enabled = za_cap_cfg.get("enable", False) or za_cap_param_enable
+    za_cap_audit_out = getattr(snakemake.output, "za_scarcity_cap_audit", None)
+    if za_cap_enabled:
+        if not za_cap_audit_out:
+            za_cap_audit_out = "data/za_validation/za_scarcity_cap_audit.csv"
+        from za_fleet.scarcity_cap import build_audit as za_build_scarcity_cap_audit
+
+        audit = za_build_scarcity_cap_audit(n, snakemake)
+        Path(za_cap_audit_out).parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(audit).to_csv(za_cap_audit_out, index=False)
+        logger.info("wrote ZA scarcity-cap audit to %s", za_cap_audit_out)
+
     n.meta = dict(snakemake.config, **dict(wildcards=dict(snakemake.wildcards)))
     n.export_to_netcdf(snakemake.output[0])
     logger.info(f"Objective function: {n.objective}")

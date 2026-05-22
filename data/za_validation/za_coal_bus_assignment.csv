@@ -1,0 +1,16 @@
+station_name,generator_name,bus,custom_capacity_mw,custom_station_capacity_mw,var_hr_station_p_nom_mw,p_nom_mw,split_capacity_share,station_generator_count,bus_assignment_source,custom_powerplant_rows,fallback_used,ambiguous_station_mapping
+Arnot,Arnot,Middelburg,2100.0,2100.0,2100.0,2100.0,1.0,1,custom_powerplants_unique_bus,Arnot|Arnot_2,False,False
+Camden,Camden,Highveld South,1481.0,1481.0,1481.0,1481.0,1.0,1,custom_powerplants_unique_bus,Camden|Camden_2,False,False
+Duvha,Duvha,Middelburg,2875.0,2875.0,2875.0,2875.0,1.0,1,custom_powerplants_unique_bus,Duvha|Duvha_2,False,False
+Grootvlei,Grootvlei,Highveld South,570.0,570.0,570.0,570.0,1.0,1,custom_powerplants_unique_bus,Grootvlei|Grootvlei_2,False,False
+Hendrina,Hendrina,Middelburg,760.0,1098.0,1098.0,760.0,0.692167577413479,2,custom_powerplants_split_weighted,Hendrina,False,False
+Hendrina,Hendrina_2,Highveld South,338.0,1098.0,1098.0,338.0,0.30783242258652094,2,custom_powerplants_split_weighted,Hendrina_2,False,False
+Kendal,Kendal,Witbank,3840.0,3840.0,3840.0,3840.0,1.0,1,custom_powerplants_unique_bus,Kendal|Kendal_2,False,False
+Kriel,Kriel,Witbank,2640.0,2640.0,2640.0,2640.0,1.0,1,custom_powerplants_unique_bus,Kriel|Kriel_2,False,False
+Kusile,Kusile,Witbank,2880.0,2880.0,2880.0,2880.0,1.0,1,custom_powerplants_unique_bus,Kusile,False,False
+Lethabo,Lethabo,Vaal,3558.0,3558.0,3558.0,3558.0,1.0,1,custom_powerplants_unique_bus,Lethabo|Lethabo_2,False,False
+Majuba,Majuba,Highveld South,3807.0,3807.0,3807.0,3807.0,1.0,1,custom_powerplants_unique_bus,Majuba|Majuba_2,False,False
+Matimba,Matimba,Lephalale,3690.0,3690.0,3690.0,3690.0,1.0,1,custom_powerplants_unique_bus,Matimba|Matimba_2,False,False
+Matla,Matla,Witbank,3450.0,3450.0,3450.0,3450.0,1.0,1,custom_powerplants_unique_bus,Matla|Matla_2,False,False
+Medupi,Medupi,Lephalale,3600.0,3600.0,3600.0,3600.0,1.0,1,custom_powerplants_unique_bus,Medupi,False,False
+Tutuka,Tutuka,Highveld South,3510.0,3510.0,3510.0,3510.0,1.0,1,custom_powerplants_unique_bus,Tutuka|Tutuka_2,False,False

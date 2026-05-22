@@ -1,8 +1,13 @@
 rel_path,size_bytes,suffix,kind,in_min_coverage,classification
 data/bundle/renewable_profiles_updated.nc,715101674,.nc,netcdf,True,covered
+networks/Benchmark_2023/S_2023BM/base-network.nc,114326,.nc,netcdf,False,audit_only
+networks/Benchmark_2023/S_2023BM/elec.nc,11178625,.nc,netcdf,False,audit_only
+networks/Coal_Flexibilisation/S1/base-network.nc,2715870,.nc,netcdf,False,audit_only
+networks/Coal_Flexibilisation/S1/elec.nc,89312928,.nc,netcdf,False,audit_only
 networks/ME IRP 2024/base/capacity-IRP_H12_CL_RM10_FULL.nc,3872189,.nc,netcdf,False,audit_only
 networks/ME IRP 2024/base/capacity-IRP_REF_CI.nc,3872189,.nc,netcdf,False,audit_only
 networks/ME IRP 2024/elec/capacity-IRP_H12_CL_RM10_FULL.nc,378958916,.nc,netcdf,False,audit_only
+results/Benchmark_2023/S_2023BM/networks/solved.nc,23218474,.nc,netcdf,False,audit_only
 pre_processing/outages/outages.ipynb,124397,.ipynb,notebook,False,audit_only
 pre_processing/resource_processing/convert_excel_to_netcdf.ipynb,26171,.ipynb,notebook,False,audit_only
 pre_processing/resource_processing/plotting.ipynb,449476,.ipynb,notebook,False,audit_only
@@ -16,14 +21,18 @@ pre_processing/resource_processing/prepare_wasa_timeseries.ipynb,307758,.ipynb,n
 data/bundle/SALandCover_OriginalUTM35North_2013_GTI_72Classes/sa_lcov_2013-14_gti_utm35n_vs22b.tif,4083281806,.tif,raster,False,audit_only
 data/bundle/ZAF_wind-speed_100m.tif,81105685,.tif,raster,True,covered
 .snakemake/scripts/tmpor4uwofl.prepare_and_solve_network.py,26519,.py,script,False,audit_only
+.snakemake/source-cache-runtime2/file/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa/scripts/build_topology.py,16143,.py,script,False,audit_only
+.snakemake/source-cache-runtime3/file/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa/scripts/add_electricity.py,76226,.py,script,False,audit_only
+.snakemake/source-cache-runtime4/file/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa/scripts/add_electricity.py,76827,.py,script,False,audit_only
+.snakemake/source-cache-runtime4/file/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa/scripts/prepare_and_solve_network.py,24848,.py,script,False,audit_only
 docs/archive/conf.py,10660,.py,script,False,audit_only
 docs/conf.py,10409,.py,script,False,audit_only
 pre_processing/resource_processing/_helpers.py,12969,.py,script,False,audit_only
 scripts/_helpers.py,42530,.py,script,True,covered
-scripts/add_electricity.py,76226,.py,script,True,covered
+scripts/add_electricity.py,77038,.py,script,True,covered
 scripts/build_topology.py,16143,.py,script,True,covered
-scripts/custom_constraints.py,16807,.py,script,True,covered
-scripts/prepare_and_solve_network.py,24848,.py,script,True,covered
+scripts/custom_constraints.py,16968,.py,script,True,covered
+scripts/prepare_and_solve_network.py,24929,.py,script,True,covered
 data/bundle/11-supply.shp,4798988,.shp,spatial,False,audit_only
 data/bundle/CSIR/Mesozones/Mesozones.shp,30889536,.shp,spatial,False,audit_only
 data/bundle/Existing_Lines.shp,1326556,.shp,spatial,True,covered
@@ -45,15 +54,28 @@ data/bundle/supply_regions/rsa_supply_regions.gpkg,19918848,.gpkg,spatial,True,c
 data/bundle/supply_regions/rsa_supply_regions2.gpkg,20615168,.gpkg,spatial,True,covered
 data/bundle/transmission_grid/eskom_gcca_2022/Existing_Lines.shp,1711652,.shp,spatial,True,covered
 data/bundle/transmission_grid/tdp_digitised/TDP_2023_32.shp,66564,.shp,spatial,True,covered
-data/bundle/SystemEnergy2009_22.csv,4894211,.csv,tabular,True,covered
+data/bundle/SystemEnergy2009_22.csv,5235148,.csv,tabular,True,covered
 data/eskom_data.csv,12701713,.csv,tabular,True,covered
 data/eskom_pu_profiles.csv,2858046,.csv,tabular,True,covered
 docs/archive/configtables/existing_non_eskom.csv,13939,.csv,tabular,False,audit_only
 docs/configtables/existing_non_eskom.csv,13939,.csv,tabular,False,audit_only
+results/Benchmark_2023/S_2023BM/outputs/generator_emissions.csv,710398,.csv,tabular,False,audit_only
+results/Benchmark_2023/S_2023BM/outputs/generator_stand_by_emissions.csv,3325604,.csv,tabular,False,audit_only
+results/Benchmark_2023/S_2023BM/outputs/generators.csv,25363,.csv,tabular,False,audit_only
+results/Coal_Flexibilisation/S1/outputs/generator_stand_by_emissions.csv,23241098,.csv,tabular,False,audit_only
 data/ambitions_validation.xlsx,43182,.xlsx,workbook,True,covered
 data/bundle/Supply area normalised power feed-in for PV.xlsx,5419924,.xlsx,workbook,True,covered
 data/bundle/Supply area normalised power feed-in for Wind.xlsx,10009966,.xlsx,workbook,True,covered
 pre_processing/resource_processing/csir_fise_SWA_data.xlsx,4201663,.xlsx,workbook,True,covered
+scenarios/Benchmark_2023/sub_scenarios/emissions.xlsx,36308,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/extendable_technologies.xlsx,125758,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/fixed_technologies.xlsx,89091,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/fuel_prices.xlsx,47298,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/operational_constraints.xlsx,33373,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/phased_decommissioning.xlsx,274253,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/plant_availability.xlsx,147985,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/reserve_margin.xlsx,14767,.xlsx,workbook,False,audit_only
+scenarios/Benchmark_2023/sub_scenarios/transmission_expansion.xlsx,14127,.xlsx,workbook,False,audit_only
 scenarios/Coal_Flexibilisation/scenarios_to_run.xlsx,260866,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/annual_load.xlsx,26808,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/aux_stg_feed.xlsx,12122,.xlsx,workbook,True,covered
@@ -61,7 +83,7 @@ scenarios/Coal_Flexibilisation/sub_scenarios/emissions.xlsx,83143,.xlsx,workbook
 scenarios/Coal_Flexibilisation/sub_scenarios/extendable_technologies.xlsx,279099,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/fixed_technologies.xlsx,89091,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/fuel_prices.xlsx,577124,.xlsx,workbook,True,covered
-scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx,66984,.xlsx,workbook,True,covered
+scenarios/Coal_Flexibilisation/sub_scenarios/operational_constraints.xlsx,33373,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/phased_decommissioning.xlsx,274253,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/plant_availability.xlsx,147985,.xlsx,workbook,True,covered
 scenarios/Coal_Flexibilisation/sub_scenarios/reserve_margin.xlsx,14767,.xlsx,workbook,True,covered

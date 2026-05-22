@@ -21,6 +21,11 @@ in any solver that does not re-call `calculate_dependent_values` before solve.
     r = 0.030 ohm/km, x = 0.246 ohm/km, c = 13.8 nF/km
     -> b = 2*pi*50*c = 4.335e-6 S/km
 
+765 kV corridors use PyPSA standard `Al/St 560/50 4-bundle 750.0` per-km
+values (the same type cited by pypsa-rsa for 765 kV thermal capacity):
+    r = 0.013 ohm/km, x = 0.276 ohm/km, c = 13.13 nF/km
+    -> b = 2*pi*50*c = 4.125e-6 S/km
+
 275 kV corridors have no exact standard in PyPSA's line_types catalog. Hand-
 override using representative single-circuit 275 kV values:
     x = 0.32 ohm/km, r = 0.034 ohm/km, b = 3.6e-6 S/km
@@ -40,6 +45,7 @@ logger = logging.getLogger("build_za_custom_lines")
 # Per-km parameters. 400 kV values match PyPSA standard `Al/St 240/40 4-bundle 380.0`
 # (n.line_types.loc['Al/St 240/40 4-bundle 380.0']); b derived from c_per_length × 2pi*f.
 P_400KV = {"x_per_km": 0.246, "r_per_km": 0.030, "b_per_km": 4.335e-6, "v_nom": 380.0}
+P_765KV = {"x_per_km": 0.276, "r_per_km": 0.013, "b_per_km": 4.125e-6, "v_nom": 765.0}
 P_275KV = {"x_per_km": 0.32,  "r_per_km": 0.034, "b_per_km": 3.6e-6,   "v_nom": 275.0}
 CUSTOM_LINE_COLUMNS = [
     "name",
@@ -86,14 +92,17 @@ def load_bus_coords(network_path: Path) -> pd.DataFrame:
 
 
 def derive_line_params(voltage_kv: int, length_km: float, num_parallel: int) -> dict:
-    if voltage_kv == 400:
+    if voltage_kv == 765:
+        p = P_765KV
+        source = "pypsa_standard_765kV_4bundle_750_per_km"
+    elif voltage_kv == 400:
         p = P_400KV
         source = "pypsa_standard_400kV_4bundle_380_per_km"
     elif voltage_kv == 275:
         p = P_275KV
         source = "hand_override_275kV_singlecircuit"
     else:
-        raise SystemExit(f"Unsupported voltage_kv={voltage_kv}; only 275 and 400 supported")
+        raise SystemExit(f"Unsupported voltage_kv={voltage_kv}; only 275, 400, and 765 supported")
     return {
         "v_nom": p["v_nom"],
         "type": "",

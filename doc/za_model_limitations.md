@@ -5,6 +5,24 @@
 **Network:** `results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-OPC-CAP.nc`
 **Date accepted:** 2026-05-13
 
+> **Staleness note — 2026-05-15.** Module 13f Option C rebuilt this same
+> network path with corrected demand alignment. The current file now has
+> `225.8749 TWh` load, `5.500000 TWh` OCGT, and `2.4969 TWh` load shedding.
+> The limitation figures below describe the pre-13f accepted Module 12 baseline
+> and need a full validation refresh before being cited as current results.
+
+> **Current Module 13j diagnostic note — 2026-05-16.** The accepted 13h/13i
+> calibration path now uses coal disaggregation plus linearised coal UC. The
+> workbook-grounded `EAF-UC-OPC-NO-MIN-GAS` baseline has coal `171.962 TWh`,
+> OCGT `27.441 TWh`, load shedding `6.051 TWh`, and coal hourly Pearson
+> `r = 0.598`. Module 13j CAP diagnostics bind OCGT at the Eskom observed
+> `5.243 TWh`, but both `NO_MIN_GAS + CAP` and `LOW_GAS + CAP` raise load
+> shedding to `27.137 TWh`. This confirms the annual OCGT cap is a diagnostic
+> counterfactual, not a final scarcity-composition fix. The underlying current
+> limitation is still missing non-scarcity energy, especially VRE
+> (`wind 7.312 TWh` vs Eskom `11.613 TWh`, `solar PV 3.625 TWh` vs `5.015 TWh`,
+> `CSP 0.806 TWh` vs `1.375 TWh`).
+
 This document records the known, accepted residual errors in the South Africa 2023
 dispatch calibration. Each section names the symptom, the diagnosed root cause, the
 quantitative evidence, and whether the limitation is portable into capacity-expansion
@@ -107,6 +125,12 @@ re-tune the TES dispatch logic; this is deferred to a CSP-specific module.
 
 **Symptom.** Coal generates **184,406 GWh/year** versus Eskom 2023 actual
 **165,627 GWh/year** — an over-dispatch of **18,779 GWh** (+11.3%).
+
+**Post-13m provenance note.** Module 13m now materializes the official Eskom
+2023 nominal coal fleet as the configured `calibrated_2023` basis
+(39.099 GW; Kelvin excluded; Medupi 3.600 GW; Kusile 2.880 GW). The figures in
+this section are still the pre-13m accepted diagnostic results until the
+official-fleet solves are run and reclassified.
 
 **Diagnosis (sensitivity decomposition).** The coal over-dispatch splits cleanly
 into two components:

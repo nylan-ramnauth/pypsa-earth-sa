@@ -5,17 +5,19 @@
 """Emit `za_local_carrier_cost_rows.csv` consumed by Module 10/12's
 `apply_za_local_carriers` hook.
 
-One row per patched carrier (`coal`, `nuclear`, `ocgt_diesel`, `ocgt_gas`).
+One row per patched carrier (`coal`, `nuclear`, `ocgt_diesel`, `ocgt_gas`,
+`sasol_coal`, `sasol_gas`).
 Marginal cost is computed in EUR/MWh as
 
     marginal_cost = fuel_price_eur_per_gj * heat_rate_gj_per_mwh + VOM_eur_per_mwh
 
 using PyPSA-RSA medians from the Module 04 audit. Coal and nuclear are upstream
-carriers whose costs are patched by the local hook. Sasol and `other_re` are
-removed from the active Module 12 baseline. CO2 emissions are recorded in
-tCO2/MWh (converted from kgCO2/MWh). Capital cost is left blank for the 2023
-fixed-validation baseline — Module 08 owns plant-by-plant capex reconciliation
-through `custom_powerplants.csv`. The
+carriers whose costs are patched by the local hook. Sasol rows are available
+for Module 13m diagnostics but only attached when explicitly enabled. `other_re`
+remains removed from the active baseline. CO2 emissions are recorded in tCO2/MWh
+(converted from kgCO2/MWh). Capital cost is left blank for the 2023 fixed-
+validation baseline — Module 08 owns plant-by-plant capex reconciliation through
+`custom_powerplants.csv`. The
 ``pypsa_earth_default_retained_reason`` column is filled when a PyPSA-Earth
 default has been kept instead of an audited PyPSA-RSA value.
 """
@@ -27,7 +29,14 @@ import pandas as pd
 
 from .audit_builder import V1_TO_RSA, PYPSA_RSA_BASE_YEAR, _fixed_tech_carrier_median, _rsa_fuel_price_2023
 
-LOCAL_CARRIERS = ["coal", "nuclear", "ocgt_diesel", "ocgt_gas"]
+LOCAL_CARRIERS = [
+    "coal",
+    "nuclear",
+    "ocgt_diesel",
+    "ocgt_gas",
+    "sasol_coal",
+    "sasol_gas",
+]
 
 LOCAL_ROW_COLUMNS = [
     "carrier",

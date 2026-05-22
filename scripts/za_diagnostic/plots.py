@@ -257,6 +257,24 @@ def plot_ratings_scatter(df_ratings: pd.DataFrame) -> plt.Figure:
     df = df_ratings[df_ratings["bus0"] != "_summary_"].copy()
     df = df.dropna(subset=["osm_s_nom_total_mw", "st_clair_n1_mw"])
     fig, ax = plt.subplots(figsize=(7, 7))
+    if df.empty:
+        ax.text(
+            0.5,
+            0.5,
+            "No matched OSM corridors available",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xlabel("St Clair N-1 (MW)")
+        ax.set_ylabel("OSM s_nom total (MW)")
+        ax.set_title("OSM thermal rating vs St Clair N-1 per corridor")
+        ax.grid(linestyle="--", alpha=0.4)
+        fig.tight_layout()
+        return fig
+
     colors = df["direction"].map({
         "osm_over": "#CC3311",
         "osm_under": "#EE9966",

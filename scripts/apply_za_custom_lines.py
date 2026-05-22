@@ -64,7 +64,7 @@ def add_line(n: pypsa.Network, row: pd.Series) -> dict:
         "name": row["name"],
         "bus0": row["bus0"],
         "bus1": row["bus1"],
-        "v_nom_kv": float(line["v_nom"]),
+        "v_nom_kv": float(row["v_nom"]),
         "length_km": float(line["length"]),
         "num_parallel": float(line["num_parallel"]),
         "s_nom_built": float(line["s_nom"]),

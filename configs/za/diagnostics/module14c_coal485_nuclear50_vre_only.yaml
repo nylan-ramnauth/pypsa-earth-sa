@@ -1,0 +1,29 @@
+# Temporary Module 14c ablation overlay.
+#
+# Holds coal EAF at the upstream clean 48.5% source network and nuclear p_max_pu at 0.5, applies the Module 14
+# VRE scaling, but removes the OCGT annual cap. This isolates the effect of VRE
+# scaling before the OCGT diesel volume is constrained.
+
+module14b_diagnostic:
+  label: Module 14c coal485+nuclear50 VRE only
+  log_slug: module14c-coal485-nuclear50-vre-only
+
+  source_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET.nc
+  backup_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-PRE-14.nc
+  output_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-MODULE14C-COAL485-NUCLEAR50-VRE-ONLY.nc
+
+  vre_scale:
+    onwind: 1.58
+    solar: 1.40
+    ror: 1.425
+
+  nuclear_availability:
+    enable: true
+    carrier: nuclear
+    target_p_max_pu: 0.5
+
+  annual_generation_caps_twh:
+    nuclear: 8.127
+
+  annual_generation_cap_sources:
+    nuclear: Eskom observed 2023 nuclear generation target; Koeberg Unit 1 outage calibration
