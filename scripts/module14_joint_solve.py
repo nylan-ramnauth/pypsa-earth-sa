@@ -25,6 +25,7 @@ import yaml
 
 from za_fleet.operational_constraints import apply as apply_operational_constraints
 from za_fleet.scarcity_cap import apply as apply_scarcity_cap
+from za_reference_data import benchmark_sub_scenario
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -71,6 +72,7 @@ class RunConfig:
     annual_generation_caps_twh: dict[str, float]
     annual_generation_cap_sources: dict[str, str]
     nuclear_availability: dict[str, Any]
+    operational_constraints: dict[str, Any]
     log_slug: str
 
 
@@ -131,6 +133,7 @@ def default_run_config() -> RunConfig:
             "ocgt_diesel": "Eskom observed 2023 OCGT generation target"
         },
         nuclear_availability={"enable": False},
+        operational_constraints={"enable": False, "scenario": "NO_MIN_GAS", "model_year": 2023},
         log_slug="module14-joint-solve",
     )
 
@@ -173,6 +176,13 @@ def load_run_config(overlay: Path | None) -> RunConfig:
     }
     cfg.nuclear_availability = dict(
         block.get("nuclear_availability", cfg.nuclear_availability) or {}
+    )
+    cfg.operational_constraints = dict(
+        block.get(
+            "za_operational_constraints",
+            block.get("operational_constraints", cfg.operational_constraints),
+        )
+        or {}
     )
     cfg.log_slug = str(block.get("log_slug", "module14b-coal49-nuclear50"))
     return cfg
@@ -353,21 +363,10 @@ def apply_nuclear_availability(
 
 
 def _resolve_opc_workbook(config: dict[str, Any]) -> Path:
-    packaged = (
-        REPO_ROOT
-        / "data/za_reference/pypsa_rsa_benchmark_2023/sub_scenarios/operational_constraints.xlsx"
-    )
-    if packaged.exists():
-        return packaged
-
-    pypsa_rsa_root = Path(config.get("pypsa_rsa_root", ""))
-    fallback = (
-        pypsa_rsa_root
-        / "scenarios/Benchmark_2023/sub_scenarios/operational_constraints.xlsx"
-    )
-    if fallback.exists():
-        return fallback
-    raise FileNotFoundError(f"Operational constraints workbook not found: {fallback}")
+    workbook = benchmark_sub_scenario(config, "operational_constraints.xlsx")
+    if workbook.exists():
+        return workbook
+    raise FileNotFoundError(f"Operational constraints workbook not found: {workbook}")
 
 
 def _normalise_annual_caps(n: pypsa.Network, caps: dict[str, float]) -> dict[str, float]:
@@ -420,7 +419,8 @@ def _solver_options(n: pypsa.Network) -> dict[str, Any]:
 def _make_snakemake_shim(
     n: pypsa.Network,
     *,
-    opc_workbook: Path,
+    opc_workbook: Path | None,
+    operational_constraints: dict[str, Any],
     annual_caps_twh: dict[str, float],
     cap_sources: dict[str, str],
 ) -> SimpleNamespace:
@@ -428,11 +428,16 @@ def _make_snakemake_shim(
     config.setdefault("za_operational_constraints", {})
     config.setdefault("za_scarcity_cap", {})
 
+    opc_enabled = bool(operational_constraints.get("enable", False))
     params = AttrDict(
         {
-            "za_operational_constraints_enable": True,
-            "za_operational_constraints_scenario": "LOW_GAS",
-            "za_operational_constraints_model_year": 2023,
+            "za_operational_constraints_enable": opc_enabled,
+            "za_operational_constraints_scenario": str(
+                operational_constraints.get("scenario", "NO_MIN_GAS")
+            ),
+            "za_operational_constraints_model_year": int(
+                operational_constraints.get("model_year", 2023)
+            ),
             "za_scarcity_cap_enable": True,
             "za_scarcity_cap_model_year": 2023,
             "za_scarcity_cap_annual_generation_caps_twh": annual_caps_twh,
@@ -442,7 +447,9 @@ def _make_snakemake_shim(
     return SimpleNamespace(
         config=config,
         params=params,
-        input=AttrDict({"operational_constraints": str(opc_workbook)}),
+        input=AttrDict(
+            {"operational_constraints": "" if opc_workbook is None else str(opc_workbook)}
+        ),
         output=AttrDict({}),
     )
 
@@ -465,9 +472,10 @@ def _remove_disabled_min_up_down_constraints(n: pypsa.Network) -> None:
         print(f"Removed ZA coal UC min-up/min-down constraints: {existing}")
 
 
-def solve_module14(n: pypsa.Network, cfg: RunConfig) -> tuple[str, str, Path, dict[str, float]]:
+def solve_module14(n: pypsa.Network, cfg: RunConfig) -> tuple[str, str, Path | None, dict[str, float]]:
     config = dict(n.meta) if isinstance(n.meta, dict) else {}
-    opc_workbook = _resolve_opc_workbook(config)
+    opc_enabled = bool(cfg.operational_constraints.get("enable", False))
+    opc_workbook = _resolve_opc_workbook(config) if opc_enabled else None
     annual_caps = _normalise_annual_caps(n, cfg.annual_generation_caps_twh)
     cap_sources = {
         carrier: cfg.annual_generation_cap_sources.get(carrier, "explicit_diagnostic_overlay")
@@ -476,14 +484,17 @@ def solve_module14(n: pypsa.Network, cfg: RunConfig) -> tuple[str, str, Path, di
     snakemake = _make_snakemake_shim(
         n,
         opc_workbook=opc_workbook,
+        operational_constraints=cfg.operational_constraints,
         annual_caps_twh=annual_caps,
         cap_sources=cap_sources,
     )
 
     def extra_functionality(network: pypsa.Network, snapshots: pd.DatetimeIndex) -> None:
         network.config = config
-        print("Registering LOW_GAS OPC constraints")
-        apply_operational_constraints(network, snapshots, snakemake)
+        if opc_enabled:
+            scenario = snakemake.params.za_operational_constraints_scenario
+            print(f"Registering {scenario} OPC constraints")
+            apply_operational_constraints(network, snapshots, snakemake)
         for carrier, cap in annual_caps.items():
             print(f"Registering annual cap: {carrier} <= {cap:.3f} TWh")
         apply_scarcity_cap(network, snapshots, snakemake)
@@ -600,7 +611,7 @@ def write_shared_log(
     summary: dict[str, float],
     scale_audits: list[ScaleAudit],
     nuclear_audit: NuclearAvailabilityAudit,
-    opc_workbook: Path,
+    opc_workbook: Path | None,
     annual_caps: dict[str, float],
     checks: list[tuple[str, bool, str]],
     cfg: RunConfig,
@@ -668,6 +679,12 @@ def write_shared_log(
     for name, passed, detail in checks:
         check_rows.append(f"| {name} | {'PASS' if passed else 'FAIL'} | {detail} |")
 
+    opc_detail = (
+        f"`{opc_workbook}`"
+        if opc_workbook is not None
+        else "disabled for this diagnostic overlay"
+    )
+
     content = f"""---
 type: shared-log
 date: '{now:%Y-%m-%d}'
@@ -690,7 +707,7 @@ workstreams:
 ## Inputs And Constraints
 
 - Source network: [[6-codebases/repos/pypsa-earth/{_relative(cfg.source_network)}]]
-- LOW-GAS OPC workbook: `{opc_workbook}`
+- OPC workbook: {opc_detail}
 
 {chr(10).join(cap_rows)}
 

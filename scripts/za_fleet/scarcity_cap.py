@@ -95,7 +95,7 @@ def _parity_status(carrier: str, model_year: int) -> str:
 def _normalise_caps(caps: Any) -> dict[str, float]:
     if not isinstance(caps, dict) or not caps:
         raise ValueError(
-            "za_scarcity_cap is enabled but annual_generation_caps_twh is empty "
+            "ZA annual generation caps are enabled but carrier caps are empty "
             "or not a mapping"
         )
 
@@ -103,11 +103,11 @@ def _normalise_caps(caps: Any) -> dict[str, float]:
     for carrier, value in caps.items():
         carrier_name = str(carrier).strip()
         if not carrier_name:
-            raise ValueError("za_scarcity_cap contains an empty carrier key")
+            raise ValueError("ZA annual generation caps contain an empty carrier key")
         cap_twh = float(value)
         if cap_twh <= 0:
             raise ValueError(
-                f"za_scarcity_cap cap for {carrier_name!r} must be positive; "
+                f"ZA annual generation cap for {carrier_name!r} must be positive; "
                 f"got {cap_twh}"
             )
         normalised[carrier_name] = cap_twh
@@ -119,7 +119,7 @@ def _normalise_cap_sources(sources: Any, caps: dict[str, float]) -> dict[str, st
         return {}
     if not isinstance(sources, dict):
         raise ValueError(
-            "za_scarcity_cap annual generation cap sources must be a mapping"
+            "ZA annual generation cap sources must be a mapping"
         )
 
     normalised: dict[str, str] = {}
@@ -131,27 +131,39 @@ def _normalise_cap_sources(sources: Any, caps: dict[str, float]) -> dict[str, st
 
 
 def resolved_config(n, snakemake) -> ScarcityCapConfig:
-    cfg = snakemake.config.get("za_scarcity_cap", {})
+    cfg = (
+        snakemake.config.get("za_generation_constraints", {})
+        .get("annual_generation_caps", {})
+        or {}
+    )
+    legacy_cfg = snakemake.config.get("za_scarcity_cap", {})
     enabled = bool(
-        _snakemake_param(snakemake, "za_scarcity_cap_enable", cfg.get("enable", False))
+        _snakemake_param(
+            snakemake,
+            "za_scarcity_cap_enable",
+            cfg.get("enable", legacy_cfg.get("enable", False)),
+        )
     )
     model_year = int(
         _snakemake_param(
             snakemake,
             "za_scarcity_cap_model_year",
-            cfg.get("model_year", _snapshot_year(n.snapshots)),
+            cfg.get("model_year", legacy_cfg.get("model_year", _snapshot_year(n.snapshots))),
         )
     )
+    unit = str(cfg.get("unit", "TWh"))
+    if unit != "TWh":
+        raise ValueError(f"ZA annual generation caps currently require unit: TWh, got {unit!r}")
     caps = _snakemake_param(
         snakemake,
         "za_scarcity_cap_annual_generation_caps_twh",
-        cfg.get("annual_generation_caps_twh", {}),
+        cfg.get("carriers", legacy_cfg.get("annual_generation_caps_twh", {})),
     )
     normalised_caps = _normalise_caps(caps) if enabled else {}
     cap_sources = _snakemake_param(
         snakemake,
         "za_scarcity_cap_annual_generation_cap_sources",
-        cfg.get("annual_generation_cap_sources", {}),
+        cfg.get("sources", legacy_cfg.get("annual_generation_cap_sources", {})),
     )
     return ScarcityCapConfig(
         enabled=enabled,

@@ -12,6 +12,11 @@ module14b_diagnostic:
   backup_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-PRE-14.nc
   output_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-MODULE14C-COAL485-NUCLEAR50-VRE-ONLY.nc
 
+  za_operational_constraints:
+    enable: true
+    scenario: LOW_GAS
+    model_year: 2023
+
   vre_scale:
     onwind: 1.58
     solar: 1.40

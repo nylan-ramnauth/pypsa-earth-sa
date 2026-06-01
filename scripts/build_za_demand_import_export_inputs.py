@@ -15,6 +15,8 @@ import numpy as np
 import pandas as pd
 import yaml
 
+from za_reference_data import supply_regions_gpkg
+
 logger = logging.getLogger("build_za_demand_import_export_inputs")
 
 DATA_VALIDATION = Path("data/za_validation")
@@ -201,8 +203,7 @@ def _pypsa_earth_style_weights(config: dict) -> tuple[pd.DataFrame, pd.DataFrame
     import fiona
     import geopandas as gpd
 
-    pypsa_rsa_root = Path(config["pypsa_rsa_root"])
-    gpkg = pypsa_rsa_root / "data" / "bundle" / "supply_regions" / "rsa_supply_regions.gpkg"
+    gpkg = supply_regions_gpkg(config)
     gadm = Path("resources") / config["run"]["name"] / "shapes" / "gadm_shapes.geojson"
     if not gpkg.exists():
         raise FileNotFoundError(f"Missing PyPSA-RSA supply regions: {gpkg}")
@@ -293,7 +294,7 @@ def _compare_pypsa_rsa_weights(config: dict, pypsa_earth_diag: pd.DataFrame) -> 
     if not audit.empty and "layer" in audit.columns:
         audited_layers = {str(int(float(v))) for v in audit["layer"].dropna() if str(v) != "nan"}
 
-    gpkg = Path(config["pypsa_rsa_root"]) / "data" / "bundle" / "supply_regions" / "rsa_supply_regions.gpkg"
+    gpkg = supply_regions_gpkg(config)
     layers = set(fiona.listlayers(str(gpkg)))
     rows: list[dict] = []
     for layer in ["1", "10", "34"]:

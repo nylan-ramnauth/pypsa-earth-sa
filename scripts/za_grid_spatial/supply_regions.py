@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText:  PyPSA-Earth and PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Load the 34 Eskom supply-region layer from pypsa-rsa pinned bundle."""
+"""Load the 34 Eskom supply-region layer from packaged reference data."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,14 +14,13 @@ GEO_CRS = "EPSG:4326"
 SUPPLY_REGION_GPKG_REL = Path("data/bundle/supply_regions/rsa_supply_regions.gpkg")
 
 
-def load_34_layer(pypsa_rsa_root: Path) -> gpd.GeoDataFrame:
+def load_34_layer_from_gpkg(gpkg: Path) -> gpd.GeoDataFrame:
     """Return the 34-feature supply-region layer in EPSG:4326.
 
     Adds a stable `region_id` column (zero-padded LocalArea name) for downstream joins.
     """
-    gpkg = pypsa_rsa_root / SUPPLY_REGION_GPKG_REL
     if not gpkg.exists():
-        raise FileNotFoundError(f"pypsa-rsa supply-region gpkg missing: {gpkg}")
+        raise FileNotFoundError(f"ZA supply-region gpkg missing: {gpkg}")
     gdf = gpd.read_file(gpkg, layer="34")
     if len(gdf) != 34:
         raise ValueError(f"expected 34 features in supply-region layer 34, got {len(gdf)}")
@@ -32,6 +31,13 @@ def load_34_layer(pypsa_rsa_root: Path) -> gpd.GeoDataFrame:
         dups = gdf.loc[gdf["region_id"].duplicated(keep=False), "region_id"].tolist()
         raise ValueError(f"duplicate LocalArea names in 34-layer: {dups}")
     return gdf[["region_id", "SupplyArea", "LocalArea", "OBJECTID", "Shape_Area", "geometry"]]
+
+
+def load_34_layer(pypsa_rsa_root_or_gpkg: Path) -> gpd.GeoDataFrame:
+    """Return the 34-region layer from either a legacy root or direct gpkg path."""
+    path = Path(pypsa_rsa_root_or_gpkg)
+    gpkg = path if path.suffix.lower() == ".gpkg" else path / SUPPLY_REGION_GPKG_REL
+    return load_34_layer_from_gpkg(gpkg)
 
 
 def supply_region_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:

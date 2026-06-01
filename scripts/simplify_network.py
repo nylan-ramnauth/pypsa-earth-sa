@@ -102,6 +102,7 @@ from pypsa.clustering.spatial import (
 )
 from pypsa.io import import_components_from_dataframe, import_series_from_dataframe
 from scipy.sparse.csgraph import connected_components, dijkstra
+from za_reference_data import supply_regions_gpkg
 
 sys.settrace
 
@@ -217,11 +218,9 @@ def transfer_isolated_loads_to_backbone(n, threshold, config, audit_path):
                 )
             regions["region_id"] = regions["LocalArea"].astype(str).str.strip()
     else:
-        from pathlib import Path
         from za_grid_spatial.supply_regions import load_34_layer
 
-        pypsa_rsa_root = Path(config["pypsa_rsa_root"]).expanduser().resolve()
-        regions = load_34_layer(pypsa_rsa_root)
+        regions = load_34_layer(supply_regions_gpkg(config))
 
     region_by_bus = _bus_supply_regions(n, regions, network_crs=network_crs)
 

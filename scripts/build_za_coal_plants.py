@@ -22,6 +22,7 @@ from za_fleet.fleet_calibration import (
     resolved_config,
     selected_coal_capacities,
 )
+from za_reference_data import benchmark_sub_scenario
 
 
 COAL_STATIONS = [
@@ -555,9 +556,9 @@ def main() -> int:
     )
     parser.add_argument(
         "--rsa-scenarios",
-        required=True,
+        default=None,
         type=Path,
-        help="Path to pypsa-rsa scenarios/Benchmark_2023/sub_scenarios",
+        help="Path to packaged/RSA Benchmark_2023 sub_scenarios",
     )
     parser.add_argument(
         "--network",
@@ -609,7 +610,7 @@ def main() -> int:
         config = yaml.safe_load(fh)
     fleet_cfg = resolved_config(config)
 
-    rsa = args.rsa_scenarios
+    rsa = args.rsa_scenarios or benchmark_sub_scenario(config, "plant_availability.xlsx").parent
     coal = select_coal_fleet(
         load_var_hr_coal(rsa / "fixed_technologies.xlsx"),
         mode=fleet_cfg["effective_mode"],

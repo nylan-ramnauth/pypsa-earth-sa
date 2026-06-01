@@ -30,6 +30,7 @@ from za_grid_spatial import (  # noqa: E402
     rsa_corridors,
     supply_regions,
 )
+from za_reference_data import supply_regions_gpkg  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("build_za_grid_spatial")
@@ -44,13 +45,10 @@ def _load_config(configfile: Path) -> dict:
         return yaml.safe_load(fh)
 
 
-def _resolve_pypsa_rsa_root(config: dict) -> Path:
-    raw = config.get("pypsa_rsa_root")
-    if not raw:
-        raise SystemExit("config missing required key 'pypsa_rsa_root'")
-    path = Path(raw).expanduser().resolve()
+def _resolve_supply_regions_gpkg(config: dict) -> Path:
+    path = supply_regions_gpkg(config)
     if not path.exists():
-        raise SystemExit(f"pypsa_rsa_root does not exist: {path}")
+        raise SystemExit(f"ZA supply-region reference gpkg does not exist: {path}")
     return path
 
 
@@ -64,7 +62,7 @@ def _resolve_run_name(config: dict) -> str:
 
 def run(configfile: Path) -> dict:
     config = _load_config(configfile)
-    pypsa_rsa_root = _resolve_pypsa_rsa_root(config)
+    supply_regions_path = _resolve_supply_regions_gpkg(config)
     run_name = _resolve_run_name(config)
 
     grid_cfg = config.get("za_grid_spatial", {})
@@ -110,9 +108,9 @@ def run(configfile: Path) -> dict:
     DATA_AUDIT.mkdir(parents=True, exist_ok=True)
 
     # --- stage 1: load 34-region supply layer ---
-    logger.info("Loading pypsa-rsa 34-region supply layer")
-    regions = supply_regions.load_34_layer(pypsa_rsa_root)
-    layer_path = pypsa_rsa_root / supply_regions.SUPPLY_REGION_GPKG_REL
+    logger.info("Loading packaged 34-region supply layer")
+    regions = supply_regions.load_34_layer_from_gpkg(supply_regions_path)
+    layer_path = supply_regions_path
 
     # --- stage 2: spatial lock ---
     logger.info("Writing spatial level lock CSV")
@@ -209,7 +207,7 @@ def _main_from_snakemake() -> int:
     if snake is None:
         return 2
     cfg = dict(snake.config)
-    pypsa_rsa_root = _resolve_pypsa_rsa_root(cfg)
+    supply_regions_path = _resolve_supply_regions_gpkg(cfg)
     run_name = _resolve_run_name(cfg)
 
     grid_cfg = cfg.get("za_grid_spatial", {})
@@ -245,7 +243,7 @@ def _main_from_snakemake() -> int:
     out_reconciliation_md = Path(snake.output.reconciliation_md)
 
     return _run_stages(
-        pypsa_rsa_root, run_name, grid_cfg, sil_mw, thermal_mw, n1, st_clair,
+        supply_regions_path, run_name, grid_cfg, sil_mw, thermal_mw, n1, st_clair,
         base_nc, elec_s_nc, existing_lines, custom_powerplants,
         load_weights, import_export, other_re,
         out_custom_busmap, out_osm_summary, out_rsa_corridors, out_reconciliation,
@@ -255,7 +253,7 @@ def _main_from_snakemake() -> int:
 
 
 def _run_stages(
-    pypsa_rsa_root, run_name, grid_cfg, sil_mw, thermal_mw, n1, st_clair,
+    supply_regions_path, run_name, grid_cfg, sil_mw, thermal_mw, n1, st_clair,
     base_nc, elec_s_nc, existing_lines, custom_powerplants,
     load_weights, import_export, other_re,
     out_custom_busmap, out_osm_summary, out_rsa_corridors, out_reconciliation,
@@ -264,9 +262,9 @@ def _run_stages(
 ) -> int:
     DATA_AUDIT.mkdir(parents=True, exist_ok=True)
 
-    logger.info("Loading pypsa-rsa 34-region supply layer")
-    regions = supply_regions.load_34_layer(pypsa_rsa_root)
-    layer_path = pypsa_rsa_root / supply_regions.SUPPLY_REGION_GPKG_REL
+    logger.info("Loading packaged 34-region supply layer")
+    regions = supply_regions.load_34_layer_from_gpkg(Path(supply_regions_path))
+    layer_path = Path(supply_regions_path)
 
     logger.info("Writing spatial level lock CSV")
     lock_mod.write_lock_csv(

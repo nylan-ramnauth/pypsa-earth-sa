@@ -41,6 +41,12 @@ current module pass.
 | [`13n_calibration_demand_adjustment.md`](13n_calibration_demand_adjustment.md) | Replace RSA Contracted Demand with calibrated demand excluding unmodelled sources for 2023 dispatch calibration |
 | [`14_expansion_and_reliability_handoff.md`](14_expansion_and_reliability_handoff.md) | Convert validated 2023 baseline into expansion-ready inputs without changing reliability solver contracts |
 
+## Workflow Simplification Audits
+
+| File | Purpose |
+|---|---|
+| [`za_snakemake_extra_rules_audit.md`](za_snakemake_extra_rules_audit.md) | Audit of the ZA fork's extra Snakemake rules versus base PyPSA-Earth, with a reduction path toward a more Earth-like workflow surface |
+
 ## Model Data Sources
 
 Canonical map of which upstream data feeds which model input. Keep these four

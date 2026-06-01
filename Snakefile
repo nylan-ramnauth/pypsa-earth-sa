@@ -28,6 +28,10 @@ from retrieve_databundle_light import (
     datafiles_retrivedatabundle,
     get_best_bundles_in_snakemake,
 )
+from za_reference_data import (
+    benchmark_sub_scenario,
+    coal_flexibilisation_sub_scenario,
+)
 from pathlib import Path
 
 
@@ -77,15 +81,8 @@ def _za_opc_workbook(config):
     if explicit:
         return os.path.abspath(explicit)
 
-    packaged = Path(
-        "data/za_reference/pypsa_rsa_benchmark_2023/sub_scenarios/operational_constraints.xlsx"
-    )
-    if packaged.exists():
-        return os.path.abspath(packaged)
-
     return os.path.abspath(
-        config.get("pypsa_rsa_root", "")
-        + "/scenarios/Benchmark_2023/sub_scenarios/operational_constraints.xlsx"
+        benchmark_sub_scenario(config, "operational_constraints.xlsx")
     )
 
 
@@ -96,8 +93,9 @@ def _za_opc_model_year(config):
 
 
 def _za_scarcity_cap_model_year(config):
-    cfg = config.get("za_scarcity_cap", {})
-    return int(cfg.get("model_year", 2023))
+    cfg = config.get("za_generation_constraints", {}).get("annual_generation_caps", {})
+    legacy_cfg = config.get("za_scarcity_cap", {})
+    return int(cfg.get("model_year", legacy_cfg.get("model_year", 2023)))
 
 
 def _za_normalise_opc_scenario(scenario):
@@ -105,26 +103,37 @@ def _za_normalise_opc_scenario(scenario):
 
 
 def _za_sasol_enabled(config):
-    cfg = config.get("za_2023_fleet_calibration", {}) or {}
-    sasol_cfg = cfg.get("sasol", {}) or {}
+    cfg = config.get("za_fleet", {}) or {}
+    if cfg:
+        excluded = {
+            str(item).strip().lower().replace("_", " ")
+            for item in cfg.get("exclude_powerplants", [])
+        }
+        sasol_excluded = {"sasol coal", "sasol gas"}.intersection(excluded)
+        return bool(cfg.get("enable", False)) and not sasol_excluded
+
+    legacy_cfg = config.get("za_2023_fleet_calibration", {}) or {}
+    sasol_cfg = legacy_cfg.get("sasol", {}) or {}
     return bool(sasol_cfg.get("enable", False))
 
 
 def _za_require_sasol_enabled_for_cap(config):
     if not _za_sasol_enabled(config):
         raise ValueError(
-            "Sasol CAP targets require za_2023_fleet_calibration.sasol.enable: "
-            "true so the active input network contains sasol_coal/sasol_gas "
-            "generators. Enable Sasol in the config before running the "
+            "Sasol CAP targets require the active fleet config to include "
+            "sasol_coal/sasol_gas generators. Remove Sasol from "
+            "za_fleet.exclude_powerplants or enable legacy "
+            "za_2023_fleet_calibration.sasol before running the "
             "OFFICIAL-FLEET-SASOL CAP target."
         )
 
 
 def _za_explicit_annual_cap_config(config):
-    cfg = config.get("za_scarcity_cap", {}) or {}
-    caps = cfg.get("annual_generation_caps_twh", {}) or {}
+    cfg = config.get("za_generation_constraints", {}).get("annual_generation_caps", {})
+    legacy_cfg = config.get("za_scarcity_cap", {}) or {}
+    caps = cfg.get("carriers", legacy_cfg.get("annual_generation_caps_twh", {})) or {}
     if not isinstance(caps, dict):
-        raise ValueError("za_scarcity_cap.annual_generation_caps_twh must be a mapping")
+        raise ValueError("ZA annual generation caps must be a mapping")
     return {str(carrier): float(value) for carrier, value in caps.items()}
 
 
@@ -314,44 +323,50 @@ rule validate_za_renewable_profiles:
         "scripts/validate_za_renewable_profiles.py"
 
 
-rule build_za_source_audits:
-    output:
-        registry="data/za_audit/pypsa_rsa_source_registry.csv",
-        discovery="data/za_audit/pypsa_rsa_discovery_sweep.csv",
-        ppm_full="data/za_audit/powerplants_pm_za_full.csv",
-        ppm_audit="data/za_audit/powerplants_pm_za_audit.csv",
-        scenario_workbooks="data/za_audit/pypsa_rsa_scenario_workbook_inventory.csv",
-        fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
-        reipppp_solar="data/za_audit/reipppp_solar_2023_candidates.csv",
-        reipppp_wind="data/za_audit/reipppp_wind_2023_candidates.csv",
-        availability="data/za_audit/pypsa_rsa_availability_audit.csv",
-        op_constraints="data/za_audit/pypsa_rsa_operational_constraints_audit.csv",
-        reserve_margin="data/za_audit/pypsa_rsa_reserve_margin_audit.csv",
-        eskom_pu="data/za_audit/pypsa_rsa_eskom_pu_profiles_audit.csv",
-        cost_fuel="data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv",
-        load_weights="data/za_audit/pypsa_rsa_load_weight_audit.csv",
-        bundle_inv="data/za_audit/pypsa_rsa_external_bundle_inventory.csv",
-        supply_regions="data/za_audit/za_rsa_supply_regions.geojson",
-        supply_layer_resolution="data/za_audit/za_rsa_supply_region_layer_resolution.csv",
-        existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
-        planned_lines="data/za_audit/za_rsa_planned_tdp_lines.geojson",
-        supply_area_limits="data/za_audit/za_rsa_supply_area_connection_limits.csv",
-        mts_limits="data/za_audit/za_rsa_mts_hosting_limits.csv",
-        transmission_expansion="data/za_audit/pypsa_rsa_transmission_expansion_audit.csv",
-        resource_siting="data/za_audit/pypsa_rsa_resource_siting_audit.csv",
-    log:
-        "logs/" + RDIR + "build_za_source_audits.log",
-    benchmark:
-        "benchmarks/" + RDIR + "build_za_source_audits"
-    script:
-        "scripts/build_za_source_audits.py"
+_ZA_SOURCE_AUDITS_ENABLED = bool(
+    (config.get("za_source_audits", {}) or {}).get("enable", False)
+    or config.get("pypsa_rsa_root")
+)
+
+if _ZA_SOURCE_AUDITS_ENABLED:
+    rule build_za_source_audits:
+        output:
+            registry="data/za_audit/pypsa_rsa_source_registry.csv",
+            discovery="data/za_audit/pypsa_rsa_discovery_sweep.csv",
+            ppm_full="data/za_audit/powerplants_pm_za_full.csv",
+            ppm_audit="data/za_audit/powerplants_pm_za_audit.csv",
+            scenario_workbooks="data/za_audit/pypsa_rsa_scenario_workbook_inventory.csv",
+            fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
+            reipppp_solar="data/za_audit/reipppp_solar_2023_candidates.csv",
+            reipppp_wind="data/za_audit/reipppp_wind_2023_candidates.csv",
+            availability="data/za_audit/pypsa_rsa_availability_audit.csv",
+            op_constraints="data/za_audit/pypsa_rsa_operational_constraints_audit.csv",
+            reserve_margin="data/za_audit/pypsa_rsa_reserve_margin_audit.csv",
+            eskom_pu="data/za_audit/pypsa_rsa_eskom_pu_profiles_audit.csv",
+            cost_fuel="data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv",
+            load_weights="data/za_audit/pypsa_rsa_load_weight_audit.csv",
+            bundle_inv="data/za_audit/pypsa_rsa_external_bundle_inventory.csv",
+            supply_regions="data/za_audit/za_rsa_supply_regions.geojson",
+            supply_layer_resolution="data/za_audit/za_rsa_supply_region_layer_resolution.csv",
+            existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
+            planned_lines="data/za_audit/za_rsa_planned_tdp_lines.geojson",
+            supply_area_limits="data/za_audit/za_rsa_supply_area_connection_limits.csv",
+            mts_limits="data/za_audit/za_rsa_mts_hosting_limits.csv",
+            transmission_expansion="data/za_audit/pypsa_rsa_transmission_expansion_audit.csv",
+            resource_siting="data/za_audit/pypsa_rsa_resource_siting_audit.csv",
+        log:
+            "logs/" + RDIR + "build_za_source_audits.log",
+        benchmark:
+            "benchmarks/" + RDIR + "build_za_source_audits"
+        script:
+            "scripts/build_za_source_audits.py"
 
 
 rule build_za_carrier_taxonomy:
     input:
         config="configs/za/za_2023_fixed_validation.yaml",
-        registry="data/za_audit/pypsa_rsa_source_registry.csv",
-        fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
+        registry=ancient("data/za_audit/pypsa_rsa_source_registry.csv"),
+        fixed_tech=ancient("data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv"),
     output:
         taxonomy_csv="data/za_audit/za_carrier_taxonomy.csv",
         crosscheck_csv="data/za_audit/za_carrier_taxonomy_crosscheck.csv",
@@ -367,7 +382,7 @@ rule build_za_demand_import_export_inputs:
     input:
         hourly="data/za_validation/eskom_2023_hourly_clean.csv",
         targets="data/za_validation/eskom_2023_targets_by_carrier.csv",
-        rsa_load_weights="data/za_audit/pypsa_rsa_load_weight_audit.csv",
+        rsa_load_weights=ancient("data/za_audit/pypsa_rsa_load_weight_audit.csv"),
     output:
         demand_profile="data/za_validation/za_2023_demand_profile.csv",
         gegis_africa="data/ssp2-2.6/2030/era5_2023_custom/Africa.csv",
@@ -389,7 +404,7 @@ rule build_za_demand_import_export_inputs:
 rule build_za_costs_fuels_efficiencies:
     input:
         config="configs/za/za_2023_fixed_validation.yaml",
-        cost_audit="data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv",
+        cost_audit=ancient("data/za_audit/pypsa_rsa_cost_fuel_emissions_audit.csv"),
         carrier_taxonomy="data/za_audit/za_carrier_taxonomy.csv",
         costs_2030="data/costs_2030.csv",
     output:
@@ -409,9 +424,9 @@ rule build_za_costs_fuels_efficiencies:
 rule build_za_fleet_reconciliation:
     input:
         config="configs/za/za_2023_fixed_validation.yaml",
-        fixed_tech="data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv",
-        reipppp_wind="data/za_audit/reipppp_wind_2023_candidates.csv",
-        reipppp_solar="data/za_audit/reipppp_solar_2023_candidates.csv",
+        fixed_tech=ancient("data/za_audit/pypsa_rsa_fixed_technologies_2023_candidates.csv"),
+        reipppp_wind=ancient("data/za_audit/reipppp_wind_2023_candidates.csv"),
+        reipppp_solar=ancient("data/za_audit/reipppp_solar_2023_candidates.csv"),
         eskom_raw="data/za_audit/raw/eskom_data_2023_full.csv",
         carrier_taxonomy="data/za_audit/za_carrier_taxonomy.csv",
     output:
@@ -453,10 +468,10 @@ rule build_za_grid_spatial:
         base_network="networks/" + RDIR + "base.nc",
         elec_s="networks/" + RDIR + "elec_s.nc",
         country_shapes="resources/" + RDIR + "shapes/country_shapes.geojson",
-        existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
-        supply_area_limits="data/za_audit/za_rsa_supply_area_connection_limits.csv",
-        mts_limits="data/za_audit/za_rsa_mts_hosting_limits.csv",
-        transmission_audit="data/za_audit/pypsa_rsa_transmission_expansion_audit.csv",
+        existing_lines=ancient("data/za_audit/za_rsa_existing_lines_220kv_plus.geojson"),
+        supply_area_limits=ancient("data/za_audit/za_rsa_supply_area_connection_limits.csv"),
+        mts_limits=ancient("data/za_audit/za_rsa_mts_hosting_limits.csv"),
+        transmission_audit=ancient("data/za_audit/pypsa_rsa_transmission_expansion_audit.csv"),
         custom_powerplants="data/custom_powerplants.csv",
         load_weights="data/za_audit/za_2023_load_allocation_weights.csv",
         import_export="data/za_audit/za_2023_import_export_attachment.csv",
@@ -559,7 +574,7 @@ rule build_za_fixed_network_audit:
 rule build_za_earth_rsa_diagnostic:
     input:
         reconciliation="data/za_audit/za_powerplant_reconciliation.csv",
-        existing_lines="data/za_audit/za_rsa_existing_lines_220kv_plus.geojson",
+        existing_lines=ancient("data/za_audit/za_rsa_existing_lines_220kv_plus.geojson"),
         grid_reconciliation=ancient("data/za_audit/za_grid_reconciliation.csv"),
         elec_s_34="networks/" + RDIR + "elec_s_34.nc",
         transfer_limits="data/za_audit/za_rsa_interregional_transfer_limits.csv",
@@ -1518,12 +1533,15 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
             config="configs/za/za_2023_fixed_validation.yaml",
             fleet_mode_audit="data/za_audit/za_2023_fleet_mode_audit.csv",
             custom_powerplants="data/custom_powerplants.csv",
-            fixed_technologies=config["pypsa_rsa_root"]
-            + "/scenarios/Benchmark_2023/sub_scenarios/fixed_technologies.xlsx",
-            fuel_prices=config["pypsa_rsa_root"]
-            + "/scenarios/Benchmark_2023/sub_scenarios/fuel_prices.xlsx",
-            plant_availability=config["pypsa_rsa_root"]
-            + "/scenarios/Benchmark_2023/sub_scenarios/plant_availability.xlsx",
+            fixed_technologies=os.path.abspath(
+                benchmark_sub_scenario(config, "fixed_technologies.xlsx")
+            ),
+            fuel_prices=os.path.abspath(
+                benchmark_sub_scenario(config, "fuel_prices.xlsx")
+            ),
+            plant_availability=os.path.abspath(
+                benchmark_sub_scenario(config, "plant_availability.xlsx")
+            ),
         output:
             plants=_za_coal_disagg_cfg.get(
                 "plants_csv", "data/za_validation/za_coal_plants_2023.csv"
@@ -1535,8 +1553,9 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
                 "bus_assignment_csv", "data/za_validation/za_coal_bus_assignment.csv"
             ),
         params:
-            rsa_scenarios=config["pypsa_rsa_root"]
-            + "/scenarios/Benchmark_2023/sub_scenarios",
+            rsa_scenarios=os.path.abspath(
+                benchmark_sub_scenario(config, "plant_availability.xlsx").parent
+            ),
         log:
             "logs/" + RDIR + "build_za_coal_plants.log",
         benchmark:
@@ -1550,8 +1569,9 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
         # stations when za_coal_disaggregation.enable is true.
         input:
             network_in="networks/" + RDIR + "elec_s_34_ec_lc1_NoCO2-1H.nc",
-            workbook=config["pypsa_rsa_root"]
-            + "/scenarios/Coal_Flexibilisation/sub_scenarios/plant_availability.xlsx",
+            workbook=os.path.abspath(
+                coal_flexibilisation_sub_scenario(config, "plant_availability.xlsx")
+            ),
             custom_pp="data/custom_powerplants.csv",
             plants_csv=(
                 _za_coal_disagg_cfg.get(
@@ -1618,6 +1638,58 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
             + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF_python.log",
         benchmark:
             "benchmarks/" + RDIR + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF"
+        threads: 20
+        resources:
+            mem=memory,
+        shadow:
+            "copy-minimal" if os.name == "nt" else "shallow"
+        script:
+            "scripts/solve_network.py"
+
+    rule solve_network_eaf_config:
+        # Generic config-owned ZA scenario solve. The scenario_label wildcard
+        # is only an output filename label; all scenario behaviour is read from
+        # the active config file by solve_network.py.
+        params:
+            solving=config["solving"],
+            augmented_line_connection=config["augmented_line_connection"],
+            policy_config=config["policy_config"],
+            za_config_solve_signature=repr(
+                {
+                    "za_fleet": config.get("za_fleet", {}),
+                    "za_coal_disaggregation": config.get("za_coal_disaggregation", {}),
+                    "za_operational_constraints": config.get("za_operational_constraints", {}),
+                    "za_generation_constraints": config.get("za_generation_constraints", {}),
+                    "za_profile_scaling": config.get("za_profile_scaling", {}),
+                    "za_availability_overrides": config.get("za_availability_overrides", {}),
+                }
+            ),
+        input:
+            network="networks/" + RDIR + "elec_s_{clusters}_ec_lc1_{opts}-EAF.nc",
+            agg_p_nom_minmax=config["electricity"]["agg_p_nom_limits"]["file"],
+            eaf_audit="data/za_audit/za_coal_eaf_audit.csv",
+            operational_constraints=_ZA_OPC_WORKBOOK,
+        output:
+            network="results/"
+            + RDIR
+            + "networks/elec_s_{clusters}_ec_lc1_{opts}-EAF-CONFIG-{scenario_label}.nc",
+        wildcard_constraints:
+            clusters="34",
+            opts="NoCO2-1H",
+            scenario_label="[A-Za-z0-9][A-Za-z0-9_-]*",
+        log:
+            solver=os.path.normpath(
+                "logs/"
+                + RDIR
+                + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-CONFIG-{scenario_label}_solver.log"
+            ),
+            python="logs/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-CONFIG-{scenario_label}_python.log",
+        benchmark:
+            "benchmarks/"
+            + RDIR
+            + "solve_network/elec_s_{clusters}_ec_lc1_{opts}-EAF-CONFIG-{scenario_label}"
         threads: 20
         resources:
             mem=memory,
@@ -2037,6 +2109,8 @@ if config["monte_carlo"]["options"].get("add_to_snakefile", False) == False:
     # wildcard patterns of prepare_network / solve_network.
     ruleorder: apply_za_coal_eaf > prepare_network
     ruleorder: solve_network_eaf > solve_network
+    ruleorder: solve_network_eaf_config > solve_network_eaf
+    ruleorder: solve_network_eaf_config > solve_network
     ruleorder: solve_network_eaf_cap > solve_network_eaf
     ruleorder: solve_network_eaf_cap > solve_network
     ruleorder: solve_network_eaf_opc > solve_network_eaf

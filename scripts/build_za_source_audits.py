@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Master entry point for ZA Calibration Plan Module 04 — Source Data Audits.
 
-Reads `pypsa_rsa_root` from the active configfile, runs every audit stage, and
-writes the full set of audit outputs under `data/za_audit/`.
+Reads `za_source_audits.pypsa_rsa_root` from the active configfile, runs every
+audit stage, and writes the full set of audit outputs under `data/za_audit/`.
 
 Usage:
     snakemake --configfile configs/za/za_2023_fixed_validation.yaml build_za_source_audits
@@ -36,6 +36,7 @@ from za_audits import (  # noqa: E402
     resource_siting,
     scenario_workbooks,
 )
+from za_reference_data import source_audit_pypsa_rsa_root  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("build_za_source_audits")
@@ -50,12 +51,12 @@ def _load_config(configfile: Path) -> dict:
 
 
 def _resolve_pypsa_rsa_root(config: dict) -> Path:
-    raw = config.get("pypsa_rsa_root")
-    if not raw:
-        raise SystemExit("config missing required key 'pypsa_rsa_root' for Module 04")
-    path = Path(raw).expanduser().resolve()
+    try:
+        path = source_audit_pypsa_rsa_root(config)
+    except FileNotFoundError as exc:
+        raise SystemExit(str(exc)) from exc
     if not path.exists():
-        raise SystemExit(f"pypsa_rsa_root does not exist: {path}")
+        raise SystemExit(f"za_source_audits.pypsa_rsa_root does not exist: {path}")
     return path
 
 
@@ -101,7 +102,8 @@ def _stage(name: str, func, *args, **kwargs) -> int:
 def main(configfile: Path) -> int:
     config = _load_config(configfile)
     pypsa_rsa_root = _resolve_pypsa_rsa_root(config)
-    pinned = config.get("pypsa_rsa_pinned_commit", "<unset>")
+    audit_cfg = config.get("za_source_audits", {}) or {}
+    pinned = audit_cfg.get("pypsa_rsa_pinned_commit", config.get("pypsa_rsa_pinned_commit", "<unset>"))
     logger.info("pypsa_rsa_root=%s pinned_commit=%s", pypsa_rsa_root, pinned)
 
     out = _output_paths()
@@ -199,7 +201,8 @@ def _main_from_snakemake() -> int:
     cfg = dict(snakemake.config)
     # Snakemake already merged the configfile; emulate _load_config using cfg.
     pypsa_rsa_root = _resolve_pypsa_rsa_root(cfg)
-    pinned = cfg.get("pypsa_rsa_pinned_commit", "<unset>")
+    audit_cfg = cfg.get("za_source_audits", {}) or {}
+    pinned = audit_cfg.get("pypsa_rsa_pinned_commit", cfg.get("pypsa_rsa_pinned_commit", "<unset>"))
     logger.info("pypsa_rsa_root=%s pinned_commit=%s", pypsa_rsa_root, pinned)
     out = _output_paths()
     DATA_AUDIT.mkdir(parents=True, exist_ok=True)

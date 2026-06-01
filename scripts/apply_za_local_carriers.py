@@ -11,7 +11,7 @@ OCGT plants in `data/custom_powerplants.csv` arrive un-attached. This hook
 closes that gap.
 
 Adds Carrier rows for: ocgt_diesel and ocgt_gas, plus sasol_coal/sasol_gas
-only when Module 13m's `za_2023_fleet_calibration.sasol.enable` is true.
+only when the active ZA fleet config includes Sasol assets.
 Attaches Oil-fueltype OCGTs as `ocgt_diesel` at their `bus` columns. Optional
 Sasol is attached as non-UC diagnostic generation after add_electricity so it
 is not silently folded into Eskom coal UC.

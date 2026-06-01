@@ -143,15 +143,42 @@ def sha256_of_file(path: Path) -> str:
 
 
 def resolved_config(config: dict[str, Any]) -> dict[str, Any]:
-    cfg = config.get("za_2023_fleet_calibration", {}) or {}
-    coal_cfg = cfg.get("coal_fleet", {}) or {}
-    custom_cfg = cfg.get("custom_powerplants", {}) or {}
-    sasol_cfg = cfg.get("sasol", {}) or {}
+    cfg = config.get("za_fleet", {}) or {}
+    legacy_cfg = config.get("za_2023_fleet_calibration", {}) or {}
 
-    requested_mode = str(coal_cfg.get("mode", "calibrated_2023"))
+    if cfg:
+        custom_cfg = cfg.get("custom_powerplants", "data/custom_powerplants.csv")
+        if isinstance(custom_cfg, dict):
+            custom_path = custom_cfg.get("path", "data/custom_powerplants.csv")
+        else:
+            custom_path = custom_cfg
+        excluded = {
+            str(item).strip().lower().replace("_", " ")
+            for item in cfg.get("exclude_powerplants", [])
+        }
+        requested_mode = str(cfg.get("source", "calibrated_2023"))
+        include_kelvin = "kelvin" not in excluded
+        sasol_enabled = not {"sasol coal", "sasol gas"}.intersection(excluded)
+        enabled = bool(cfg.get("enable", False))
+        backup_before_mutation = bool(cfg.get("backup_before_mutation", True))
+        backup_dir = Path(cfg.get("backup_dir", "data/za_audit/backups"))
+    else:
+        coal_cfg = legacy_cfg.get("coal_fleet", {}) or {}
+        custom_cfg = legacy_cfg.get("custom_powerplants", {}) or {}
+        sasol_cfg = legacy_cfg.get("sasol", {}) or {}
+        requested_mode = str(coal_cfg.get("mode", "calibrated_2023"))
+        include_kelvin = bool(coal_cfg.get("include_kelvin", False))
+        sasol_enabled = bool(sasol_cfg.get("enable", False))
+        enabled = bool(legacy_cfg.get("enable", False))
+        custom_path = custom_cfg.get("path", "data/custom_powerplants.csv")
+        backup_before_mutation = bool(
+            custom_cfg.get("backup_before_mutation", True)
+        )
+        backup_dir = Path(custom_cfg.get("backup_dir", "data/za_audit/backups"))
+
     if requested_mode not in FLEET_MODES:
         raise ValueError(
-            f"Unknown za_2023_fleet_calibration.coal_fleet.mode={requested_mode!r}"
+            f"Unknown ZA fleet source/mode {requested_mode!r}"
         )
     effective_mode = (
         "eskom_nominal_2023"
@@ -159,18 +186,14 @@ def resolved_config(config: dict[str, Any]) -> dict[str, Any]:
         else requested_mode
     )
     return {
-        "enable": bool(cfg.get("enable", False)),
+        "enable": enabled,
         "requested_mode": requested_mode,
         "effective_mode": effective_mode,
-        "include_kelvin": bool(coal_cfg.get("include_kelvin", False)),
-        "sasol_enabled": bool(sasol_cfg.get("enable", False)),
-        "custom_powerplants_path": Path(
-            custom_cfg.get("path", "data/custom_powerplants.csv")
-        ),
-        "backup_before_mutation": bool(
-            custom_cfg.get("backup_before_mutation", True)
-        ),
-        "backup_dir": Path(custom_cfg.get("backup_dir", "data/za_audit/backups")),
+        "include_kelvin": include_kelvin,
+        "sasol_enabled": sasol_enabled,
+        "custom_powerplants_path": Path(custom_path),
+        "backup_before_mutation": backup_before_mutation,
+        "backup_dir": backup_dir,
     }
 
 

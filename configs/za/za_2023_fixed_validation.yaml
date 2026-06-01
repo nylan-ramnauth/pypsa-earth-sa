@@ -3,104 +3,113 @@
 # SPDX-License-Identifier: CC0-1.0
 
 # South Africa 2023 fixed-capacity validation overlay.
-# Invoke explicitly with:
-# snakemake --configfile configs/za/za_2023_fixed_validation.yaml --dry-run
 
 countries: ["ZA"]
 
-# Module 07 — Costs, Fuels, Efficiencies, and CoUE.
-# Locks dispatch-cost inputs for the 2023 fixed-validation baseline.
-# `output_currency` lives under `costs:` because PyPSA-Earth reads
-# `config["costs"]["output_currency"]` (scripts/add_electricity.py:759).
-# `electricity_grid_connection: 0` disables the upstream per-generator
-# grid-connection cost (PR f8eab87a) for ZA local carriers — Module 08
-# reconciles full per-plant capex through custom_powerplants.csv.
+run:
+  name: za_2023_fixed_validation
+  shared_cutouts: true
+
+scenario:
+  simpl: [""]
+  clusters: [34]
+  ll: ["c1"]
+  opts: ["NoCO2-1H"]
+
+snapshots:
+  start: "2023-01-01"
+  end: "2024-01-01"
+  inclusive: "left"
+
+enable:
+  retrieve_cutout: false
+  build_cutout: false
+  custom_busmap: true
+
 costs:
   year: 2030
   output_currency: ZAR
   electricity_grid_connection: 0
 
-# Module 07 — Policy CoLS reference values (ZAR per MWh).
-# Numeric rows + EUR conversion are recorded in
-# data/za_audit/za_cols_reference_values.csv. Module 12 reporting must
-# present load-shedding costs in both solver-safety-valve and policy frames.
-za_cols_policy:
-  primary:
-    source: CSIR
-    base_year: 2024
-    value_zar_per_mwh: 116570
-  lower_sensitivity:
-    source: Nova_Economics
-    base_year: 2019
-    value_zar_per_mwh: 9530
-  historical:
-    source: Deloitte_Eskom_2009
-    base_year: 2009
-    value_zar_per_mwh: 8950
+atlite:
+  default: cutout-2023-era5
+  cutouts:
+    cutout-2023-era5:
+      module: era5
+      dx: 0.3
+      dy: 0.3
 
-# Module 04 — Source Data Audits: PyPSA-RSA reference repo.
-pypsa_rsa_root: "/Users/nylan/Documents/BSE/Reliable-Electrification-Planning-SA-Vault/6-codebases/repos/pypsa-rsa"
-pypsa_rsa_pinned_commit: "0831ce243f0badbba6f09b418c2b57774ea89a5f"
+load_options:
+  ssp: ssp2-2.6
+  weather_year: 2023_calibrated
+  prediction_year: 2030
+  scale: 1
+
+cluster_options:
+  simplify_network:
+    p_threshold_drop_isolated: 20
+    s_threshold_fetch_isolated: false
+
+electricity:
+  co2limit: null
+  custom_powerplants: replace
+  powerplants_filter: (DateOut >= 2022 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
+  estimate_renewable_capacities:
+    stats: false
+  conventional_carriers: [coal, nuclear]
+  renewable_carriers: [solar, onwind, hydro, csp]
+  extendable_carriers:
+    Generator: []
+    StorageUnit: []
+    Store: []
+    Link: []
+
+solving:
+  solver:
+    name: gurobi
+    options: gurobi-default
+  solver_options:
+    gurobi-default:
+      threads: 2
+      method: 2
+      crossover: 0
+      BarConvTol: 1.e-5
+      OptimalityTol: 1.e-6
+      FeasibilityTol: 1.e-6
+  options:
+    load_shedding: true
+    noisy_costs: false
+
+renewable:
+  hydro:
+    multiplier: 1.20
 
 za:
   isolated_load_transfer:
     enable: true
     audit: data/za_audit/za_isolated_load_transfer.csv
 
-# Module 13m — configurable 2023 fleet basis and optional Sasol diagnostic.
-za_2023_fleet_calibration:
+za_reference_data:
+  pypsa_rsa_benchmark_2023: data/za_reference/pypsa_rsa_benchmark_2023
+  pypsa_rsa_coal_flexibilisation: data/za_reference/pypsa_rsa_coal_flexibilisation
+  supply_regions: data/za_reference/supply_regions/rsa_supply_regions.gpkg
+
+za_source_audits:
+  enable: false
+  pypsa_rsa_root: ../pypsa-rsa
+  pypsa_rsa_pinned_commit: 0831ce243f0badbba6f09b418c2b57774ea89a5f
+
+za_fleet:
   enable: true
-  custom_powerplants:
-    path: data/custom_powerplants.csv
-    backup_before_mutation: true
-    backup_dir: data/za_audit/backups
-  coal_fleet:
-    # Options:
-    # - rsa_var_hr_41p419: current Module 13g/13h fleet, 41.419 GW incl. Kelvin
-    # - eskom_nominal_2023: Eskom Integrated Report 2023 nominal fleet, 39.099 GW
-    # - calibrated_2023: project-selected baseline; currently aliases eskom_nominal_2023
-    mode: calibrated_2023
-    include_kelvin: false
-  sasol:
-    enable: false
+  custom_powerplants: data/custom_powerplants.csv
+  source: calibrated_2023
+  exclude_powerplants:
+    - Kelvin
+    - Sasol coal
+    - Sasol gas
+  backup_before_mutation: true
+  backup_dir: data/za_audit/backups
 
-# Module 13i — configurable ZA operational-constraints workbook rows.
-za_operational_constraints:
-  enable: false
-  # Source table: scenarios/Benchmark_2023/sub_scenarios/operational_constraints.xlsx
-  # Packaged Earth copy after Module 13l: data/za_reference/pypsa_rsa_benchmark_2023/sub_scenarios/operational_constraints.xlsx
-  # NO_MIN_GAS = selected 2023 baseline setting; no direct OCGT cap in the current Earth model
-  # LOW_GAS = sensitivity; adds weekly OCGT max-capacity-factor limits
-  # HIGH_GAS = sensitivity; annual max output rows are audited here and delegated to Module 13j
-  # This is the canonical selector for config-driven OPC solves. The labelled
-  # Snakemake comparison outputs `...-OPC-{NO-MIN-GAS,LOW-GAS,HIGH-GAS}.nc`
-  # override only this field from the wildcard so the filename and audit scenario
-  # cannot drift from each other.
-  scenario: NO_MIN_GAS
-  # Selects the year-specific values from the operational-constraints table.
-  # For 2023 this is a historical calibration selector; for 2030+ it is a
-  # scenario-assumption selector.
-  model_year: 2023
-
-# Module 13j — configurable annual generation-cap diagnostics.
-# Default remains disabled so the selected 2023 RSA-BM parity baseline is still
-# Module 13i `NO_MIN_GAS` without a hidden annual OCGT cap.
-za_scarcity_cap:
-  enable: false
-  model_year: 2023
-  # Generator carriers expected across calibrated ZA variants:
-  # coal, csp, load shedding, nuclear, ocgt_diesel, onwind, solar,
-  # sasol_coal, sasol_gas
-  #
-  # Full carrier table seen in the current network:
-  # AC, PHS, battery, coal, csp, hydro, load shedding, nuclear,
-  # ocgt_diesel, ocgt_gas, onwind, ror, solar
-  annual_generation_caps_twh:
-    ocgt_diesel: 5.243
-    sasol_coal: 5.5
-    sasol_gas: 2.8
-
-# Module 13g/13h — per-plant coal disaggregation and coal-only linearised UC.
 za_coal_disaggregation:
   enable: true
   availability_mode: rsa_eaf_projected
@@ -120,196 +129,64 @@ za_coal_disaggregation:
     clean_pu_profiles: true
     min_ramp_limit_threshold: 0.05
 
-enable:
-  retrieve_cutout: false
-  build_cutout: false
-  # Module 09 — custom busmap from 34 Eskom local-area supply regions.
-  custom_busmap: true
+za_operational_constraints:
+  enable: false
+  scenario: NO_MIN_GAS
+  model_year: 2023
 
-run:
-  name: "za_2023_fixed_validation"
-  shared_cutouts: true
+za_generation_constraints:
+  annual_generation_caps:
+    enable: false
+    unit: TWh
+    model_year: 2023
+    carriers: {}
 
-scenario:
-  simpl: [""]
-  clusters: [34]
-  # Module 12 — "c1" = cost-limit factor 1.0 → no transmission expansion.
-  # Combined with empty extendable_carriers below, locks fixed 2023 grid.
-  ll: ["c1"]
-  opts: ["NoCO2-1H"]
+za_profile_scaling:
+  enable: false
+  carriers: {}
 
-cluster_options:
-  simplify_network:
-    p_threshold_drop_isolated: 20     # drop isolated nodes after transferring their demand
-    s_threshold_fetch_isolated: false # avoid topology fetch; preserve demand via direct load transfer
+za_availability_overrides:
+  static_p_max_pu:
+    enable: false
+    carriers: {}
 
-snapshots:
-  start: "2023-01-01"
-  end: "2024-01-01"
-  inclusive: "left"
-
-atlite:
-  default: cutout-2023-era5
-  cutouts:
-    cutout-2023-era5:
-      module: era5
-      dx: 0.3
-      dy: 0.3
-
-load_options:
-  ssp: "ssp2-2.6"
-  weather_year: 2023_calibrated
-  prediction_year: 2030
-  scale: 1
-
-electricity:
-  # Module 12 — structural 2023 baseline has no binding dispatch-level CO2 cap.
-  # CO2 policy constraints are deferred to expansion/policy scenarios.
-  co2limit: null
-  custom_powerplants: replace
-  # Module 08 — Fleet Reconciliation. Keep rows active in 2023:
-  #   DateOut >= 2022 OR DateOut isna  AND  DateIn <= 2023 OR DateIn isna
-  powerplants_filter: (DateOut >= 2022 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
-  estimate_renewable_capacities:
-    stats: false
-  # Module 05 — System Boundary And Carrier Taxonomy.
-  # Upstream V1 baseline carriers. `ocgt_diesel`/`ocgt_gas` are added post
-  # add_electricity by the local hook and must NOT appear here. Sasol and
-  # `other_re` are excluded from Module 12 onward.
-  conventional_carriers: [coal, nuclear]
-  renewable_carriers: [solar, onwind, hydro, csp]
-  extendable_carriers:
-    Generator: []
-    StorageUnit: []
-    Store: []
-    Link: []
-
-# Module 12 — Hydro inflow structural multiplier (year-portable).
-#
-# This value is intentionally NOT tuned to make 2023 dispatch match
-# Eskom exactly. It is composed only of year-invariant structural
-# corrections so that the same overlay can be re-used with a different
-# cutout year (Module 14 expansion) without inheriting 2023 weather
-# bias. Two layers:
-#
-#   Layer A — IRENA-vs-Eskom scope correction:  ~1.065
-#       IRENA "Renewable hydropower" ZAF 2023   = 1871 GWh
-#       Eskom  "Hydro Water Generation" ZA 2023 = 1992 GWh
-#       Definitional gap (durable accounting boundary).
-#
-#   Layer B — Efficiency double-count correction: ~1.111 = 1 / 0.9
-#       PyPSA-Earth applies efficiency_dispatch = 0.9 to hydro
-#       StorageUnit dispatch (turbine loss). Eskom reports gross
-#       electrical generation already net of turbine losses, so the
-#       inflow target must be grossed up by 1/0.9 to make the
-#       dispatched-electricity figure match Eskom's reporting frame.
-#
-#   Combined: 1.065 × 1.111 ≈ 1.183 → rounded to 1.20.
-#
-# DO NOT tune this knob to close 2023 residual error. The remaining
-# residual (≈ −30 % annual at mult = 1.20) is the year-conditioned
-# part of the gap (ERA5 2023 ZA runoff vs realised hydro generation)
-# and absorbing it into this multiplier would lock in a 2023 weather
-# bias that does not translate to other cutout years. Hydro is 0.7 %
-# of annual ZA generation, so the system-level error from this residual
-# is < 0.3 %. The Module 12 calibration report documents the residual
-# explicitly. Module 14 should re-evaluate per cutout year.
-#
-# Reservoir sizing (max_hours ≈ 3366 h) is consistent with
-# data/hydro_capacities.csv E_store/p_nom and is left unchanged.
-renewable:
-  hydro:
-    multiplier: 1.20
-
-# Module 05 — System Boundary lock for V1 fixed-fleet validation.
-za_system_boundary:
-  scope: "national South Africa 2023 electricity system"
-  demand_target: "RSA Contracted Demand"
-  load_shedding_target: "MLR + ILS + IOS"
-  imports_exports: "exogenous time series owned by module 06"
-  embedded_pv_treatment: "excluded as explicit plant capacity in V1; documented as residual demand/accounting issue"
-  ipp_utility_inclusion: "included when present in Eskom reported generation and 2023 plant reconciliation"
-  csp_2023_anchors:
-    installed_capacity_mw: 500
-    generation_twh: 1.375
-    redstone_excluded: true
-    profile_route: "native_atlite_first; documented_temporary_fallback_allowed"
-
-# Module 05 / 12 — Carrier Taxonomy lock (structural metadata only).
-# Cost numeric values are owned by module 07 in
-# data/za_audit/za_local_carrier_cost_rows.csv. Network rows are added by
-# module 10 apply_za_local_carriers hook AFTER add_electricity.
 za_local_carriers:
   ocgt_diesel:
     component: Generator
     color: "#cc6633"
-    nice_name: "OCGT diesel"
-    profile_intent: "peaker; high marginal cost; module 11 dispatch"
-    emissions_intent: "explicit row in module 07"
-    validation_target: "Eskom 2023 OCGT/diesel reconciliation"
-    availability_treatment: "owned by module 08"
+    nice_name: OCGT diesel
+    profile_intent: peaker; high marginal cost
+    emissions_intent: explicit local cost row
+    validation_target: Eskom 2023 OCGT/diesel reconciliation
+    availability_treatment: fixed fleet input
   ocgt_gas:
     component: Generator
     color: "#d35050"
-    nice_name: "OCGT gas"
-    profile_intent: "peaker; module 11 dispatch"
-    emissions_intent: "explicit row in module 07"
-    validation_target: "Eskom 2023 OCGT/gas reconciliation"
-    availability_treatment: "owned by module 08"
+    nice_name: OCGT gas
+    profile_intent: peaker
+    emissions_intent: explicit local cost row
+    validation_target: Eskom 2023 OCGT/gas reconciliation
+    availability_treatment: fixed fleet input
   sasol_coal:
     component: Generator
     color: "#6f4e37"
-    nice_name: "Sasol coal"
-    profile_intent: "optional non-UC Module 13m diagnostic"
-    emissions_intent: "explicit row in module 07/13m"
-    validation_target: "diagnostic only; excluded from Eskom coal validation"
-    availability_treatment: "fixed p_max_pu unless constrained by labelled CAP diagnostic"
+    nice_name: Sasol coal
+    profile_intent: optional non-UC diagnostic
+    emissions_intent: explicit local cost row
+    validation_target: diagnostic only
+    availability_treatment: fixed p_max_pu unless capped by diagnostic
   sasol_gas:
     component: Generator
     color: "#b56576"
-    nice_name: "Sasol gas"
-    profile_intent: "optional non-UC Module 13m diagnostic"
-    emissions_intent: "explicit row in module 07/13m"
-    validation_target: "diagnostic only; excluded from Eskom OCGT validation"
-    availability_treatment: "fixed p_max_pu unless constrained by labelled CAP diagnostic"
+    nice_name: Sasol gas
+    profile_intent: optional non-UC diagnostic
+    emissions_intent: explicit local cost row
+    validation_target: diagnostic only
+    availability_treatment: fixed p_max_pu unless capped by diagnostic
 
-za_known_omissions:
-  other_re:
-    annual_generation_gwh_2023: 238
-    reason: "Eskom Other RE is an expansion-incompatible aggregate; explicit small hydro, landfill gas, and biogas candidates are deferred to Module 14."
-
-solving:
-  solver:
-    name: gurobi
-    options: gurobi-default
-  solver_options:
-    gurobi-default:
-      threads: 2
-      method: 2
-      crossover: 0
-      BarConvTol: 1.e-5
-      OptimalityTol: 1.e-6
-      FeasibilityTol: 1.e-6
-  options:
-    load_shedding: true
-    noisy_costs: false
-
-# Module 09 — Grid Spatial And Transmission Model.
-# Spatial level locked to 34 Eskom local areas (Stage 4b decision,
-# pre-implementation-decisions.md Q2). Custom busmap is the V1 path
-# (enable.custom_busmap: true above); subregion.method stays false.
-# The 34-cluster target is selected at CLI time via the wildcard in
-# `networks/{run}/elec_s_34.nc` — no `scenario:` or `cluster_options:`
-# overrides are needed because `config.default.yaml` already sets
-# alternative_clustering: false and upstream aggregation_strategies.
-# Thermal/SIL/n1/s_max_pu values pinned from pypsa-rsa @
-# 89872c1ea703af3d8a3f198706d1ab7958f50a5f config.yaml:146-162.
-# St Clair coefficients (53.736, -0.65) from pypsa-rsa
-# scripts/build_topology.py:241-253; differs from literature-standard
-# Dunlop fit (43.261, -0.6678) — see doc/za_grid_reconciliation.md.
 za_grid_spatial:
   spatial_level: 34
-  source_decision: "Stage 4b (pre-implementation-decisions.md Q2)"
+  source_decision: Stage 4b
   pypsa_rsa_supply_regions_layer: 34
   line_voltage_threshold_kv: 220
   st_clair_coefficients: [53.736, -0.65]

@@ -14,6 +14,11 @@ module14b_diagnostic:
   backup_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-PRE-14.nc
   output_network: results/za_2023_fixed_validation/networks/elec_s_34_ec_lc1_NoCO2-1H-EAF-UC-OPC-LOW-GAS-OFFICIAL-FLEET-MODULE14C-COAL485-NUCLEAR50.nc
 
+  za_operational_constraints:
+    enable: true
+    scenario: LOW_GAS
+    model_year: 2023
+
   # Module 14 accepted VRE profile corrections. CSP is deliberately not scaled
   # in this diagnostic so the coal/nuclear effects remain isolated.
   vre_scale:

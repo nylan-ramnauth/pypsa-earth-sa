@@ -1135,9 +1135,17 @@ def extra_functionality(n, snapshots):
             pd.DataFrame(audit).to_csv(audit_out, index=False)
             logger.info("wrote ZA operational constraints audit to %s", audit_out)
 
-    za_cap_cfg = snakemake.config.get("za_scarcity_cap", {})
+    za_cap_cfg = (
+        snakemake.config.get("za_generation_constraints", {})
+        .get("annual_generation_caps", {})
+        or {}
+    )
+    legacy_za_cap_cfg = snakemake.config.get("za_scarcity_cap", {})
     za_cap_param_enable = getattr(snakemake.params, "za_scarcity_cap_enable", False)
-    za_cap_enabled = za_cap_cfg.get("enable", False) or za_cap_param_enable
+    za_cap_enabled = (
+        za_cap_cfg.get("enable", legacy_za_cap_cfg.get("enable", False))
+        or za_cap_param_enable
+    )
     if za_cap_enabled:
         logger.info("setting ZA scarcity caps")
         from za_fleet.scarcity_cap import apply as za_apply_scarcity_cap
@@ -1263,6 +1271,9 @@ if __name__ == "__main__":
         n_ref = None
 
     n = prepare_network(n, solve_opts, config=solve_opts)
+    from za_fleet.profile_adjustments import apply_pre_solve_adjustments
+
+    apply_pre_solve_adjustments(n, snakemake.config)
 
     n = solve_network(
         n,
@@ -1270,9 +1281,17 @@ if __name__ == "__main__":
         solving=snakemake.params.solving,
         log_fn=snakemake.log.solver,
     )
-    za_cap_cfg = snakemake.config.get("za_scarcity_cap", {})
+    za_cap_cfg = (
+        snakemake.config.get("za_generation_constraints", {})
+        .get("annual_generation_caps", {})
+        or {}
+    )
+    legacy_za_cap_cfg = snakemake.config.get("za_scarcity_cap", {})
     za_cap_param_enable = getattr(snakemake.params, "za_scarcity_cap_enable", False)
-    za_cap_enabled = za_cap_cfg.get("enable", False) or za_cap_param_enable
+    za_cap_enabled = (
+        za_cap_cfg.get("enable", legacy_za_cap_cfg.get("enable", False))
+        or za_cap_param_enable
+    )
     za_cap_audit_out = getattr(snakemake.output, "za_scarcity_cap_audit", None)
     if za_cap_enabled:
         if not za_cap_audit_out:
