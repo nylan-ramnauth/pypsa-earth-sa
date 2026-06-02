@@ -30,6 +30,7 @@ import logging
 import re
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -40,6 +41,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logger = logging.getLogger("fix_csp_links_stores")
 
 _STORAGE_HOURS_RE = re.compile(r"csp_storage_hours\s*=\s*([0-9]+(?:\.[0-9]+)?)")
+
+
+def touch_markers(*paths: Path) -> None:
+    time.sleep(1.1)
+    for path in paths:
+        path.touch()
 
 
 def _parse_storage_hours(notes: object) -> float:
@@ -212,6 +219,7 @@ def main(
         return 1
 
     n.export_to_netcdf(str(network_in))
+    touch_markers(backup_out, audit_out)
     logger.info("Saved fixed network in place to %s", network_in)
     return 0
 

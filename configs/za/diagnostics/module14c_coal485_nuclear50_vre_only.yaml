@@ -20,7 +20,6 @@ module14b_diagnostic:
   vre_scale:
     onwind: 1.58
     solar: 1.40
-    ror: 1.425
 
   nuclear_availability:
     enable: true

@@ -1,11 +1,11 @@
 # ZA Grid Reconciliation — Module 09
 
-_Generated: 2026-05-15 17:18_
+_Generated: 2026-06-01 19:25_
 
 ## Spatial level
 
 - Locked level: **34** Eskom local areas
-- Source decision: Stage 4b (pre-implementation-decisions.md Q2)
+- Source decision: Stage 4b
 - Voltage threshold: ≥ 220 kV
 - St Clair coefficients: [53.736, -0.65]
 

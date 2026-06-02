@@ -9,36 +9,6 @@ za_scenario:
   label: coal485_nuclear50_vre_only
   description: Coal 48.5%, nuclear 50%, VRE scaling, no OCGT cap
 
-za_fleet:
-  enable: true
-  custom_powerplants: data/custom_powerplants.csv
-  source: calibrated_2023
-  exclude_powerplants:
-    - Kelvin
-    - Sasol coal
-    - Sasol gas
-  backup_before_mutation: true
-  backup_dir: data/za_audit/backups
-
-za_coal_disaggregation:
-  enable: true
-  availability_mode: rsa_eaf_projected
-  outage_profiles_scenario: BASE
-  annual_availability_scenario: EAF_48
-  annual_availability_target_override:
-    coal: 0.485
-  plants_csv: data/za_validation/za_coal_plants_2023.csv
-  eaf_hourly_csv: data/za_validation/za_coal_eaf_hourly_2023.csv
-  bus_assignment_csv: data/za_validation/za_coal_bus_assignment.csv
-  uc:
-    enable: true
-    msl_mode: scale_by_p_max_pu
-    p_min_pu_base: 0.7
-    ramp_multiplier: 1.5
-    apply_min_up_down_time: false
-    clean_pu_profiles: true
-    min_ramp_limit_threshold: 0.05
-
 za_operational_constraints:
   enable: true
   scenario: LOW_GAS
@@ -57,7 +27,6 @@ za_profile_scaling:
   carriers:
     onwind: 1.58
     solar: 1.40
-    ror: 1.425
 
 za_availability_overrides:
   static_p_max_pu:

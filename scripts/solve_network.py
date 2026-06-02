@@ -1218,6 +1218,25 @@ def solve_network(n, config, solving, **kwargs):
     return n
 
 
+def validate_za_scenario_label(snakemake):
+    target_label = getattr(snakemake.wildcards, "scenario_label", None)
+    if not target_label:
+        return
+
+    cfg = snakemake.config.get("za_scenario", {}) or {}
+    config_label = cfg.get("label")
+    if not config_label:
+        raise ValueError(
+            "Target uses scenario_label wildcard "
+            f"{target_label!r}, but za_scenario.label is not set in the active config"
+        )
+    if str(config_label) != str(target_label):
+        raise ValueError(
+            "Target scenario label does not match active config: "
+            f"target={target_label!r}, za_scenario.label={config_label!r}"
+        )
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
         from _helpers import mock_snakemake
@@ -1242,6 +1261,7 @@ if __name__ == "__main__":
     solve_opts = snakemake.config["solving"]["options"]
 
     is_sector_coupled = "sopts" in snakemake.wildcards.keys()
+    validate_za_scenario_label(snakemake)
 
     n = pypsa.Network(snakemake.input.network)
 

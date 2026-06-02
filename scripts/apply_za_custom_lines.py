@@ -13,6 +13,7 @@ captured post-hoc).
 import logging
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -39,6 +40,11 @@ AUDIT_COLUMNS = [
 ]
 
 
+def touch_marker(path: Path) -> None:
+    time.sleep(1.1)
+    path.touch()
+
+
 def add_line(n: pypsa.Network, row: pd.Series) -> dict:
     kwargs = dict(
         bus0=row["bus0"],
@@ -59,6 +65,10 @@ def add_line(n: pypsa.Network, row: pd.Series) -> dict:
         kwargs["r"] = float(row["r"])
         kwargs["b"] = float(row["b"])
     n.add("Line", row["name"], **kwargs)
+    return audit_line(n, row)
+
+
+def audit_line(n: pypsa.Network, row: pd.Series) -> dict:
     line = n.lines.loc[row["name"]]
     return {
         "name": row["name"],
@@ -90,6 +100,7 @@ def main(custom_lines_path: Path, network_in: Path, backup_out: Path, audit_out:
     if custom.empty:
         audit_out.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(columns=AUDIT_COLUMNS).to_csv(audit_out, index=False)
+        touch_marker(backup_out)
         logger.info("No custom lines requested; wrote empty audit to %s", audit_out)
         return
 
@@ -101,14 +112,17 @@ def main(custom_lines_path: Path, network_in: Path, backup_out: Path, audit_out:
         if row["bus0"] not in n.buses.index or row["bus1"] not in n.buses.index:
             raise SystemExit(f"Bus missing in network for line {row['name']}: {row['bus0']} / {row['bus1']}")
         if row["name"] in n.lines.index:
-            logger.warning("Line %s already present; skipping", row["name"])
+            logger.info("Line %s already present; keeping existing row", row["name"])
+            audit_rows.append(audit_line(n, row))
             continue
         audit_rows.append(add_line(n, row))
 
-    assert len(n.lines) == prior + len(audit_rows), f"Line count drift: {prior} -> {len(n.lines)}"
-    logger.info("Added %d lines; total now %d", len(audit_rows), len(n.lines))
+    added_count = int(len(n.lines) - prior)
+    assert added_count <= len(audit_rows), f"Line count drift: {prior} -> {len(n.lines)}"
+    logger.info("Added %d lines; audited %d custom lines; total now %d", added_count, len(audit_rows), len(n.lines))
 
     n.export_to_netcdf(str(network_in))
+    touch_marker(backup_out)
     logger.info("Saved patched network to %s", network_in)
 
     audit = pd.DataFrame(audit_rows, columns=AUDIT_COLUMNS)

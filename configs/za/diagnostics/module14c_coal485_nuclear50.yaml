@@ -24,7 +24,6 @@ module14b_diagnostic:
   vre_scale:
     onwind: 1.58
     solar: 1.40
-    ror: 1.425
 
   # LOW_GAS OPC includes a nuclear hourly minimum equal to 100% of nuclear
   # p_max_pu. The 2023 outage target must therefore adjust the static nuclear

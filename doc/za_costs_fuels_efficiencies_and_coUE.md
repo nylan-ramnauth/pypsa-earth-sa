@@ -26,7 +26,7 @@ capacity validation baseline before Module 10 (network build) and Module 11
 - **Frozen 2023 EUR/ZAR rate:** `20.3477` ZAR per 1 EUR
   on `2023-12-29`.
 - **Source:** https://raw.githubusercontent.com/alexprengere/currencyconverter/master/currency_converter/eurofxref-hist.zip (member `eurofxref-hist.csv`,
-  SHA256 `9dea72fbf8116f2d76106d78f9875f2aa8157f39ed3cf728a1602f2a5445d199`).
+  SHA256 `766e6751e41af988c03c1d8907d2c9ff6306e1a7b23de908f5af4a203ac0868b`).
 - **PyPSA-RSA base-year rate (2018):** `15.6186`
   ZAR per 1 EUR. Used to convert all PyPSA-RSA-sourced ZAR values to EUR
   for solver-internal use.
@@ -75,7 +75,7 @@ after `add_electricity` — is implemented by Module 10/12. See
 ## Artifacts
 
 - `data/za_audit/za_costs_fuels_efficiencies_audit.csv` — 105 rows
-- `data/za_audit/za_local_carrier_cost_rows.csv` — 4 rows ({coal, nuclear, ocgt_diesel, ocgt_gas})
+- `data/za_audit/za_local_carrier_cost_rows.csv` — 6 rows ({coal, nuclear, ocgt_diesel, ocgt_gas})
 - `data/za_audit/za_eur_zar_fxrate_2023.csv` — 1 row
 - `data/za_audit/za_cols_reference_values.csv` — 3 rows ({CSIR, Nova, Deloitte})
 

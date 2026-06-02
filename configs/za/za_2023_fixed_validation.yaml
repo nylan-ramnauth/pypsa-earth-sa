@@ -25,6 +25,7 @@ enable:
   retrieve_cutout: false
   build_cutout: false
   custom_busmap: true
+  za_input_data_regeneration: false
 
 costs:
   year: 2030

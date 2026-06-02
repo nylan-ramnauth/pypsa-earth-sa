@@ -1,10 +1,9 @@
 action,carrier,name,bus,p_nom,p_nom_extendable,marginal_cost,co2_emissions,mean_p_max_pu
 patch_standard_carrier_cost,coal,Highveld South coal,Highveld South,9706.0,False,40.561224534,1.01,
-patch_standard_carrier_cost,coal,Lephalale coal,Lephalale,8007.0,False,40.561224534,1.01,
+patch_standard_carrier_cost,coal,Lephalale coal,Lephalale,7290.0,False,40.561224534,1.01,
 patch_standard_carrier_cost,coal,Middelburg coal,Middelburg,5735.0,False,40.561224534,1.01,
-patch_standard_carrier_cost,coal,Midrand coal,Midrand,160.0,False,40.561224534,1.01,
 patch_standard_carrier_cost,coal,Vaal coal,Vaal,3558.0,False,40.561224534,1.01,
-patch_standard_carrier_cost,coal,Witbank coal,Witbank,13530.0,False,40.561224534,1.01,
+patch_standard_carrier_cost,coal,Witbank coal,Witbank,12810.0,False,40.561224534,1.01,
 patch_standard_carrier_cost,nuclear,Peninsula nuclear,Peninsula,1854.0,False,16.391057193,0.0,
 add_carrier,ocgt_diesel,,,,False,380.282473988,0.574,
 add_carrier,ocgt_gas,,,,False,200.844403752,0.574,
@@ -13,6 +12,7 @@ add_generator,ocgt_diesel,Gqeberha ocgt_diesel,Gqeberha,335.0,False,380.28247398
 add_generator,ocgt_diesel,Outeniqua ocgt_diesel,Outeniqua,740.0,False,380.282473988,0.574,1.0
 add_generator,ocgt_diesel,Peninsula ocgt_diesel,Peninsula,1503.0,False,380.282473988,0.574,1.0
 add_generator,ocgt_diesel,Pinetown ocgt_diesel,Pinetown,670.0,False,380.282473988,0.574,1.0
+skip_sasol_disabled,sasol_coal+sasol_gas,,,,False,,,
 retag_csp_from_solar,csp,Kalahari csp,Kalahari,100.0,False,0.0,0.0,0.18004589139626184
 retag_csp_from_solar,csp,Kimberley csp,Kimberley,200.0,False,0.0,0.0,0.18071259875135665
 retag_csp_from_solar,csp,Namaqualand csp,Namaqualand,200.0,False,0.0,0.0,0.18913724653166167

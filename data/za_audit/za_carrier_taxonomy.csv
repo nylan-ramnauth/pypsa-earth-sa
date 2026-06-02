@@ -1,8 +1,8 @@
 carrier_name,source_concept,treatment,component,is_local,color,nice_name,profile_intent,emissions_intent,validation_target,availability_treatment,owning_modules,notes
 coal,coal,upstream conventional generator,Generator,false,,,,,,,05|07|08,Eskom coal fleet
 nuclear,nuclear,upstream conventional generator,Generator,false,,,,,,,05|07|08,Koeberg
-ocgt_diesel,ocgt_diesel / diesel peaker,local generator with explicit cost/emissions,Generator,true,#cc6633,OCGT diesel,peaker; high marginal cost; module 11 dispatch,explicit row in module 07,Eskom 2023 OCGT/diesel reconciliation,owned by module 08,05|07|08|10,Ankerlig/Gourikwa diesel peakers
-ocgt_gas,ocgt_avf / gas OCGT,local generator with explicit cost/emissions,Generator,true,#d35050,OCGT gas,peaker; module 11 dispatch,explicit row in module 07,Eskom 2023 OCGT/gas reconciliation,owned by module 08,05|07|08|10,AVF gas OCGT
+ocgt_diesel,ocgt_diesel / diesel peaker,local generator with explicit cost/emissions,Generator,true,#cc6633,OCGT diesel,peaker; high marginal cost,explicit local cost row,Eskom 2023 OCGT/diesel reconciliation,fixed fleet input,05|07|08|10,Ankerlig/Gourikwa diesel peakers
+ocgt_gas,ocgt_avf / gas OCGT,local generator with explicit cost/emissions,Generator,true,#d35050,OCGT gas,peaker,explicit local cost row,Eskom 2023 OCGT/gas reconciliation,fixed fleet input,05|07|08|10,AVF gas OCGT
 onwind,wind,upstream renewable generator (atlite profile),Generator,false,,,,,,,05|03|08,REIPPPP wind fleet
 solar,solar PV,upstream renewable generator (atlite profile),Generator,false,,,,,,,05|03|08,REIPPPP utility PV
 csp,solar_csp / csp,upstream renewable generator (atlite profile),Generator,false,,,,,,,05|03|08,500 MW / 1.375 TWh anchor; never mapped to PV

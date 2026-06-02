@@ -22,6 +22,7 @@ Upstream Carrier rows are not mutated. Network mutation is in-place; a backup
 import logging
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +37,14 @@ from za_fleet.fleet_calibration import SASOL_ASSETS, resolved_config
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("apply_za_local_carriers")
+
+
+def touch_markers(*paths: Path) -> None:
+    if not paths:
+        return
+    time.sleep(1.1)
+    for path in paths:
+        path.touch()
 
 
 def _load_carrier_costs(path: Path) -> pd.DataFrame:
@@ -109,15 +118,26 @@ def add_local_carriers(
     *,
     include_sasol: bool,
 ) -> None:
-    upstream_carriers = set(n.carriers.index)
     carriers = ["ocgt_diesel", "ocgt_gas"]
     if include_sasol:
         carriers += ["sasol_coal", "sasol_gas"]
     for carrier in carriers:
-        if carrier in upstream_carriers:
-            raise SystemExit(f"Upstream Carrier '{carrier}' unexpectedly present; aborting to avoid mutation.")
         if carrier not in costs.index:
             raise SystemExit(f"Carrier '{carrier}' missing from cost CSV.")
+        if carrier in n.carriers.index:
+            logger.info("Carrier '%s' already present; keeping existing row", carrier)
+            audit_rows.append({
+                "action": "keep_existing_carrier",
+                "carrier": carrier,
+                "name": "",
+                "bus": "",
+                "p_nom": np.nan,
+                "p_nom_extendable": False,
+                "marginal_cost": float(costs.loc[carrier, "marginal_cost"]) if pd.notna(costs.loc[carrier, "marginal_cost"]) else np.nan,
+                "co2_emissions": n.carriers.at[carrier, "co2_emissions"] if "co2_emissions" in n.carriers.columns else np.nan,
+                "mean_p_max_pu": np.nan,
+            })
+            continue
         kw = _carrier_kwargs(costs.loc[carrier])
         n.add("Carrier", carrier, **kw)
         audit_rows.append({
@@ -177,7 +197,26 @@ def attach_oil_and_gas(n: pypsa.Network, custom_pp: pd.DataFrame, costs: pd.Data
                 raise SystemExit(f"Bus '{bus}' from custom_powerplants not in clustered network; cannot attach {carrier}")
             name = f"{bus} {carrier}"
             if name in n.generators.index:
-                raise SystemExit(f"Generator '{name}' already exists; refusing to overwrite")
+                existing = n.generators.loc[name]
+                if (
+                    str(existing.carrier) == carrier
+                    and str(existing.bus) == bus
+                    and np.isclose(float(existing.p_nom), cap, atol=1e-6)
+                ):
+                    logger.info("Generator '%s' already attached; keeping existing row", name)
+                    audit_rows.append({
+                        "action": "keep_existing_generator",
+                        "carrier": carrier,
+                        "name": name,
+                        "bus": bus,
+                        "p_nom": cap,
+                        "p_nom_extendable": False,
+                        "marginal_cost": float(existing.marginal_cost),
+                        "co2_emissions": float(costs.loc[carrier, "co2_emissions"]),
+                        "mean_p_max_pu": 1.0,
+                    })
+                    continue
+                raise SystemExit(f"Generator '{name}' already exists with different attributes; refusing to overwrite")
             kw = _generator_kwargs(costs.loc[carrier], bus=bus, carrier=carrier, p_nom=cap)
             n.add("Generator", name, **kw)
             logger.info("Attached %s: %s p_nom=%.1f MW", carrier, name, cap)
@@ -232,7 +271,26 @@ def attach_sasol_assets(
         bus = _nearest_bus(n, lon=float(asset["lon"]), lat=float(asset["lat"]))
         name = f"{asset['station_or_asset']} {carrier}"
         if name in n.generators.index:
-            raise SystemExit(f"Generator '{name}' already exists; refusing to overwrite")
+            existing = n.generators.loc[name]
+            if (
+                str(existing.carrier) == carrier
+                and str(existing.bus) == bus
+                and np.isclose(float(existing.p_nom), float(asset["p_nom_mw"]), atol=1e-6)
+            ):
+                logger.info("Optional Sasol asset '%s' already attached; keeping existing row", name)
+                audit_rows.append({
+                    "action": "keep_existing_sasol_generator",
+                    "carrier": carrier,
+                    "name": name,
+                    "bus": bus,
+                    "p_nom": float(asset["p_nom_mw"]),
+                    "p_nom_extendable": False,
+                    "marginal_cost": float(existing.marginal_cost),
+                    "co2_emissions": float(costs.loc[carrier, "co2_emissions"]),
+                    "mean_p_max_pu": 1.0,
+                })
+                continue
+            raise SystemExit(f"Generator '{name}' already exists with different attributes; refusing to overwrite")
         kw = _generator_kwargs(
             costs.loc[carrier],
             bus=bus,
@@ -276,18 +334,31 @@ def retag_csp_from_solar(n: pypsa.Network, custom_pp: pd.DataFrame, audit_rows: 
             raise SystemExit(f"Missing csp ghost generator '{csp_name}'; cannot transfer CSP")
         prior_solar = float(n.generators.at[solar_name, "p_nom"])
         prior_csp = float(n.generators.at[csp_name, "p_nom"])
-        if prior_solar < cap:
-            raise SystemExit(f"'{solar_name}' p_nom {prior_solar:.1f} < CSP target {cap:.1f}; cannot subtract")
-        n.generators.at[solar_name, "p_nom"] = prior_solar - cap
-        n.generators.at[csp_name, "p_nom"] = prior_csp + cap
-        logger.info("CSP retag at %s: solar %.1f -> %.1f, csp %.1f -> %.1f (+%.1f MW)",
-                    bus, prior_solar, prior_solar - cap, prior_csp, prior_csp + cap, cap)
+        if prior_csp > cap + 1e-6:
+            raise SystemExit(f"'{csp_name}' p_nom {prior_csp:.1f} exceeds CSP target {cap:.1f}")
+        delta = cap - prior_csp
+        if delta <= 1e-6:
+            logger.info("CSP retag at %s already applied; keeping csp %.1f MW", bus, prior_csp)
+            action = "keep_existing_csp_retag"
+            new_solar = prior_solar
+            new_csp = prior_csp
+            delta = 0.0
+        else:
+            if prior_solar < delta:
+                raise SystemExit(f"'{solar_name}' p_nom {prior_solar:.1f} < remaining CSP target {delta:.1f}; cannot subtract")
+            new_solar = prior_solar - delta
+            new_csp = prior_csp + delta
+            n.generators.at[solar_name, "p_nom"] = new_solar
+            n.generators.at[csp_name, "p_nom"] = new_csp
+            logger.info("CSP retag at %s: solar %.1f -> %.1f, csp %.1f -> %.1f (+%.1f MW)",
+                        bus, prior_solar, new_solar, prior_csp, new_csp, delta)
+            action = "retag_csp_from_solar"
         audit_rows.append({
-            "action": "retag_csp_from_solar",
+            "action": action,
             "carrier": "csp",
             "name": csp_name,
             "bus": bus,
-            "p_nom": cap,
+            "p_nom": delta,
             "p_nom_extendable": False,
             "marginal_cost": float(n.generators.at[csp_name, "marginal_cost"]),
             "co2_emissions": 0.0,
@@ -313,6 +384,8 @@ def main(
     custom_pp_path: Path,
     backup_out: Path,
     audit_out: Path,
+    custom_lines_marker: Path | None = None,
+    custom_lines_audit: Path | None = None,
     config: dict | None = None,
 ) -> None:
     backup_out.parent.mkdir(parents=True, exist_ok=True)
@@ -338,6 +411,12 @@ def main(
     assert_no_upstream_carrier_mutation(upstream_carriers, n.carriers.loc[upstream_carriers.index])
 
     n.export_to_netcdf(str(network_in))
+    markers = [backup_out]
+    if custom_lines_marker is not None:
+        markers.append(custom_lines_marker)
+    if custom_lines_audit is not None:
+        markers.append(custom_lines_audit)
+    touch_markers(*markers)
     logger.info("Saved patched network to %s", network_in)
 
     audit = pd.DataFrame(audit_rows)
@@ -360,6 +439,8 @@ if __name__ == "__main__":
             custom_pp_path=Path(snakemake.input.custom_pp),
             backup_out=Path(snakemake.output.backup),
             audit_out=Path(snakemake.output.audit),
+            custom_lines_marker=Path(snakemake.input.custom_lines_marker),
+            custom_lines_audit=Path(snakemake.input.custom_lines_audit),
             config=dict(snakemake.config),
         )
     else:
