@@ -1,0 +1,7 @@
+asset_id,carrier,treatment,build_year,source
+Redstone CSP,csp,excluded,2024,4-work/expansion-handoff-decisions.md; pypsa-rsa fixed_technologies.xlsx corroborating future DateIn evidence
+solar_candidate_class,solar,candidate,,4-work/expansion-handoff-decisions.md
+onshore_wind_candidate_class,onshore_wind,candidate,,4-work/expansion-handoff-decisions.md
+csp_candidate_class,csp,candidate,,4-work/expansion-handoff-decisions.md
+tdp_planned_lines,transmission,scenario_dependent,,data/za_audit/pypsa_rsa_transmission_expansion_audit.csv; 4-work/expansion-handoff-decisions.md
+future_contracted_projects,mixed,scenario_dependent,,4-work/expansion-handoff-decisions.md

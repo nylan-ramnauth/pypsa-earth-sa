@@ -1,0 +1,27 @@
+asset_id,carrier,retirement_year,source,applies_to_horizon
+Arnot*,coal,2027,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Arnot**,coal,2029,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Camden*,coal,2024,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Camden**,coal,2025,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Duvha*,coal,2033,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2040_2050
+Duvha**,coal,2034,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2040_2050
+Grootvlei*,coal,2026,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Grootvlei**,coal,2027,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Hendrina*,coal,2024,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Hendrina**,coal,2025,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Kelvin,coal,2027,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,not_applicable_excluded_from_baseline
+Kendal*,coal,2044,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2050
+Kendal**,coal,2050,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2050
+Komati,coal,2022,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,not_applicable_pre_2023_retired
+Kriel*,coal,2028,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Kriel**,coal,2030,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Lethabo*,coal,2038,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2040_2050
+Lethabo**,coal,2041,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2050
+Majuba*,coal,2048,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2050
+Majuba**,coal,2051,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,after_2050
+Matimba*,coal,2042,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2050
+Matimba**,coal,2044,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2050
+Matla*,coal,2032,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2040_2050
+Matla**,coal,2036,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2040_2050
+Tutuka*,coal,2030,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2030_2040_2050
+Tutuka**,coal,2031,IRP 2023 canonical source pending local file; pypsa-rsa ME IRP 2024 fixed_technologies.xlsx IRP23_FULL corroborating decommissioning evidence,2040_2050
